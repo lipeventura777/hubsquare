@@ -1,0 +1,50 @@
+# Dependências e saídas de build
+node_modules/
+out/
+dist/
+release/
+*.tsbuildinfo
+.eslintcache
+
+# Logs
+*.log*
+/logs/
+
+# Testes, reprodução e ferramentas locais
+.teste/
+.playwright-mcp/
+.claude/
+
+# Nada do jogo nem de servidores (na raiz; as pastas de código com esses nomes ficam): servidores, mundos, mods, packs, backups, caches e Java
+/servidores/
+/saves/
+/world/
+/mundos/
+/backups/
+/removidos/
+/mods/
+/plugins/
+/resourcepacks/
+/shaderpacks/
+/datapacks/
+/downloads-manuais/
+/cache-modpacks/
+/jogo/
+/java/
+/crash-reports/
+*.jar
+*.zip
+*.mrpack
+*.exe
+*.dll
+*.mca
+*.dat
+*.dat_old
+*.nbt
+*.hubsquare
+
+# Segredos
+.env
+.env.*
+curseforge.json
+celular.json

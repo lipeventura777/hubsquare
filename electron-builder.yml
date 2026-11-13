@@ -1,0 +1,55 @@
+# appId fica o do ServSquare: assim o HubSquare instala por cima e substitui a versão antiga.
+appId: com.servsquare.app
+productName: HubSquare
+directories:
+  buildResources: build
+  output: release
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!tests/*'
+  - '!scripts/*'
+  - '!release/*'
+  # Pasta de testes (servidores e modpacks de vários GB) e cache do TypeScript.
+  - '!.teste/**'
+  - '!*.tsbuildinfo'
+  - '!docs/**'
+  - '!DESIGN.md'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,CHANGELOG.md,README.md,CLAUDE.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+# O ícone da bandeja fica fora do asar para o Windows conseguir ler.
+asarUnpack:
+  - resources/**
+win:
+  executableName: HubSquare
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch: x64
+nsis:
+  # Instalador com telas (não "um clique"), para poder escolher a pasta de instalação.
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  artifactName: HubSquare-Setup-${version}.${ext}
+  shortcutName: HubSquare
+  uninstallDisplayName: HubSquare
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  runAfterFinish: true
+# Fase M6: abrir um convite (link hubsquare://convite/... ou arquivo .hubsquare) abre o HubSquare.
+protocols:
+  - name: Convite do HubSquare
+    schemes:
+      - hubsquare
+fileAssociations:
+  - ext: hubsquare
+    name: Convite do HubSquare
+    description: Convite do HubSquare
+npmRebuild: false
+# Sem atualização automática e sem publicar em lugar nenhum.
+publish: null

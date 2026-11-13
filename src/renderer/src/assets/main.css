@@ -1,0 +1,587 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Nomes do Tailwind ligados aos tokens do DESIGN.md (bg-panel, text-muted, bg-accent...). */
+@theme inline {
+  --font-sans: var(--fonte-texto);
+  --font-pixel: var(--fonte-pixel);
+  --font-mono: var(--fonte-mono);
+
+  --color-app: var(--bg-app);
+  --color-sidebar: var(--bg-sidebar);
+  --color-tile: var(--bg-tile);
+  --color-tile-active: var(--bg-tile-active);
+  --color-panel: var(--bg-panel);
+  --color-panel-2: var(--bg-panel-2);
+  --color-console: var(--bg-console);
+  --color-console-muted: var(--console-text-muted);
+  --color-checkbox: var(--border-checkbox);
+  --color-linha: var(--border);
+  --color-linha-clara: var(--border-light);
+  --color-texto: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-shadow: var(--accent-shadow);
+  --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-danger-shadow: var(--danger-shadow);
+  --color-warning: var(--warning);
+  --color-warning-shadow: var(--warning-shadow);
+  --color-highlight: var(--highlight);
+  --color-highlight-shadow: var(--highlight-shadow);
+  --color-secondary: var(--secondary);
+  --color-secondary-shadow: var(--secondary-shadow);
+  --color-vida: var(--vida);
+  --color-fome: var(--fome);
+  --color-online: var(--status-online);
+  --color-starting: var(--status-starting);
+  --color-offline: var(--status-offline);
+  --color-erro: var(--status-error);
+  --color-on-light: var(--text-on-light);
+  --color-on-dark: var(--text-on-dark);
+}
+
+body {
+  margin: 0;
+  /* Por baixo do fundo de bioma (Fundo.tsx), enquanto ele desenha. */
+  background: var(--fundo-base);
+  color: var(--text);
+  font-family: var(--fonte-texto);
+  font-size: 14px;
+}
+
+/* ---------- Vidro (DESIGN.md v4, seção 5) ----------
+   Fora das camadas do Tailwind de propósito: vale para todas as telas sem mexer nelas.
+   Painéis, barra lateral, diálogos, menus e listas flutuantes desfocam o fundo; vidro dentro
+   de vidro não desfoca de novo (custo e borrão duplo). "Vidro leve" tira o desfoque. */
+.bg-sidebar,
+.bg-panel,
+.bg-console,
+.vidro-painel,
+.placa-vidro,
+dialog,
+[popover] {
+  -webkit-backdrop-filter: var(--vidro-desfoque);
+  backdrop-filter: var(--vidro-desfoque);
+}
+:is(.bg-sidebar, .bg-panel, .bg-console, .vidro-painel, dialog, [popover])
+  :is(.bg-panel, .bg-console, .placa-vidro) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.bg-sidebar,
+.bg-panel,
+.vidro-painel,
+dialog,
+[popover] {
+  background-image: var(--brilho-topo);
+  box-shadow:
+    inset 0 1px 0 var(--vidro-brilho),
+    0 12px 32px -16px var(--vidro-sombra);
+}
+.bg-sidebar,
+.vidro-painel,
+dialog,
+[popover] {
+  border: 1px solid var(--vidro-borda);
+}
+.bg-sidebar,
+.vidro-painel,
+dialog {
+  border-radius: var(--raio-painel);
+}
+/* Área de conteúdo de cada tela (e do assistente): todo texto fica em cima de vidro. */
+.vidro-painel {
+  background-color: var(--bg-panel);
+}
+/* Placa do nome no banner: vidro com pelo menos 70% de opacidade, que dá 4,5:1 sobre
+   qualquer imagem (tests/contrasteRegras.test.ts). */
+.placa-vidro {
+  background-color: rgb(var(--vidro-rgb) / max(var(--vidro-alfa), 0.7));
+  border: 1px solid var(--vidro-borda);
+  border-radius: var(--raio-item);
+  box-shadow: inset 0 1px 0 var(--vidro-brilho);
+}
+.bg-panel,
+[popover] {
+  border-radius: var(--raio-item);
+}
+.bg-panel-2,
+.bg-tile,
+.bg-tile-active,
+.bg-console {
+  border-radius: var(--raio-pequeno);
+}
+
+/* Cores usadas como texto sobre o vidro: versões com 4,5:1 (tema.ts › ajustarContraste). */
+.text-accent {
+  color: var(--accent-legivel);
+}
+.text-danger {
+  color: var(--perigo-legivel);
+}
+.text-warning {
+  color: var(--atencao-legivel);
+}
+.text-online {
+  color: var(--online-legivel);
+}
+
+/* Status online: quadradinho com brilho. */
+.bg-online {
+  box-shadow: 0 0 8px var(--status-online);
+}
+
+/* JOGAR e os outros botões grandes de destaque: bloco com sombra por dentro embaixo e brilho. */
+.botao-grande.bg-accent {
+  border-bottom-width: 0;
+  box-shadow:
+    inset 0 -5px 0 var(--accent-shadow),
+    inset 0 1px 0 var(--relevo-brilho),
+    0 0 28px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Foco visível em tudo (DESIGN.md, seção 9). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Slider (seção 6.7): trilho de 4px, preenchimento --accent até --preenchido, alça 14×24 com relevo. */
+.slider {
+  appearance: none;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+.slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--preenchido, 0%),
+    var(--bg-panel-2) var(--preenchido, 0%)
+  );
+}
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 24px;
+  margin-top: -10px;
+  background: var(--secondary);
+  border-bottom: 3px solid var(--secondary-shadow);
+  box-shadow: inset 0 1px 0 var(--relevo-brilho);
+}
+.slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Texto em pixel com sombra dura (seção 4). */
+.texto-pixel {
+  font-family: var(--fonte-pixel);
+  text-shadow: var(--brilho-titulo);
+}
+
+/* Fundo padrão do banner quando não há imagem (seção 6.3): blocos geométricos nos tons do accent. */
+/* Sem imagem: a arte do bioma do app (tema.ts gera --arte-bioma a partir do fundo/biomas.ts). */
+.banner-padrao {
+  background: var(--fundo-base) var(--arte-bioma, none) center / cover no-repeat;
+  image-rendering: pixelated;
+}
+
+/* Gradiente escuro embaixo do banner, para o texto ficar legível sobre qualquer imagem. */
+.banner-gradiente {
+  background: linear-gradient(to bottom, transparent 35%, var(--overlay));
+}
+
+/* "LIGANDO…" com três pontos animados (seção 8). Sem animação, fica "…" fixo. */
+.pontos::after {
+  content: '…';
+  display: inline-block;
+  width: 1.2em;
+  text-align: left;
+  animation: pontos 1.2s steps(1) infinite;
+}
+@keyframes pontos {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '.';
+  }
+  50% {
+    content: '..';
+  }
+  75% {
+    content: '...';
+  }
+}
+
+/* ---------- Catálogo de animações (seção 8) ---------- */
+
+/* Troca de página: entra com fade + 8px de baixo; sai só com fade de 100ms. */
+.anim-pagina {
+  animation: entrar-pagina var(--dur-base) var(--ease-out) both;
+}
+.anim-pagina-saindo {
+  opacity: 0;
+  transition: opacity 100ms var(--ease-out);
+}
+@keyframes entrar-pagina {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Listas e grades: fade + 6px, escalonado em 30ms (o atraso vem de --ordem, no máximo 7).
+   "backwards" (e não "both"): depois de entrar, o transform fica livre para o hover e o clique. */
+.anim-item {
+  animation: entrar-item var(--dur-base) var(--ease-out) backwards;
+  animation-delay: calc(min(var(--ordem, 0), 7) * 30ms);
+}
+@keyframes entrar-item {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Avisos: entram 24px da direita; saem com fade + 8px. A barra de tempo esvazia em 5 s. */
+.anim-aviso {
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+.anim-aviso-saindo {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.anim-tempo {
+  transform-origin: left;
+  animation: esvaziar 5s linear both;
+}
+@keyframes esvaziar {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Linhas novas do console: só fade. */
+.anim-linha {
+  animation: aparecer var(--dur-fast) var(--ease-out) both;
+}
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Selos (⚠, novidade): de 0,9 a 1 com fade (nada surge do nada, sem exagero). */
+.anim-estalo {
+  animation: estalo var(--dur-base) var(--ease-out) backwards;
+}
+@keyframes estalo {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* Bolinha de status: "Ligando" pulsa em loop; "Online" pulsa uma vez. */
+.pulso-loop,
+.pulso-unico {
+  position: relative;
+}
+.pulso-loop::after,
+.pulso-unico::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: inherit;
+}
+.pulso-loop::after {
+  animation: pulsar 1.2s var(--ease-out) infinite;
+}
+.pulso-unico::after {
+  animation: pulsar 0.8s var(--ease-out) 1 both;
+}
+@keyframes pulsar {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Botão LIGAR em "LIGANDO": brilho diagonal passando a cada 1,6 s. */
+.anim-brilho {
+  position: relative;
+  overflow: hidden;
+}
+.anim-brilho::after {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, var(--relevo-brilho), transparent);
+  transform: translateX(-150%) skewX(-20deg);
+  animation: brilho 1.6s linear infinite;
+}
+@keyframes brilho {
+  to {
+    transform: translateX(350%) skewX(-20deg);
+  }
+}
+
+/* Barra de progresso: o preenchimento cresce por clip-path (movimento.tsx); as listras deslizam. */
+.anim-listras {
+  position: absolute;
+  inset: 0 -16px 0 -16px;
+  background: repeating-linear-gradient(-45deg, transparent 0 6px, var(--relevo-brilho) 6px 12px);
+  animation: listras 0.6s linear infinite;
+}
+@keyframes listras {
+  to {
+    transform: translateX(16px);
+  }
+}
+
+/* Esqueleto de carregamento: faixa de brilho da esquerda para a direita a cada 1,4 s. */
+.anim-esqueleto {
+  position: relative;
+  overflow: hidden;
+}
+.anim-esqueleto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--relevo-brilho), transparent);
+  transform: translateX(-100%);
+  animation: esqueleto 1.4s linear infinite;
+}
+@keyframes esqueleto {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Diálogo: o fundo escurece com fade; a caixa entra com escala 0,96 → 1 + fade. */
+dialog[open] {
+  animation: dialogo-entrar var(--dur-slow) var(--ease-out) both;
+}
+dialog[open]::backdrop {
+  animation: aparecer var(--dur-slow) var(--ease-out) both;
+}
+@keyframes dialogo-entrar {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* "Reduzir animações" (seção 8): ligado pelo usuário ou pelo Windows (prefers-reduced-motion).
+   O app marca o <html> com data-reduzir-animacoes; as durações viram 0 e os loops de status
+   param (a cor fica fixa). */
+[data-reduzir-animacoes] {
+  --dur-instant: 0ms;
+  --dur-fast: 100ms;
+  --dur-base: 150ms;
+  --dur-slow: 150ms;
+}
+/* Sem movimento: só cor e opacidade fazem transição (o transform muda na hora). */
+[data-reduzir-animacoes] *,
+[data-reduzir-animacoes] *::before,
+[data-reduzir-animacoes] *::after {
+  transition-property: color, background-color, border-color, opacity, box-shadow !important;
+}
+/* Entradas viram só um fade curto, sem deslizar nem crescer. */
+[data-reduzir-animacoes]
+  :is(
+    .anim-pagina,
+    .anim-item,
+    .anim-aviso,
+    .anim-area-play,
+    .anim-area-serv,
+    .anim-estalo,
+    .anim-fundo,
+    .flutuante
+  ),
+[data-reduzir-animacoes] dialog[open],
+[data-reduzir-animacoes] ::backdrop {
+  animation: aparecer var(--dur-base) var(--ease-out) backwards !important;
+  animation-delay: 0ms !important;
+}
+/* A saída das listas flutuantes continua (a tela espera ela terminar), só sem deslizar. */
+[data-reduzir-animacoes] .flutuante-saindo {
+  animation: sumir var(--dur-fast) var(--ease-out) both !important;
+}
+@keyframes sumir {
+  to {
+    opacity: 0;
+  }
+}
+/* Loops decorativos param (a cor de status fica fixa). A barra de tempo dos avisos continua:
+   ela mostra quanto falta, não é enfeite. */
+[data-reduzir-animacoes] :is(.pulso-loop, .pulso-unico, .anim-brilho, .anim-esqueleto)::after,
+[data-reduzir-animacoes] .anim-listras {
+  animation: none !important;
+}
+
+/* Descrições e changelogs do Modrinth (Explorar, Fase 23), já sanitizados. */
+.markdown {
+  overflow-wrap: anywhere;
+}
+.markdown > * + * {
+  margin-top: 0.75em;
+}
+.markdown :is(h1, h2, h3, h4) {
+  font-weight: 700;
+  margin-top: 1.25em;
+}
+.markdown h1 {
+  font-size: 20px;
+}
+.markdown h2 {
+  font-size: 17px;
+}
+.markdown h3,
+.markdown h4 {
+  font-size: 15px;
+}
+.markdown a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.markdown :is(ul, ol) {
+  padding-left: 1.5em;
+}
+.markdown ul {
+  list-style: square;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown img {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+}
+.markdown :is(code, pre) {
+  font-family: var(--font-mono, monospace);
+  background: var(--bg-panel-2);
+  font-size: 12px;
+}
+.markdown code {
+  padding: 0 4px;
+}
+.markdown pre {
+  padding: 12px;
+  overflow-x: auto;
+}
+.markdown blockquote {
+  border-left: 4px solid var(--border);
+  padding-left: 12px;
+  color: var(--text-muted);
+}
+.markdown hr {
+  border-color: var(--border);
+}
+.markdown table {
+  border-collapse: collapse;
+}
+.markdown :is(th, td) {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+}
+.markdown summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* Camada flutuante (Flutuante.tsx): listas, menus, autocompletar e dicas. Fica na camada do topo
+   (popover) e é posicionada pelo componente. Entra a partir do lado de onde surge: de cima para
+   baixo quando abre embaixo, de baixo para cima quando abre em cima (seção 8). */
+.flutuante {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: var(--z-flutuante);
+  animation: flutuante-entrar var(--dur-fast) var(--ease-out) both;
+}
+.flutuante-baixo {
+  transform-origin: top;
+  --flutuante-de: -4px;
+}
+.flutuante-cima {
+  transform-origin: bottom;
+  --flutuante-de: 4px;
+}
+.flutuante-saindo {
+  animation: flutuante-sair var(--dur-fast) var(--ease-out) both;
+}
+@keyframes flutuante-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(var(--flutuante-de)) scale(0.98);
+  }
+}
+@keyframes flutuante-sair {
+  to {
+    opacity: 0;
+    transform: translateY(var(--flutuante-de)) scale(0.98);
+  }
+}
+
+/* Troca de área Serv/Play (seção 8): diferente da troca de página, a barra lateral e o conteúdo
+   deslizam 32px na direção da área nova (Play vem da direita, Serv da esquerda). */
+.anim-area-play,
+.anim-area-serv {
+  animation: entrar-area var(--dur-slow) var(--ease-out) backwards;
+}
+.anim-area-play {
+  --area-de: 24px;
+}
+.anim-area-serv {
+  --area-de: -24px;
+}
+.anim-area-saindo {
+  opacity: 0;
+  transition: opacity 100ms var(--ease-out);
+}
+@keyframes entrar-area {
+  from {
+    opacity: 0;
+    transform: translateX(var(--area-de));
+  }
+}
+
+/* Tela Jogar (seção 6.1.3): o fundo novo do banner entra com crossfade por cima do anterior,
+   com um desfoque leve que some junto (sem ele, parecem duas imagens se cruzando). */
+.anim-fundo {
+  animation: entrar-fundo var(--dur-slow) var(--ease-out) backwards;
+}
+@keyframes entrar-fundo {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
