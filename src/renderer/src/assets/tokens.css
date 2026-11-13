@@ -1,0 +1,242 @@
+/* Tokens do HubSquare (DESIGN.md versão 4, seções 3 e 7). Único lugar com cores em hex no
+   renderer, lido pelo Tailwind (main.css › @theme) e pelo teste de contraste
+   (tests/contrasteRegras.test.ts). Um conjunto por bioma em [data-bioma]; as superfícies são
+   vidro: --vidro-rgb com --vidro-alfa. A tela pode subir o --vidro-alfa (e trocar as cores
+   "-legivel") quando o fundo pede, para o texto manter 4,5:1 (contrasteRegras.ts). */
+
+@font-face {
+  font-family: 'Inter';
+  src: url('./fonts/InterVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Pixelify Sans';
+  src: url('./fonts/PixelifySans-latin.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: block;
+}
+
+:root {
+  /* ---------- Superfícies de vidro (iguais em todos os biomas; os valores vêm do bioma) ---------- */
+  --bg-app: transparent;
+  --bg-sidebar: rgb(var(--vidro-rgb) / var(--vidro-alfa));
+  --bg-panel: rgb(var(--vidro-rgb) / var(--vidro-alfa));
+  --bg-panel-2: rgb(var(--vidro-2-rgb) / var(--vidro-alfa));
+  --bg-tile: rgb(var(--vidro-2-rgb) / var(--vidro-alfa));
+  --bg-tile-active: rgb(var(--vidro-2-rgb) / calc(var(--vidro-alfa) + 0.18));
+  /* Console e editores: vidro bem mais opaco, para leitura longa. */
+  --bg-console: rgb(var(--console-rgb) / 0.88);
+  --vidro-desfoque: blur(var(--vidro-blur)) saturate(150%);
+  --raio-painel: 22px;
+  --raio-item: 16px;
+  --raio-pequeno: 12px;
+  --brilho-topo: none; /* degradê claro por cima do vidro (Mar) */
+  --brilho-titulo: 2px 2px 0 var(--sombra-texto);
+
+  /* Cor de destaque. A tela troca --accent pela cor do bioma ou pela escolhida (useAparencia). */
+  --accent: var(--accent-padrao);
+  --accent-hover: var(--accent-padrao);
+  --accent-shadow: var(--accent-padrao);
+  --accent-text: var(--text-on-light);
+
+  --danger: #c42b2b;
+  --danger-shadow: #7a1717;
+  --warning: #e8c22b;
+  --warning-shadow: #b08f12;
+  --highlight: #7e3ff2;
+  --highlight-shadow: #5a2ab0;
+  --secondary: #d0d1d4;
+  --secondary-shadow: #8c8d90;
+
+  /* Ícones de vida e fome do jogador (seção 6.11). */
+  --vida: #e03c3c;
+  --fome: #e8892b;
+
+  --status-online: #52a535;
+  --status-starting: #e8c22b;
+  --status-offline: #8a8a8a;
+  --status-error: #c42b2b;
+
+  /* Texto sobre fundos claros (secundário, atenção, accent claro) e escuros. */
+  --text-on-light: #0f172a;
+  --text-on-dark: #ffffff;
+  /* Texto INFO do console: o console é escuro em todos os biomas. */
+  --console-text-muted: #b4bcc8;
+  --relevo-brilho: rgba(255, 255, 255, 0.25);
+  --sombra-texto: rgba(0, 0, 0, 0.6);
+
+  /* Etiquetas dos mods (Fase 25): conteúdo do usuário, iguais em todos os biomas. */
+  --etiqueta-vermelho: #d9534f;
+  --etiqueta-laranja: #f0883e;
+  --etiqueta-amarelo: #e3b341;
+  --etiqueta-verde: #3fb950;
+  --etiqueta-azul: #4f8cff;
+  --etiqueta-roxo: #a371f7;
+  --etiqueta-cinza: #8b949e;
+
+  /* Espaço do inventário (seção 6.18): sombra em cima e brilho embaixo, por dentro. */
+  --slot-sombra: rgba(0, 0, 0, 0.3);
+  --slot-brilho: rgba(255, 255, 255, 0.12);
+  --sombra-numero: rgba(0, 0, 0, 0.7);
+
+  /* Sugestões de cor de destaque (seção 7). */
+  --sugestao-verde: #22c55e;
+  --sugestao-azul: #60a5fa;
+  --sugestao-roxo: #a78bfa;
+  --sugestao-laranja: #fb923c;
+  --sugestao-vermelho: #f87171;
+  --sugestao-ciano: #5eead4;
+
+  /* Ordem das camadas (seção 8.1). */
+  --z-painel-lateral: 30;
+  --z-avisos: 40;
+  --z-flutuante: 50;
+
+  /* Animações (seção 8). Com "Reduzir animações", as durações viram 0 (main.css). */
+  --dur-instant: 60ms;
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  --fonte-texto: 'Inter', 'Segoe UI', sans-serif;
+  --fonte-pixel: 'Pixelify Sans', 'Inter', sans-serif;
+  --fonte-mono: 'Cascadia Mono', Consolas, monospace;
+}
+
+/* ---------- Os cinco biomas ---------- */
+
+:root,
+[data-bioma='dia'] {
+  color-scheme: dark;
+  --fundo-base: #6a8fae;
+  --vidro-rgb: 12 20 28;
+  --vidro-2-rgb: 30 41 52;
+  --vidro-alfa: 0.42;
+  --vidro-blur: 20px;
+  --vidro-borda: rgb(255 255 255 / 0.16);
+  --vidro-brilho: rgb(255 255 255 / 0.22);
+  --vidro-sombra: rgb(0 0 0 / 0.35);
+  --console-rgb: 8 12 18;
+  --text: #f8fafc;
+  --text-muted: #cbd5e1;
+  --accent-padrao: #4ade80;
+  --border: rgb(255 255 255 / 0.12);
+  --border-light: rgb(255 255 255 / 0.25);
+  --border-checkbox: #94a3b8;
+  --overlay: rgb(0 0 0 / 0.5);
+  /* Cores usadas como texto sobre o vidro (a tela recalcula se o fundo mudar). */
+  --accent-legivel: #4ade80;
+  --perigo-legivel: #fca5a5;
+  --atencao-legivel: #fcd34d;
+  --online-legivel: #86efac;
+}
+
+[data-bioma='diaClaro'] {
+  color-scheme: light;
+  --fundo-base: #bce5ff;
+  --vidro-rgb: 255 255 255;
+  --vidro-2-rgb: 241 245 249;
+  --vidro-alfa: 0.58;
+  --vidro-blur: 24px;
+  --vidro-borda: rgb(255 255 255 / 0.75);
+  --vidro-brilho: rgb(255 255 255 / 0.9);
+  --vidro-sombra: rgb(15 23 42 / 0.18);
+  --console-rgb: 15 23 42;
+  --text: #0f172a;
+  --text-muted: #334155;
+  --accent-padrao: #22c55e;
+  --border: rgb(15 23 42 / 0.14);
+  --border-light: rgb(255 255 255 / 0.8);
+  --border-checkbox: #64748b;
+  --overlay: rgb(15 23 42 / 0.35);
+  --sombra-texto: rgb(255 255 255 / 0.6);
+  --accent-legivel: #15803d;
+  --perigo-legivel: #b91c1c;
+  --atencao-legivel: #92400e;
+  --online-legivel: #166534;
+}
+
+[data-bioma='noite'] {
+  color-scheme: dark;
+  --fundo-base: #1b1a45;
+  --vidro-rgb: 14 10 32;
+  --vidro-2-rgb: 34 26 66;
+  --vidro-alfa: 0.48;
+  --vidro-blur: 20px;
+  --vidro-borda: rgb(167 139 250 / 0.3);
+  --vidro-brilho: rgb(196 181 253 / 0.25);
+  --vidro-sombra: rgb(0 0 0 / 0.45);
+  --console-rgb: 10 7 24;
+  --text: #f5f3ff;
+  --text-muted: #cfc8ef;
+  --accent-padrao: #a78bfa;
+  --border: rgb(196 181 253 / 0.14);
+  --border-light: rgb(196 181 253 / 0.3);
+  --border-checkbox: #a5a0c8;
+  --overlay: rgb(4 3 12 / 0.55);
+  --brilho-titulo: 0 0 12px rgb(167 139 250 / 0.75), 2px 2px 0 var(--sombra-texto);
+  --accent-legivel: #c4b5fd;
+  --perigo-legivel: #fca5a5;
+  --atencao-legivel: #fcd34d;
+  --online-legivel: #86efac;
+}
+
+[data-bioma='mar'] {
+  color-scheme: dark;
+  --fundo-base: #17708f;
+  --vidro-rgb: 4 34 50;
+  --vidro-2-rgb: 10 52 70;
+  --vidro-alfa: 0.3;
+  --vidro-blur: 20px;
+  --vidro-borda: rgb(255 255 255 / 0.28);
+  --vidro-brilho: rgb(255 255 255 / 0.55);
+  --vidro-sombra: rgb(2 22 32 / 0.35);
+  --console-rgb: 4 26 36;
+  --text: #f0fdfa;
+  --text-muted: #ccfbf1;
+  --accent-padrao: #5eead4;
+  --border: rgb(255 255 255 / 0.16);
+  --border-light: rgb(255 255 255 / 0.3);
+  --border-checkbox: #99c9c4;
+  --overlay: rgb(2 22 32 / 0.5);
+  --raio-painel: 28px;
+  --raio-item: 20px;
+  --brilho-topo: linear-gradient(to bottom, rgb(255 255 255 / 0.12), transparent 45%);
+  --accent-legivel: #5eead4;
+  --perigo-legivel: #fecaca;
+  --atencao-legivel: #fde68a;
+  --online-legivel: #bbf7d0;
+}
+
+[data-bioma='nether'] {
+  color-scheme: dark;
+  --fundo-base: #4a1208;
+  --vidro-rgb: 30 6 8;
+  --vidro-2-rgb: 52 14 14;
+  --vidro-alfa: 0.5;
+  --vidro-blur: 20px;
+  --vidro-borda: rgb(251 146 60 / 0.32);
+  --vidro-brilho: rgb(253 186 116 / 0.22);
+  --vidro-sombra: rgb(0 0 0 / 0.45);
+  --console-rgb: 20 4 6;
+  --text: #fff7ed;
+  --text-muted: #fed7aa;
+  --accent-padrao: #fb923c;
+  --border: rgb(253 186 116 / 0.14);
+  --border-light: rgb(253 186 116 / 0.3);
+  --border-checkbox: #c9a08a;
+  --overlay: rgb(12 2 2 / 0.55);
+  --brilho-titulo: 0 0 12px rgb(251 146 60 / 0.75), 2px 2px 0 var(--sombra-texto);
+  --accent-legivel: #fdba74;
+  --perigo-legivel: #fecaca;
+  --atencao-legivel: #fde68a;
+  --online-legivel: #bbf7d0;
+}
+
+/* Vidro leve (Aparência): sem desfoque, só o fundo translúcido, para PCs fracos. */
+[data-vidro-leve] {
+  --vidro-desfoque: none;
+}
