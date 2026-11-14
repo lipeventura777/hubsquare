@@ -49,9 +49,11 @@ export function aplicarAccent(cor: string | null): string {
   raiz.style.setProperty('--accent', final)
   raiz.style.setProperty('--accent-hover', hover)
   raiz.style.setProperty('--accent-shadow', sombra)
+  // Na cor do próprio bioma vale o texto que o bioma define (Fase V5), se ele definir.
+  const doBioma = cor ? '' : token('--accent-padrao-texto')
   raiz.style.setProperty(
     '--accent-text',
-    textoEscuro ? 'var(--text-on-light)' : 'var(--text-on-dark)'
+    doBioma || (textoEscuro ? 'var(--text-on-light)' : 'var(--text-on-dark)')
   )
   return final
 }
@@ -70,6 +72,9 @@ export function ajustarContraste(fundos: Rgb[], accent: string): void {
   const raiz = document.documentElement
   AJUSTADAS.forEach((v) => raiz.style.removeProperty(v)) // volta aos valores do bioma
   const brilho = /rgb\((\d+ \d+ \d+) \/ ([\d.]+)\)/.exec(token('--brilho-topo'))
+  // Vidro que clareia o que está atrás (Aurora): o fundo entra na conta já clareado.
+  const claro = Number(/brightness\(([\d.]+)\)/.exec(token('--vidro-desfoque'))?.[1] ?? 1)
+  if (claro !== 1) fundos = fundos.map((f) => f.map((v) => Math.min(255, v * claro)) as Rgb)
   const { alfa, legiveis } = ajustarAoFundo(
     {
       vidro: rgbDeTexto(token('--vidro-rgb')),
@@ -91,10 +96,15 @@ export function ajustarContraste(fundos: Rgb[], accent: string): void {
   for (const [nome, cor] of Object.entries(legiveis)) raiz.style.setProperty(nome, paraHex(cor))
 }
 
-// Cores de uma imagem do usuário (amostra pequena), já com o escurecimento por cima.
-export function amostrarImagem(url: string, escurecimento: number): Promise<Rgb[]> {
+// Cores de uma imagem do usuário (amostra pequena), já com a camada de escurecer/clarear por cima.
+// Fase V4: imagens do hubsquare-fundo:// pedem CORS (senão o canvas não deixa ler as cores).
+export function amostrarImagem(
+  url: string,
+  camada: { cor: Rgb; opacidade: number } | null
+): Promise<Rgb[]> {
   return new Promise((ok) => {
     const img = new Image()
+    img.crossOrigin = 'anonymous'
     img.onload = () => {
       const lado = 24
       const tela = document.createElement('canvas')
@@ -104,11 +114,11 @@ export function amostrarImagem(url: string, escurecimento: number): Promise<Rgb[
       if (!c) return ok([])
       c.drawImage(img, 0, 0, lado, lado)
       const dados = c.getImageData(0, 0, lado, lado).data
-      const base = hex(token('--fundo-base'))
       const cores: Rgb[] = []
+      const o = camada?.opacidade ?? 0
       for (let i = 0; i < dados.length; i += 4) {
         const p: Rgb = [dados[i], dados[i + 1], dados[i + 2]]
-        cores.push(p.map((v, k) => base[k] * escurecimento + v * (1 - escurecimento)) as Rgb)
+        cores.push(p.map((v, k) => (camada ? camada.cor[k] * o : 0) + v * (1 - o)) as Rgb)
       }
       ok(cores)
     }

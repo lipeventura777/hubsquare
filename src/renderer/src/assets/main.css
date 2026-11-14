@@ -78,6 +78,7 @@ dialog,
   background-image: var(--brilho-topo);
   box-shadow:
     inset 0 1px 0 var(--vidro-brilho),
+    inset 0 0 28px var(--vidro-brilho-interno),
     0 12px 32px -16px var(--vidro-sombra);
 }
 .bg-sidebar,
@@ -583,5 +584,59 @@ dialog[open]::backdrop {
   from {
     opacity: 0;
     filter: blur(4px);
+  }
+}
+
+/* ---------- Telas mais largas (Fase V8) ----------
+   Grade das telas de ajustes pela largura do painel (PaginaAjustes é o @container): até 900px,
+   uma coluna; de 900 a 1300px, duas; acima, três. Cada seção vira um subcartão de vidro com o
+   título dentro, e os da mesma linha ficam com a mesma altura. */
+@container (min-width: 900px) {
+  .grade-de-secoes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    align-items: stretch;
+  }
+  .grade-de-secoes > :not(.secao) {
+    grid-column: 1 / -1;
+  }
+  .grade-de-secoes > .secao {
+    border: 1px solid var(--border);
+    border-radius: var(--raio-item);
+    background-color: var(--bg-panel-2);
+    padding: 24px;
+  }
+  /* Quantas colunas: uma por seção, até duas (três acima de 1300px). */
+  .grade-de-secoes:has(> .secao ~ .secao) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (min-width: 1300px) {
+  .grade-de-secoes:has(> .secao ~ .secao ~ .secao) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+/* Campos, listas e barras com largura de conteúdo, mesmo num cartão largo. */
+.grade-de-secoes :is(input:not([type='checkbox'], [type='radio']), select, textarea) {
+  max-width: 36rem;
+}
+/* Tela vazia ou de "preparar": o aviso fica no centro do painel, não da faixa de 1480px. */
+.grade-de-secoes:has(> .estado-vazio) {
+  max-width: none;
+}
+/* Texto corrido: no máximo uns 75 caracteres por linha; o espaço a mais vira colunas. */
+main p {
+  max-width: 65ch;
+}
+/* Software: "Atual" e "Trocar" empilhados até 1300px; acima, lado a lado (1/3 e 2/3). */
+@container (min-width: 900px) {
+  .grade-software:has(> .secao ~ .secao) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container (min-width: 1300px) {
+  .grade-software:has(> .secao ~ .secao) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   }
 }

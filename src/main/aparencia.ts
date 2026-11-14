@@ -1,11 +1,18 @@
-import { app, dialog, nativeImage, nativeTheme, type BrowserWindow } from 'electron'
-import { copyFile, mkdir, readdir, readFile, rm, stat } from 'fs/promises'
+import { app, nativeImage, nativeTheme } from 'electron'
+import { readdir, readFile, stat } from 'fs/promises'
 import { basename, extname, join } from 'path'
 import { BIOMAS, type Aparencia, type Bioma, type Screenshot } from '../shared/tipos'
 import { migrarAparencia } from './aparenciaRegras'
 import { MODOS_ANIMACAO, type ModoAnimacao } from '../shared/animacaoRegras'
 import { gravarComSeguranca, lerTexto } from './config'
 import { ErroApp } from './erros'
+import {
+  BIOMAS_DE_VIDRO_CLARO,
+  fundoAppAntigo,
+  validarEscolha,
+  type EscolhaFundo
+} from '../shared/fundoRegras'
+import { avisarFundo, guardarImagem, pastaFundos } from './fundos'
 
 // Preferências de aparência do app (bioma, cores, vidro, imagem de fundo), na pasta de dados.
 const TIPOS: Record<string, string> = {
@@ -15,11 +22,9 @@ const TIPOS: Record<string, string> = {
   '.webp': 'image/webp',
   '.gif': 'image/gif'
 }
-const LIMITE_BYTES = 15 * 1024 * 1024
 const MAX_SCREENSHOTS = 24
 
 const arquivo = (): string => join(app.getPath('userData'), 'aparencia.json')
-const pastaFundos = (): string => join(app.getPath('userData'), 'fundos')
 // Onde o Minecraft guarda os prints (F2). Ele não separa por mundo.
 const pastaScreenshots = (): string => join(app.getPath('appData'), '.minecraft', 'screenshots')
 
@@ -27,6 +32,12 @@ export async function lerAparencia(): Promise<Aparencia> {
   const texto = await lerTexto(arquivo())
   const salvo = texto ? (JSON.parse(texto) as Record<string, unknown>) : {}
   const { aparencia, migrou } = migrarAparencia(salvo, nativeTheme.shouldUseDarkColors)
+  // Arquivo de antes da Fase V4: o fundo do app passa para o fundoApp (uma vez).
+  if (!aparencia.fundoApp) {
+    const nova = await migrarFundoApp(aparencia)
+    if (texto) await gravar(nova)
+    return nova
+  }
   // Arquivo de antes da Fase V1: grava a migração uma vez, para o bioma não mudar depois.
   if (texto && migrou) await gravar(aparencia)
   return aparencia
@@ -36,9 +47,9 @@ async function gravar(aparencia: Aparencia): Promise<void> {
   await gravarComSeguranca(arquivo(), JSON.stringify(aparencia, null, 2))
 }
 
-// Menus, barras de rolagem e campos nativos seguem o bioma: só o Dia claro é claro.
+// Menus, barras de rolagem e campos nativos seguem o vidro do bioma (claro ou escuro).
 export function aplicarTema(bioma: Bioma): void {
-  nativeTheme.themeSource = bioma === 'diaClaro' ? 'light' : 'dark'
+  nativeTheme.themeSource = BIOMAS_DE_VIDRO_CLARO.includes(bioma) ? 'light' : 'dark'
 }
 
 export async function salvarAparencia(valor: unknown): Promise<Aparencia> {
@@ -66,10 +77,16 @@ export async function salvarAparencia(valor: unknown): Promise<Aparencia> {
     throw new ErroApp('Escolha se a imagem fica em todo o app ou só no banner.')
   }
   const bioma = v.bioma as Bioma
+  let fundoApp: EscolhaFundo
+  try {
+    fundoApp = validarEscolha(v.fundoApp ?? null) ?? { tipo: 'bioma', bioma }
+  } catch (e) {
+    throw new ErroApp((e as Error).message)
+  }
   const nova: Aparencia = {
     ...(await lerAparencia()),
     // O tema antigo acompanha o bioma, para uma versão antiga do app abrir parecida.
-    tema: bioma === 'diaClaro' ? 'claro' : 'escuro',
+    tema: BIOMAS_DE_VIDRO_CLARO.includes(bioma) ? 'claro' : 'escuro',
     bioma,
     vidroLeve: v.vidroLeve,
     animacaoFundo: v.animacaoFundo as ModoAnimacao | undefined,
@@ -78,14 +95,16 @@ export async function salvarAparencia(valor: unknown): Promise<Aparencia> {
     destaquePlay: v.destaquePlay as string | null,
     escurecimento: v.escurecimento,
     fundoEmTodoApp: v.fundoEmTodoApp,
-    reduzirAnimacoes: v.reduzirAnimacoes
+    reduzirAnimacoes: v.reduzirAnimacoes,
+    fundoApp
   }
   await gravar(nova)
   aplicarTema(nova.bioma)
   return nova
 }
 
-// A imagem vai para a tela como "data URL", porque a janela só carrega arquivos do próprio app.
+// Imagem antiga só do banner do Painel (antes da Fase V4, com "em todo o app" desligado): a tela
+// ainda mostra ela lá, como data URL. O fundo do app inteiro agora é o fundoApp.
 export async function lerFundo(): Promise<string | null> {
   const { fundo } = await lerAparencia()
   if (!fundo) return null
@@ -97,45 +116,23 @@ export async function lerFundo(): Promise<string | null> {
   }
 }
 
-// Remove a cópia anterior (só a que o próprio app guardou na pasta de dados).
-async function apagarCopiaAnterior(aparencia: Aparencia): Promise<void> {
-  if (aparencia.fundo) await rm(join(pastaFundos(), aparencia.fundo), { force: true })
-}
-
-// Copia a imagem para a pasta de dados do app e passa a usá-la como fundo.
-async function copiarComoFundo(origem: string): Promise<string | null> {
-  const extensao = extname(origem).toLowerCase()
-  if (!TIPOS[extensao]) throw new ErroApp('Escolha uma imagem PNG, JPG, WEBP ou GIF.')
-  if ((await stat(origem)).size > LIMITE_BYTES) {
-    throw new ErroApp('Essa imagem é muito grande. Escolha uma de até 15 MB.')
+// Fase V4: o fundo do app vem do fundoApp. Arquivo de antes: a imagem que valia no app inteiro
+// vira uma imagem guardada; se ela sumiu, fica o bioma e o app avisa uma vez.
+async function migrarFundoApp(a: Aparencia): Promise<Aparencia> {
+  const { usarImagemAntiga, ajuste } = fundoAppAntigo(a)
+  let fundoApp: EscolhaFundo = { tipo: 'bioma', bioma: a.bioma }
+  if (usarImagemAntiga && a.fundo) {
+    try {
+      fundoApp = {
+        tipo: 'imagem',
+        imagem: await guardarImagem(join(pastaFundos(), a.fundo)),
+        ajuste
+      }
+    } catch {
+      avisarFundo('A imagem de fundo do app não existe mais. O app voltou para o bioma.')
+    }
   }
-  const anterior = await lerAparencia()
-  const nome = `fundo-${Date.now()}${extensao}`
-  await mkdir(pastaFundos(), { recursive: true })
-  await copyFile(origem, join(pastaFundos(), nome))
-  await gravar({ ...anterior, fundo: nome })
-  await apagarCopiaAnterior(anterior)
-  return lerFundo()
-}
-
-export async function escolherFundo(janela: BrowserWindow | null): Promise<string | null> {
-  const opcoes = {
-    title: 'Escolha a imagem de fundo',
-    properties: ['openFile' as const],
-    filters: [{ name: 'Imagens', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }]
-  }
-  const escolha = janela
-    ? await dialog.showOpenDialog(janela, opcoes)
-    : await dialog.showOpenDialog(opcoes)
-  const origem = escolha.filePaths[0]
-  if (escolha.canceled || !origem) return null
-  return copiarComoFundo(origem)
-}
-
-export async function removerFundo(): Promise<void> {
-  const anterior = await lerAparencia()
-  await gravar({ ...anterior, fundo: null })
-  await apagarCopiaAnterior(anterior)
+  return { ...a, fundoApp }
 }
 
 // ---------- Screenshots do Minecraft ----------
@@ -172,10 +169,10 @@ export async function listarScreenshots(): Promise<Screenshot[]> {
   return lista
 }
 
-export async function usarScreenshotComoFundo(valor: unknown): Promise<string | null> {
+export async function usarScreenshotComoFundo(valor: unknown): Promise<string> {
   const nome = typeof valor === 'string' ? basename(valor) : ''
   if (!nome || !(await nomesDosScreenshots()).includes(nome)) {
     throw new ErroApp('Esse print não existe mais. Atualize a lista e escolha outro.')
   }
-  return copiarComoFundo(join(pastaScreenshots(), nome))
+  return guardarImagem(join(pastaScreenshots(), nome))
 }

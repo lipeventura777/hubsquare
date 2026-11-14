@@ -258,3 +258,61 @@ Pelo terminal já passou: as abas nos cinco biomas (nenhuma corta letras, cantos
 3. [ ] Nome das instalações: uma instalação de servidor de modpack com a versão "esmagada" (ex.: "…-1 7 42-…") aparece com os pontos; nomes escolhidos por você continuam iguais; as pastas no disco não mudam. Importar um .zip "Pack-1.2.3.zip" sugere "Pack-1.2.3".
 4. [ ] Jogar com o dono e o servidor desligado: o status "Servidor …" não fica mais por cima do botão "Ligar servidor e jogar".
 5. [ ] As telas que os testes não fotografam (lista no fim de `docs/design/acabamento-v3.md`), nos cinco biomas.
+
+# Testar quando voltar (Fase V4: fundos personalizáveis)
+
+Pelo terminal já passou: o bug (escolher a imagem e ver o banner na hora; continua depois de recarregar), a cópia pelo hash sem duplicar, arquivo que não é imagem recusado, a regra dos 25 MB e do protocolo (recusa `..` e o que não está na pasta), a prioridade, a migração (imagem antiga existente vale, apagada avisa, bioma próprio vale) e a imagem que some (volta ao bioma com aviso). Prints em `.teste/prints-v4/`. O que só dá para ver com você:
+
+1. [ ] Aparência › Fundo: escolher uma imagem sua para o app; mexer em enquadramento, ponto de foco (arrastar), desfoque, escurecer/clarear e partículas, vendo a prévia e o app ao vivo. Trocar de bioma e usar o **Desfazer**. O vidro fica claro sobre uma imagem clara e escuro sobre uma escura, com o texto legível.
+2. [ ] Jogar › Fundo numa instalação: Igual ao app, Bioma e Imagem; os mesmos ajustes; "Usar este fundo em todas as instalações" (com a confirmação) e "Voltar ao fundo do app". Trocar de instalação: o fundo muda com transição suave.
+3. [ ] Arrastar uma imagem do Explorador para cima do banner da tela Jogar: aparece a moldura e o fundo troca.
+4. [ ] Fechar e reabrir o HubSquare: o fundo do app e o de cada instalação continuam. A Catotaz_place continua com a imagem dela e a COBBLEVERSE-1 7 42-CF com o bioma Dia (migração).
+5. [ ] Minhas imagens: ver "Em uso: …" e apagar uma em uso (quem usava volta para "Igual ao app").
+
+# Testar quando voltar (Fase V5: sete biomas novos)
+
+Pelo terminal já passou: o contraste de 4,5:1 nos doze biomas (nenhuma cor da lista precisou mudar), os doze na escolha de fundo do app e da instalação, o Vidro leve nos sete e os prints em `.teste/prints-v5/` (Painel e Jogar em cada bioma novo e a folha `doze-miniaturas.png`). O que só dá para ver com você:
+
+1. [ ] Aparência › Fundo: passar pelos sete biomas novos (Cerejeira em Claros; os outros seis em Escuros) e olhar algumas telas em cada um: o vidro, a borda, o brilho do título e o botão de destaque.
+2. [ ] Jogar › Fundo numa instalação: escolher cada um dos sete; o banner troca com a transição suave e fica parado (sem animação nesta fase).
+3. [ ] Geodo de Ametista: o vidro ficou em 85% de opacidade por causa da calcita clara na borda. Ver se ainda parece vidro ou se prefere a calcita mais escura.
+4. [ ] Aurora Nevada e Deep Dark: o reflexo forte em cima do vidro (gelo) e o brilho ciano por dentro agradam, ou estão fortes demais?
+5. [ ] Ligar o "Vidro leve" em dois ou três dos novos.
+
+# Testar quando voltar (Fase V6: fundo vivo dos biomas novos)
+
+Pelo terminal já passou: os limites de movimento nos doze biomas (simulação de 4 minutos em cada, modo completo e leve), o quadro inicial de cada bioma idêntico à arte parada da V5, a pausa ao minimizar nos sete novos, o fundo parado com "reduzir movimento", a troca entre biomas novos na tela Jogar e a medição de CPU (tabela em `.teste/resultados-desempenho/fundo-v6.md`). Gravações em `.teste/prints-v6/<bioma>-sequencia.png` (8 quadros, 1 s entre eles). O que só dá para ver com você:
+
+1. [ ] Olhar cada bioma novo por um minuto (Aparência › Fundo): o movimento é calmo, nada pisca nem chama atenção atrás do texto, e o evento raro aparece de vez em quando (borboleta, pulso, bando/arbusto, estrela cadente, peixe).
+2. [ ] Jogar: trocar de instalação entre instalações com biomas diferentes (novos e antigos): a troca é suave, sem pulo nem tela preta.
+3. [ ] Com o app aberto, jogar uns minutos: o jogo não perde FPS (o fundo para sozinho com o jogo aberto).
+4. [ ] "Partículas por cima" de uma imagem sua com cada bioma novo.
+5. [ ] Ligar "Reduzir animações": o fundo fica parado na arte (escolher "completa" à mão volta a animar).
+
+# Testar quando voltar (Fase V7: imagens dentro dos cantos)
+
+Pelo terminal já passou: `tests/e2e/cantos.e2e.ts` confere, em Cópias de segurança, Mundos, Mods (Explorar e Instalados), Servidores, Jogar, Instalações, Explorar, Conteúdo, Servidores do PlaySquare, Capturas de tela e Ajustes do jogo, que nada encostado num canto arredondado vaza (também com o mouse em cima dos cards). Prints antes/depois em `.teste/prints-v7/`. O que só dá para ver com você:
+
+1. [ ] Passar o mouse nos cards de Cópias de segurança e Mundos (o card sobe 2px) e olhar os cantos de cima da imagem: ficam redondos, sem ponta reta aparecendo.
+2. [ ] O mesmo com "Vidro leve" ligado.
+3. [ ] Ajustes do jogo: a caixa "Todos os avisos estão aparecendo" com cantos arredondados e a faixa verde acompanhando a curva.
+4. [ ] Cópias de segurança: com a janela larga e estreita, a caixa de seleção e Proteger ficam juntos, e Apagar e Restaurar juntos à direita.
+
+# Testar quando voltar (Fase V8: telas mais largas)
+
+Pelo terminal já passou: `tests/e2e/larguras.e2e.ts` abre todas as telas e abas das duas áreas em 1280×800, 1600×900, 1920×1080 e 2560×1440 e confere que nada rola para os lados, que em 1920 o conteúdo usa pelo menos 65% do painel (telas vazias à parte) e que nenhum parágrafo passa de 90 caracteres por linha. Prints antes/depois em `.teste/prints-v8/` (medidas em `medidas-antes.md` e `medidas-depois.md`). O que só dá para ver com você:
+
+1. [ ] Com a janela maximizada e com ela pequena: Software, Ajustes do jogo, Opções (Gerais e Integrações), Conexão (todas as abas), Integrações › Celular, Automação, Mods › Proibidos e Comandos.
+2. [ ] Software: com o Paper e a versão atual escolhidos, passar o mouse no botão desligado mostra "Este já é o software atual".
+3. [ ] Telas vazias ou de preparar (Comandos sem preparar, Opções › Avançado, Mods › Atualizações sem nada, Desempenho › Mapa): o aviso no meio do painel.
+4. [ ] Arrastar a janela de larga para estreita: as seções passam de 3 para 2 colunas e depois para uma, sem pular nem cortar.
+
+# Testar quando voltar (Fase V9: páginas nas listas de mods)
+
+Pelo terminal já passou: as regras de página (`tests/paginaRegras.test.ts`), e com respostas gravadas (`tests/e2e/paginas.e2e.ts`): trocar de página, mudar o tamanho (fica salvo), filtro voltando para a página 1, voltar dos detalhes na mesma página e posição, erro com "Tentar de novo", trocar rápido (a página atrasada é ignorada), o limite de 10.000 do CurseForge e a seleção entre páginas nos instalados. Medição em `.teste/resultados-desempenho/paginas.md`; prints em `.teste/prints-v9/`. O que só dá para ver com você:
+
+1. [ ] Mods › Explorar: procurar um mod popular (ex.: "sodium"), passar algumas páginas pelos números, pelas setas do teclado e pelo "Ir para a página"; trocar "Por página" e conferir que fica salvo ao reabrir o app.
+2. [ ] Abrir um mod, voltar: a mesma página e a mesma posição da rolagem.
+3. [ ] CurseForge (com a sua chave): uma busca bem aberta mostra "Muitos resultados…" e a última página abre.
+4. [ ] Instalados do Cobbleverse (e Conteúdo da instalação dele no PlaySquare): páginas rápidas, a busca acha mods de qualquer página, e selecionar em duas páginas mostra "N selecionados".
+5. [ ] Criar servidor de modpack: a lista de modpacks com páginas.

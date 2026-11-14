@@ -187,46 +187,51 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
                   {nomeTipo(b)}
                 </span>
               </div>
+              {/* Dois grupos que quebram juntos: seleção + Proteger; Apagar + Restaurar à direita. */}
               <div className="flex flex-wrap items-center gap-2">
-                <CaixaSelecao
-                  marcada={selecionados.has(b.arquivo)}
-                  disabled={b.protegido}
-                  aoMudar={(v) =>
-                    setSelecionados((s) => {
-                      const novo = new Set(s)
-                      if (v) novo.add(b.arquivo)
-                      else novo.delete(b.arquivo)
-                      return novo
-                    })
-                  }
-                >
-                  <span className="sr-only">Selecionar backup de {data(b)}</span>
-                </CaixaSelecao>
-                <Botao
-                  tamanho="pequeno"
-                  aria-pressed={b.protegido}
-                  onClick={() => proteger(b)}
-                  title={b.protegido ? 'Tirar a proteção' : 'Proteger: nunca apagar sozinho'}
-                >
-                  <IconeCadeado className="h-4 w-4" />
-                  {b.protegido ? 'Desproteger' : 'Proteger'}
-                </Botao>
-                <Botao
-                  variante="perigo"
-                  tamanho="pequeno"
-                  disabled={b.protegido || ocupado}
-                  onClick={() => setApagando([b])}
-                >
-                  Apagar
-                </Botao>
-                <Botao
-                  variante="perigo"
-                  tamanho="pequeno"
-                  disabled={!desligado || restaurando}
-                  onClick={() => setConfirmando(b)}
-                >
-                  Restaurar
-                </Botao>
+                <div className="flex items-center gap-2">
+                  <CaixaSelecao
+                    marcada={selecionados.has(b.arquivo)}
+                    disabled={b.protegido}
+                    aoMudar={(v) =>
+                      setSelecionados((s) => {
+                        const novo = new Set(s)
+                        if (v) novo.add(b.arquivo)
+                        else novo.delete(b.arquivo)
+                        return novo
+                      })
+                    }
+                  >
+                    <span className="sr-only">Selecionar backup de {data(b)}</span>
+                  </CaixaSelecao>
+                  <Botao
+                    tamanho="pequeno"
+                    aria-pressed={b.protegido}
+                    onClick={() => proteger(b)}
+                    title={b.protegido ? 'Tirar a proteção' : 'Proteger: nunca apagar sozinho'}
+                  >
+                    <IconeCadeado className="h-4 w-4" />
+                    {b.protegido ? 'Desproteger' : 'Proteger'}
+                  </Botao>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <Botao
+                    variante="perigo"
+                    tamanho="pequeno"
+                    disabled={b.protegido || ocupado}
+                    onClick={() => setApagando([b])}
+                  >
+                    Apagar
+                  </Botao>
+                  <Botao
+                    variante="primario"
+                    tamanho="pequeno"
+                    disabled={!desligado || restaurando}
+                    onClick={() => setConfirmando(b)}
+                  >
+                    Restaurar
+                  </Botao>
+                </div>
               </div>
             </CardImagem>
           ))}

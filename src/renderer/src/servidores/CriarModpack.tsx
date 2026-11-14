@@ -18,6 +18,9 @@ import { IconeProjeto } from '../mods/TelaMods'
 import { ListaManuais, separarManuais } from '../mods/ListaManuais'
 import { AndamentoModpack as Andamento } from '../componentes/AndamentoModpack'
 import type { Fonte } from '../../../shared/fontes'
+import { BarraDePaginas, TopoDaLista } from '../componentes/Paginas'
+import { usePreferencia } from '../mods/partesExplorar'
+import { tamanhoValido } from '../../../shared/paginaRegras'
 
 const ETAPAS = ['Modpack', 'Confirmar', 'Pronto'] as const
 const numero = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })
@@ -52,20 +55,34 @@ export function CriarModpack({
 
   useEffect(() => window.api.aoProgredir(setProgresso), [])
 
-  const buscar = useCallback(async (texto: string, offset: number): Promise<void> => {
-    setBuscando(true)
-    setErro(null)
-    const r = await window.api.buscarModpacks(texto, offset)
-    setBuscando(false)
-    if (!r.ok) return setErro(r.erro)
-    setTotal(r.valor.total)
-    setItens((atuais) => (offset ? [...(atuais ?? []), ...r.valor.itens] : r.valor.itens))
-  }, [])
+  // Páginas (Fase V9): só a página aberta; o tamanho fica salvo. A última busca feita fica em
+  // "procurado" (o campo pode mudar sem procurar de novo).
+  const [tamanhoSalvo, setTamanhoSalvo] = usePreferencia('hubsquare:modpacks-por-pagina', '24')
+  const tamanho = tamanhoValido(Number(tamanhoSalvo))
+  const [busca, setBusca] = useState({ procurado: '', pagina: 1 })
+  const topo = useRef<HTMLDivElement>(null)
+  const pedido = useRef(0)
+
+  const buscar = useCallback(
+    async (texto: string, pagina: number, porPagina: number): Promise<void> => {
+      const meu = ++pedido.current
+      setBuscando(true)
+      setErro(null)
+      setItens(null)
+      const r = await window.api.buscarModpacks(texto, pagina, porPagina)
+      if (meu !== pedido.current) return // chegou depois de outra página
+      setBuscando(false)
+      if (!r.ok) return setErro(r.erro)
+      setTotal(r.valor.total)
+      setItens(r.valor.itens)
+    },
+    []
+  )
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- primeira busca (os mais baixados)
-    void buscar('', 0)
-  }, [buscar])
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- busca ao mudar a página
+    void buscar(busca.procurado, busca.pagina, tamanho)
+  }, [buscar, busca, tamanho])
 
   function escolhido(a: AnaliseModpack | null): void {
     if (!a) return
@@ -156,7 +173,7 @@ export function CriarModpack({
                   className="flex min-w-[320px] flex-1 gap-2"
                   onSubmit={(e) => {
                     e.preventDefault()
-                    buscar(termo, 0)
+                    setBusca({ procurado: termo, pagina: 1 }) // busca nova volta para a página 1
                   }}
                 >
                   <Campo
@@ -177,6 +194,17 @@ export function CriarModpack({
               </div>
               {abrindo && <Andamento progresso={progresso} />}
               {erro && <MensagemErro erro={erro} />}
+              <div ref={topo} className="scroll-mt-4">
+                <TopoDaLista
+                  pagina={busca.pagina}
+                  tamanho={tamanho}
+                  total={itens ? total : 0}
+                  aoMudarTamanho={(t) => {
+                    setTamanhoSalvo(String(t))
+                    setBusca((b) => ({ ...b, pagina: 1 }))
+                  }}
+                />
+              </div>
               {!itens ? (
                 <Esqueleto linhas={6} />
               ) : !itens.length ? (
@@ -217,14 +245,16 @@ export function CriarModpack({
                   ))}
                 </ul>
               )}
-              {itens && itens.length < total && (
-                <Botao
-                  className="self-center"
-                  disabled={buscando}
-                  onClick={() => buscar(termo, itens.length)}
-                >
-                  {buscando ? 'Carregando...' : 'Carregar mais'}
-                </Botao>
+              {itens && (
+                <BarraDePaginas
+                  pagina={busca.pagina}
+                  tamanho={tamanho}
+                  total={total}
+                  aoIr={(p) => {
+                    setBusca((b) => ({ ...b, pagina: p }))
+                    topo.current?.scrollIntoView({ block: 'start' })
+                  }}
+                />
               )}
             </Secao>
           )}

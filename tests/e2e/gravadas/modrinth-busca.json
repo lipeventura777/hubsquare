@@ -1,0 +1,28 @@
+{
+  "hits": [
+    {
+      "project_id": "AANobbMI",
+      "project_type": "mod",
+      "slug": "sodium",
+      "author": "jellysquid3",
+      "title": "Sodium",
+      "description": "The fastest and most compatible rendering optimization mod for Minecraft.",
+      "categories": ["optimization", "fabric", "neoforge"],
+      "display_categories": ["optimization", "fabric"],
+      "versions": ["1.21.1"],
+      "downloads": 58431027,
+      "follows": 24312,
+      "icon_url": "",
+      "date_created": "2020-12-12T00:00:00Z",
+      "date_modified": "2026-10-01T00:00:00Z",
+      "latest_version": "1.21.1",
+      "license": "PolyForm-Shield-1.0.0",
+      "client_side": "required",
+      "server_side": "unsupported",
+      "gallery": []
+    }
+  ],
+  "offset": 0,
+  "limit": 1,
+  "total_hits": 1234
+}

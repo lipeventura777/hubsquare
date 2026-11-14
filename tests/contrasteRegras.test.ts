@@ -18,7 +18,7 @@ import { ARTE } from '../src/renderer/src/fundo/biomas.ts'
 import { derivarAccent } from '../src/renderer/src/aparencia/accent.ts'
 import { BIOMAS } from '../src/shared/tipos.ts'
 
-// Contraste de 4,5:1 em todo texto, nos cinco biomas (Fase V1). Lê o tokens.css de verdade e a
+// Contraste de 4,5:1 em todo texto, nos doze biomas (Fases V1 e V5). Lê o tokens.css de verdade e a
 // paleta de cada bioma (o pior pedaço de fundo que pode ficar atrás de um painel).
 
 const CSS = readFileSync(
@@ -67,7 +67,11 @@ for (const bioma of BIOMAS) {
   test(`contraste 4,5:1 no bioma ${bioma}`, () => {
     const t = tokens(bioma)
     const b = doBioma(t)
-    const fundos = ARTE[bioma].paleta.map(hex)
+    // Vidro que clareia o que está atrás (Aurora): o fundo entra na conta já clareado.
+    const claro = Number(/brightness\(([\d.]+)\)/.exec(t['--vidro-desfoque'])?.[1] ?? 1)
+    const fundos = ARTE[bioma].paleta.map(
+      (cor) => hex(cor).map((v) => Math.min(255, v * claro)) as Rgb
+    )
     const accent = hex(t['--accent-padrao'])
     const { alfa, legiveis } = ajustarAoFundo(b, fundos, {
       accent,
@@ -93,7 +97,9 @@ for (const bioma of BIOMAS) {
     }
     // Texto do botão de destaque (JOGAR): escuro sobre a cor do bioma.
     const { textoEscuro } = derivarAccent(t['--accent-padrao'])
-    const textoBotao = hex(textoEscuro ? t['--text-on-light'] : t['--text-on-dark'])
+    const textoBotao = hex(
+      t['--accent-padrao-texto'] ?? (textoEscuro ? t['--text-on-light'] : t['--text-on-dark'])
+    )
     assert.ok(contraste(textoBotao, accent) >= 4.5, `${bioma}: texto do JOGAR`)
     // Console e editores (vidro quase opaco, sempre escuro).
     const consoles = fundos.map((f) => misturar(rgbDeTexto(t['--console-rgb']), 0.88, f))

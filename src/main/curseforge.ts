@@ -96,6 +96,7 @@ export async function buscar(p: {
   ordem: number
   indice: number
   limite: number
+  signal?: AbortSignal
 }): Promise<{ itens: ModCF[]; total: number }> {
   const q = new URLSearchParams({
     gameId: String(JOGO),
@@ -112,10 +113,10 @@ export async function buscar(p: {
   if (p.categoria) q.set('categoryId', String(p.categoria))
   const r = await buscarJson<{ data: ModCF[]; pagination: { totalCount: number } }>(
     `${API}/mods/search?${q}`,
-    { headers: { 'x-api-key': await chave(), Accept: 'application/json' } }
+    { headers: { 'x-api-key': await chave(), Accept: 'application/json' }, signal: p.signal }
   )
-  // A API não passa de 10.000 resultados (índice + página).
-  return { itens: r.data, total: Math.min(r.pagination.totalCount, 10_000) }
+  // O total de verdade: a tela só pagina os 10.000 primeiros (paginaRegras.ts).
+  return { itens: r.data, total: r.pagination.totalCount }
 }
 
 export const mod = (id: number): Promise<ModCF> => pedir(`/mods/${id}`)

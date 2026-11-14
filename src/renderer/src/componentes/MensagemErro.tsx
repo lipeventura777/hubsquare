@@ -38,7 +38,10 @@ export function MensagemErro({
   }
 
   return (
-    <div role="alert" className="border-l-4 border-danger bg-danger/12 px-4 py-3 text-texto">
+    <div
+      role="alert"
+      className="isolate overflow-hidden rounded-(--raio-pequeno) border-l-4 border-danger bg-danger/12 px-4 py-3 text-texto"
+    >
       <p className="font-bold">{titulo}</p>
       {oQueFazer && <p className="mt-1 text-sm">{oQueFazer}</p>}
       {erro.falhas && erro.falhas.length > 0 && (

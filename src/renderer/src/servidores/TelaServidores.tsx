@@ -145,7 +145,7 @@ export function TelaServidores({
             {lista.map((s, i) => (
               <li
                 key={s.id}
-                className="anim-item relative flex h-20 items-center gap-3 border border-linha bg-panel pr-3 pl-5 transition-colors duration-(--dur-fast) hover:border-muted"
+                className="anim-item relative isolate flex h-20 items-center gap-3 overflow-hidden border border-linha bg-panel pr-3 pl-5 transition-colors duration-(--dur-fast) hover:border-muted"
                 style={{ '--ordem': i } as React.CSSProperties}
               >
                 <span

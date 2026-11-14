@@ -30,6 +30,7 @@ export function criarMotor(
   tela.width = LARGURA
   tela.height = ALTURA
   const c = tela.getContext('2d')!
+  let biomaAtual = bioma
   let cena: Cena = ARTE[bioma].criar()
   let soParticulasAgora = so
   let t = 0
@@ -75,6 +76,12 @@ export function criarMotor(
   }
 
   function seguir(): void {
+    // Desligada (Fase V6): volta à arte parada, e não ao último quadro da animação.
+    if (modoAtual() === 'desligada' && t !== 0) {
+      cena = ARTE[biomaAtual].criar()
+      t = 0
+      desenhar(0)
+    }
     if (animando() && id === null) {
       ultimo = performance.now()
       id = requestAnimationFrame(laco)
@@ -91,6 +98,7 @@ export function criarMotor(
       const ac = antes.getContext('2d')!
       ac.clearRect(0, 0, LARGURA, ALTURA)
       ac.drawImage(tela, 0, 0)
+      biomaAtual = novo
       cena = ARTE[novo].criar()
       transicao = animando() ? 0 : 1
       desenhar(0)

@@ -85,22 +85,30 @@ export async function opcoesHangar(): Promise<OpcoesExplorar> {
 export async function buscarCF(
   f: FiltrosExplorar,
   instalados: Set<string>,
-  info: InfoServidor
+  info: InfoServidor,
+  pedidos: { offset: number; limit: number }[],
+  signal: AbortSignal
 ): Promise<ResultadoExplorar> {
   const loader = f.loader === 'servidor' ? info.tipo : f.loader // "fabric", "forge"...
-  const r = await cf.buscar({
-    classId: classeCF(f.tipo),
-    termo: f.termo,
-    versao: f.versao,
-    loader: f.tipo === 'mod' || f.tipo === 'modpack' ? (LOADER_CF[loader ?? ''] ?? null) : null,
-    categoria: f.categorias[0] ? Number(f.categorias[0]) || null : null,
-    ordem: ORDEM_CF[f.ordem] ?? 2,
-    indice: Math.min(f.offset, 9_950),
-    limite: 24
-  })
+  const partes = await Promise.all(
+    pedidos.map((p) =>
+      cf.buscar({
+        classId: classeCF(f.tipo),
+        termo: f.termo,
+        versao: f.versao,
+        loader: f.tipo === 'mod' || f.tipo === 'modpack' ? (LOADER_CF[loader ?? ''] ?? null) : null,
+        categoria: f.categorias[0] ? Number(f.categorias[0]) || null : null,
+        ordem: ORDEM_CF[f.ordem] ?? 2,
+        indice: p.offset,
+        limite: p.limit,
+        signal
+      })
+    )
+  )
   return {
-    total: r.total,
-    itens: r.itens
+    total: partes[0]?.total ?? 0,
+    itens: partes
+      .flatMap((r) => r.itens)
       .filter((m) => !(f.esconderInstalados && instalados.has(String(m.id))))
       .map((m) => ({
         fonte: 'curseforge' as const,
@@ -120,20 +128,28 @@ export async function buscarCF(
 
 export async function buscarHangar(
   f: FiltrosExplorar,
-  instalados: Set<string>
+  instalados: Set<string>,
+  pedidos: { offset: number; limit: number }[],
+  signal: AbortSignal
 ): Promise<ResultadoExplorar> {
   if (f.tipo !== 'plugin') throw new ErroApp('O Hangar só tem plugins para Paper.')
-  const r = await hangar.buscar({
-    termo: f.termo,
-    versao: f.versao,
-    categoria: f.categorias[0] ?? null,
-    ordem: ORDEM_HANGAR[f.ordem] ?? '-recent_downloads',
-    offset: f.offset,
-    limite: 24
-  })
+  const partes = await Promise.all(
+    pedidos.map((p) =>
+      hangar.buscar({
+        termo: f.termo,
+        versao: f.versao,
+        categoria: f.categorias[0] ?? null,
+        ordem: ORDEM_HANGAR[f.ordem] ?? '-recent_downloads',
+        offset: p.offset,
+        limite: p.limit,
+        signal
+      })
+    )
+  )
   return {
-    total: r.total,
-    itens: r.itens
+    total: partes[0]?.total ?? 0,
+    itens: partes
+      .flatMap((r) => r.itens)
       .filter((p) => !(f.esconderInstalados && instalados.has(String(p.id))))
       .map((p) => ({
         fonte: 'hangar' as const,

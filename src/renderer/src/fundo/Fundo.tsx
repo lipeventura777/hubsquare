@@ -4,6 +4,7 @@ import { useAparencia } from '../aparencia/useAparencia'
 import { Aviso, Botao } from '../componentes/ui'
 import { ALTURA, ARTE, LARGURA } from './biomas'
 import { criarMotor, type Motor } from './motor'
+import { CamadaFundo } from './CamadaFundo'
 
 // Fundo de bioma (Fases V1 e V2, DESIGN.md seção 7): pixel art pequena, ampliada sem suavizar.
 // Vivo (motor.ts), parado quando o jogo está aberto, a janela está escondida ou sem foco, ou um
@@ -81,7 +82,8 @@ const CHAVE_AVISO = 'hubsquare-aviso-fundo-leve'
 
 // Atrás de todo o app (inclusive do assistente de primeira vez).
 export function FundoDoApp(): React.JSX.Element | null {
-  const { aparencia, fundoUrl, mudar } = useAparencia()
+  const { aparencia, fundoApp, falhou, imagemFalhou, avisosFundo, fecharAvisosFundo, mudar } =
+    useAparencia()
   const [aviso, setAviso] = useState(false)
   if (!aparencia) return null
 
@@ -98,29 +100,41 @@ export function FundoDoApp(): React.JSX.Element | null {
     setAviso(true)
   }
 
-  const imagem = fundoUrl && aparencia.fundoEmTodoApp
+  // Fase V4: o fundo do app (bioma ou imagem com ajustes). A imagem que não abre volta ao bioma
+  // padrão, com um aviso discreto (nunca a tela preta).
+  const fundo = fundoApp ?? { tipo: 'bioma' as const, bioma: aparencia.bioma }
   return (
     <>
-      {imagem ? (
-        <div aria-hidden="true" className="fixed inset-0 -z-10">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${fundoUrl})` }}
-          />
-          <div
-            className="absolute inset-0 bg-[var(--fundo-base)]"
-            style={{ opacity: aparencia.escurecimento }}
-          />
-          {aparencia.particulasSobreImagem && (
-            <FundoAnimado bioma={aparencia.bioma} so className="absolute inset-0 h-full w-full" />
-          )}
-        </div>
-      ) : (
+      {fundo.tipo === 'bioma' ? (
         <FundoAnimado
-          bioma={aparencia.bioma}
+          bioma={fundo.bioma}
           aoPesar={aoPesar}
           className="fixed inset-0 -z-10 h-full w-full"
         />
+      ) : (
+        <div aria-hidden="true" className="fixed inset-0 -z-10">
+          <CamadaFundo escolha={fundo} aoFalhar={imagemFalhou} />
+        </div>
+      )}
+      {(falhou || avisosFundo.length > 0) && (
+        <div className="anim-aviso fixed bottom-4 left-4 z-(--z-avisos) flex w-[380px] max-w-[calc(100vw-32px)] flex-col gap-2">
+          {falhou && (
+            <Aviso tipo="atencao">
+              <span className="flex-1">
+                A imagem de fundo não abriu (foi apagada ou está estragada). Mostrando o bioma;
+                escolha outra em Aparência › Fundo.
+              </span>
+            </Aviso>
+          )}
+          {avisosFundo.map((a) => (
+            <Aviso key={a} tipo="atencao">
+              <span className="flex-1">{a}</span>
+              <Botao tamanho="pequeno" onClick={fecharAvisosFundo}>
+                OK
+              </Botao>
+            </Aviso>
+          ))}
+        </div>
       )}
       {aviso && (
         <div className="anim-aviso fixed bottom-4 left-4 z-(--z-avisos) w-[380px] max-w-[calc(100vw-32px)]">

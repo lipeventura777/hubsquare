@@ -119,7 +119,9 @@ async function abrirApp(
   await app.context().route('**/*', (rota) => {
     const url = rota.request().url()
     if (
-      /^(file|data|blob|devtools|chrome-extension):|^https?:\/\/(127\.0\.0\.1|localhost)/.test(url)
+      /^(file|data|blob|devtools|chrome-extension|hubsquare-fundo):|^https?:\/\/(127\.0\.0\.1|localhost)/.test(
+        url
+      )
     ) {
       return rota.continue()
     }

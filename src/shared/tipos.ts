@@ -187,16 +187,38 @@ export interface PedidoParaEntrar {
   em: string // ISO
 }
 
-// Fundos de bioma (Fase V1). "Dia claro" é o único claro.
-export const BIOMAS = ['diaClaro', 'dia', 'noite', 'mar', 'nether'] as const
+// Fundos de bioma (Fase V1; mais sete na V5). Vidro claro: só "Dia claro" e "Cerejeira".
+export const BIOMAS = [
+  'diaClaro',
+  'dia',
+  'noite',
+  'mar',
+  'nether',
+  'cerejeira',
+  'caverna',
+  'deepDark',
+  'deserto',
+  'aurora',
+  'ametista',
+  'pantano'
+] as const
 export type Bioma = (typeof BIOMAS)[number]
 export const NOMES_BIOMAS: Record<Bioma, string> = {
   diaClaro: 'Dia claro',
   dia: 'Dia',
   noite: 'Noite',
   mar: 'Mar',
-  nether: 'Nether'
+  nether: 'Nether',
+  cerejeira: 'Cerejeira',
+  caverna: 'Caverna Exuberante',
+  deepDark: 'Deep Dark',
+  deserto: 'Deserto ao pôr do sol',
+  aurora: 'Aurora Nevada',
+  ametista: 'Geodo de Ametista',
+  pantano: 'Pântano de Vagalumes'
 }
+
+import type { EscolhaFundo } from './fundoRegras'
 
 export interface Aparencia {
   tema: Tema // antigo (até a Fase V1); fica no arquivo para versões antigas do app
@@ -210,6 +232,14 @@ export interface Aparencia {
   fundo: string | null // nome do arquivo copiado para a pasta de dados do app
   fundoEmTodoApp: boolean // false: a imagem aparece só no banner do Painel
   reduzirAnimacoes: boolean // escolha do usuário; o Windows também pode pedir (prefers-reduced-motion)
+  fundoApp?: EscolhaFundo // Fase V4: fundo do app inteiro (sem valor no arquivo: migrado ao abrir)
+}
+
+// Fase V4: imagem guardada na pasta de fundos ("Minhas imagens").
+export interface ImagemFundo {
+  nome: string // <hash>.<tipo>
+  url: string // hubsquare-fundo://img/<nome>
+  usadaEm: string[] // "App" e/ou nomes das instalações
 }
 
 // Print do Minecraft (.minecraft/screenshots), com miniatura pequena para a tela.
@@ -583,7 +613,8 @@ export interface FiltrosExplorar {
   codigoAberto: boolean
   esconderInstalados: boolean
   ordem: string // cada fonte tem as suas (OrdemExplorar no Modrinth)
-  offset: number
+  pagina: number // Fase V9: começa em 1
+  tamanho: number // itens por página (paginaRegras.ts)
 }
 
 export interface CategoriaExplorar {
@@ -1136,8 +1167,7 @@ export interface Instalacao {
   ultimoUso: string | null // ISO
   imagem: string | null // data URL (ícone do servidor, capa do modpack ou imagem escolhida)
   convite?: EstadoConviteInstalacao // só nas instalações de convite
-  temFundo: boolean // fundo próprio do banner da tela Jogar (Fase P4)
-  bannerBioma?: Bioma | null // banner com um bioma (Fase V1); sem ele, imagem/capa ou o padrão
+  fundo: EscolhaFundo | null // Fase V4: fundo da instalação; null = igual ao app
   instalada: boolean // a pasta já foi montada pelo INSTALAR (Correção P1)
   atualizar: boolean // instalada, mas o servidor ou a instalação mudou desde então
 }

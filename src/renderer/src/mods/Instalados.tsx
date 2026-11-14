@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { paginaValida, tamanhoValido } from '../../../shared/paginaRegras'
+import { BarraDePaginas, TopoDaLista } from '../componentes/Paginas'
 import { useApi } from '../componentes/api'
 import { useAvisosOcultos } from './FraseCompat'
 import {
@@ -174,6 +176,23 @@ export function Instalados({
   const [ocupado, setOcupado] = useState(false)
   const [feito, setFeito] = useState<{ texto: string; lote: string } | null>(null)
   const [aberto, setAberto] = useState<ItemInstalado | null>(null)
+  // Páginas na memória (Fase V9): o tamanho fica salvo por tela; a página volta para a 1 quando
+  // a aba, a busca, um filtro, a ordem ou o tamanho mudam (a chave abaixo).
+  const [tamanhoSalvo, setTamanhoSalvo] = usePreferencia(
+    `hubsquare:instalados-por-pagina:${info.jogador ? 'play' : 'serv'}`,
+    '24'
+  )
+  const tamanhoPagina = tamanhoValido(Number(tamanhoSalvo))
+  const [paginaDe, setPaginaDe] = useState({ chave: '', pagina: 1 })
+  const topo = useRef<HTMLDivElement>(null)
+  const rolagemAntes = useRef<number | null>(null)
+  // Voltar dos detalhes: a lista reaparece na mesma posição da rolagem.
+  useEffect(() => {
+    if (aberto || rolagemAntes.current === null) return
+    const r = topo.current?.closest<HTMLElement>('.overflow-auto')
+    if (r) r.scrollTop = rolagemAntes.current
+    rolagemAntes.current = null
+  }, [aberto])
   const [agora, setAgora] = useState(() => Date.now())
   // Fase 25
   const [modAberto, setModAberto] = useState<string | null>(null) // painel lateral (chave)
@@ -411,6 +430,34 @@ export function Instalados({
           ? (b.data ?? '').localeCompare(a.data ?? '')
           : a.titulo.localeCompare(b.titulo, 'pt-BR')
     )
+  // A busca e os filtros valem antes de dividir em páginas.
+  const chaveFiltros = JSON.stringify([
+    aba,
+    termo,
+    ordem,
+    fonte,
+    situacao,
+    comAtualizacao,
+    mundo,
+    comProblema,
+    categoriaFiltro,
+    corFiltro,
+    tamanhoPagina
+  ])
+  const pagina = paginaValida(
+    paginaDe.chave === chaveFiltros ? paginaDe.pagina : 1,
+    visiveis.length,
+    tamanhoPagina
+  )
+  const naPagina = visiveis.slice((pagina - 1) * tamanhoPagina, pagina * tamanhoPagina)
+  function abrirItem(i: ItemInstalado): void {
+    rolagemAntes.current = topo.current?.closest<HTMLElement>('.overflow-auto')?.scrollTop ?? 0
+    setAberto(i)
+  }
+  function irPara(p: number): void {
+    setPaginaDe({ chave: chaveFiltros, pagina: p })
+    topo.current?.scrollIntoView({ block: 'start' })
+  }
   const podeSelecionar = (i: ItemInstalado): boolean => i.removivel && !i.removerAoDesligar
   const escolhidos = todos.filter((i) => selecionados.has(i.chave) && podeSelecionar(i))
 
@@ -597,7 +644,7 @@ export function Instalados({
   // ---------- Detalhes ----------
 
   if (aberto) {
-    const voltar = (): void => setAberto(null)
+    const voltar = (): void => setAberto(null) // a lista volta na mesma página e posição
     const extra = (
       <>
         {botaoRemover(aberto, false)}
@@ -685,7 +732,7 @@ export function Instalados({
       {travamento && (
         <section
           aria-label="Travamento"
-          className="flex flex-col gap-3 border-l-4 border-danger bg-danger/12 px-4 py-3 text-[13px]"
+          className="isolate flex flex-col gap-3 overflow-hidden rounded-(--raio-pequeno) border-l-4 border-danger bg-danger/12 px-4 py-3 text-[13px]"
         >
           <p>
             <b>{info.jogador ? 'O jogo travou' : 'O servidor travou'}</b> em{' '}
@@ -906,7 +953,15 @@ export function Instalados({
           </PainelDeFiltros>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div ref={topo} className="flex min-w-0 flex-1 scroll-mt-4 flex-col gap-3">
+          {visiveis.length > 0 && (
+            <TopoDaLista
+              pagina={pagina}
+              tamanho={tamanhoPagina}
+              total={visiveis.length}
+              aoMudarTamanho={(t) => setTamanhoSalvo(String(t))}
+            />
+          )}
           {visiveis.some(podeSelecionar) && (
             <div className="flex flex-wrap items-center gap-3">
               <CaixaSelecao
@@ -947,6 +1002,17 @@ export function Instalados({
                   )}
                 </>
               )}
+              {selecionados.size > 0 && (
+                <>
+                  {/* A seleção vale entre páginas. */}
+                  <span aria-live="polite" className="text-xs text-muted">
+                    {selecionados.size} {selecionados.size === 1 ? 'selecionado' : 'selecionados'}
+                  </span>
+                  <Botao tamanho="pequeno" onClick={() => setSelecionados(new Set())}>
+                    Limpar seleção
+                  </Botao>
+                </>
+              )}
               {escolhidos.length > 0 && (
                 <Botao
                   variante="perigo"
@@ -972,7 +1038,7 @@ export function Instalados({
             />
           ) : (
             <ListaDeCards vista={vista}>
-              {visiveis.map((i) => (
+              {naPagina.map((i) => (
                 <CardProjeto
                   key={i.chave}
                   icone={i.icone}
@@ -984,7 +1050,7 @@ export function Instalados({
                     i.chave.startsWith('extras:')
                       ? setModAberto(i.chave)
                       : i.projetoId
-                        ? setAberto(i)
+                        ? abrirItem(i)
                         : undefined
                   }
                   etiquetas={etiquetas(i)}
@@ -1012,6 +1078,12 @@ export function Instalados({
               ))}
             </ListaDeCards>
           )}
+          <BarraDePaginas
+            pagina={pagina}
+            tamanho={tamanhoPagina}
+            total={visiveis.length}
+            aoIr={irPara}
+          />
         </div>
       </div>
 

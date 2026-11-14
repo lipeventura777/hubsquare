@@ -99,7 +99,7 @@ export function TelaSoftware(): React.JSX.Element {
   }
 
   return (
-    <PaginaAjustes>
+    <PaginaAjustes grade="grade-software">
       <Secao titulo="Atual">
         <CardPainel titulo="Software do servidor">
           <p className="texto-pixel text-[22px]">
@@ -110,7 +110,8 @@ export function TelaSoftware(): React.JSX.Element {
       </Secao>
 
       <Secao titulo="Trocar">
-        <div className="grid grid-cols-2 gap-3 min-[900px]:grid-cols-5">
+        {/* Os cinco numa linha quando o bloco tem espaço; senão quebram juntos. */}
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
           {(Object.keys(NOMES_TIPOS) as TipoId[]).map((t) => (
             <button
               key={t}
@@ -127,17 +128,31 @@ export function TelaSoftware(): React.JSX.Element {
           ))}
         </div>
 
-        <label className="flex flex-col gap-1 text-[13px]">
-          Versão do jogo
-          <Selecao value={versao} disabled={!versoes} onChange={(e) => setVersao(e.target.value)}>
-            {!versoes && <option>Carregando...</option>}
-            {versoes?.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </Selecao>
-        </label>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex w-60 flex-col gap-1 text-[13px]">
+            Versão do jogo
+            <Selecao value={versao} disabled={!versoes} onChange={(e) => setVersao(e.target.value)}>
+              {!versoes && <option>Carregando...</option>}
+              {versoes?.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </Selecao>
+          </label>
+          <span title={mudou ? undefined : 'Este já é o software atual'}>
+            <Botao
+              variante="primario"
+              disabled={!mudou || !desligado || !versao}
+              onClick={() => {
+                setEntendi(false)
+                setConfirmando(true)
+              }}
+            >
+              Trocar para {NOMES_TIPOS[tipo]} {versao}
+            </Botao>
+          </span>
+        </div>
 
         {mudou && (
           <Aviso tipo="atencao">
@@ -152,17 +167,6 @@ export function TelaSoftware(): React.JSX.Element {
           </Aviso>
         )}
 
-        <Botao
-          variante="primario"
-          className="self-start"
-          disabled={!mudou || !desligado || !versao}
-          onClick={() => {
-            setEntendi(false)
-            setConfirmando(true)
-          }}
-        >
-          Trocar para {NOMES_TIPOS[tipo]} {versao}
-        </Botao>
         {!desligado && <p className="text-xs text-muted">Desligue o servidor para trocar.</p>}
         {erro && <MensagemErro erro={erro} />}
       </Secao>

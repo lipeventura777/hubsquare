@@ -172,18 +172,26 @@ export function OpcaoRadio({
   )
 }
 
-// Coluna das telas de ajustes (seção 6.7): alinhada à esquerda, até 720px, margem de 40px,
-// seções separadas por 40px. "largo" deixa usar a largura toda (grades de cards).
+// Telas de ajustes (seção 6.7): alinhadas à esquerda, margem de 40px, até 1480px (Fase V8).
+// Pela largura do painel (container query): até 900px, uma coluna; daí, as seções viram
+// subcartões numa grade de 2 colunas (3 acima de 1300px); o que não é seção ocupa a linha toda.
+// "largo" é para grades de cards, que já se espalham sozinhas.
 export function PaginaAjustes({
   children,
-  largo = false
+  largo = false,
+  grade = ''
 }: {
   children: React.ReactNode
   largo?: boolean
+  grade?: string // classe com a proporção própria das colunas da tela (main.css)
 }): React.JSX.Element {
   return (
-    <div className="min-h-0 flex-1 overflow-auto">
-      <div className={`flex flex-col gap-10 p-10 ${largo ? '' : 'max-w-[720px]'}`}>{children}</div>
+    <div className="@container min-h-0 flex-1 overflow-auto">
+      <div
+        className={`flex max-w-[1480px] flex-col gap-10 p-10 ${largo ? '' : `grade-de-secoes ${grade}`}`}
+      >
+        {children}
+      </div>
     </div>
   )
 }
@@ -202,8 +210,8 @@ export function EstadoVazio({
   children?: React.ReactNode
 }): React.JSX.Element {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-      <span aria-hidden="true" className="text-muted [&>svg]:h-12 [&>svg]:w-12">
+    <div className="estado-vazio flex flex-col items-center justify-center gap-3 py-16 text-center">
+      <span aria-hidden="true" className="text-muted [&>svg]:h-16 [&>svg]:w-16">
         {icone}
       </span>
       <p className="text-base font-bold">{titulo}</p>
@@ -225,7 +233,7 @@ export function Aviso({
   return (
     <div
       role="status"
-      className={`flex items-center gap-4 border-l-4 px-4 py-3 text-[13px] ${cor}`}
+      className={`isolate flex items-center gap-4 overflow-hidden rounded-(--raio-pequeno) border-l-4 px-4 py-3 text-[13px] ${cor}`}
     >
       {children}
     </div>
@@ -241,7 +249,7 @@ export function Secao({
   children: React.ReactNode
 }): React.JSX.Element {
   return (
-    <section className="flex flex-col">
+    <section className="secao flex flex-col">
       <h2 className="mb-4 text-xs font-bold tracking-[.02em] text-muted uppercase">{titulo}</h2>
       <div className="flex flex-col gap-3">{children}</div>
     </section>
@@ -267,7 +275,7 @@ export function CardImagem({
 }): React.JSX.Element {
   return (
     <article
-      className="anim-item flex w-[300px] flex-col border border-linha bg-panel transition-colors duration-(--dur-fast) hover:border-muted"
+      className="anim-item isolate flex w-[300px] flex-col overflow-hidden border border-linha bg-panel transition-colors duration-(--dur-fast) hover:border-muted"
       style={{ '--ordem': ordem } as React.CSSProperties}
     >
       <div className="relative aspect-video overflow-hidden">
@@ -276,7 +284,7 @@ export function CardImagem({
         ) : (
           <div aria-hidden="true" className="banner-padrao h-full w-full" />
         )}
-        <span className="absolute bottom-2 left-2 bg-accent px-2 py-0.5 text-xs font-bold text-accent-text">
+        <span className="absolute bottom-2 left-2 rounded-[calc(var(--raio-pequeno)/2)] bg-accent px-2 py-0.5 text-xs font-bold text-accent-text">
           {etiqueta}
         </span>
       </div>

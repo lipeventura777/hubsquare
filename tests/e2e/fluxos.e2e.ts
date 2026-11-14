@@ -205,21 +205,26 @@ test('aparência: migra o tema antigo, troca o bioma, vidro leve e banner por in
 
   await criarPeloAssistente(j, 'Servidor Visual')
   await j.getByRole('button', { name: 'Aparência' }).click()
+  // Fase V4: o bioma do app fica na aba Fundo.
+  await j.getByRole('tab', { name: 'Fundo' }).click()
   await j.getByRole('radio', { name: 'Nether' }).click()
   await expect(j.locator('html')).toHaveAttribute('data-bioma', 'nether')
   await expect.poll(() => salvo().bioma).toBe('nether')
 
+  await j.getByRole('tab', { name: 'Tema' }).click()
   await j.getByRole('switch', { name: 'Vidro leve' }).click()
   await expect(j.locator('html')).toHaveAttribute('data-vidro-leve', '')
   await expect.poll(() => salvo().vidroLeve).toBe(true)
 
-  // Bioma próprio no banner da instalação do servidor (PlaySquare › Jogar › Fundo).
+  // Bioma próprio no banner da instalação do servidor (PlaySquare › Jogar › Fundo, Fase V4).
   await area(j, 'PlaySquare')
   await pagina(j, 'Jogar')
-  await j.getByRole('button', { name: 'Fundo' }).click()
-  await j.getByRole('menuitem', { name: 'Bioma Noite nesta instalação' }).click()
+  await j.getByRole('button', { name: 'Trocar o fundo' }).click()
+  const painel = j.getByRole('dialog', { name: 'Trocar o fundo' })
+  await painel.getByRole('radio', { name: 'Bioma' }).click()
+  await painel.getByRole('radio', { name: 'Noite' }).click()
   const indice = join(a.pasta, 'appData', 'ServSquare', 'instalacoes.json')
   await expect
-    .poll(() => JSON.parse(readFileSync(indice, 'utf8')).instalacoes[0].bannerBioma)
-    .toBe('noite')
+    .poll(() => JSON.parse(readFileSync(indice, 'utf8')).instalacoes[0].fundo)
+    .toEqual({ tipo: 'bioma', bioma: 'noite' })
 })

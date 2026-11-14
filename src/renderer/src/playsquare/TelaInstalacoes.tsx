@@ -464,7 +464,7 @@ function DialogoNova({
   useEffect(() => {
     if (modo !== 'modpack') return
     const t = setTimeout(() => {
-      window.api.buscarModpacks(termo, 0).then((r) => setPacks(r.ok ? r.valor.itens : []))
+      window.api.buscarModpacks(termo, 1, 24).then((r) => setPacks(r.ok ? r.valor.itens : []))
     }, 300)
     return () => clearTimeout(t)
   }, [termo, modo])

@@ -5,14 +5,20 @@ import type { InfoServidor, Resultado } from '../shared/tipos'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import {
   aplicarTema,
-  escolherFundo,
   lerAparencia,
   lerFundo,
   listarScreenshots,
-  removerFundo,
   salvarAparencia,
   usarScreenshotComoFundo
 } from './aparencia'
+import {
+  escolherImagem,
+  guardarImagemArrastada,
+  listarImagens,
+  pegarAvisosDeFundo,
+  registrarEsquemaFundo,
+  servirFundos
+} from './fundos'
 import { lerConfiguracoes, limitesRam, salvarConfiguracoes } from './config'
 import {
   escolherModo,
@@ -285,16 +291,14 @@ import {
   prepararTeste,
   usarCapturaComoFundo,
   definirRecomendados,
-  escolherFundoInstalacao,
-  escolherFundoPadrao,
-  fundoDaInstalacao,
-  lerFundoPadrao,
+  apagarImagemFundo,
+  definirFundoInstalacao,
+  migrarFundosDasInstalacoes,
+  usarFundoEmTodas,
+  usosDosFundos,
   ligarServidorEJogar,
   memoriaDoJogo,
-  removerFundoInstalacao,
-  definirBannerBioma,
   diagnosticarInstalacao,
-  removerFundoPadrao,
   statusDoServidor,
   editarInstalacao,
   infoDaInstalacao,
@@ -322,6 +326,8 @@ if (pastaDeTeste) {
   process.env.APPDATA = app.getPath('appData')
 }
 app.setPath('userData', join(app.getPath('appData'), 'ServSquare'))
+// Fase V4: o protocolo das imagens de fundo precisa ser registrado antes de o app ficar pronto.
+registrarEsquemaFundo()
 
 // Instalações de modpack em andamento (Fase V2): o fundo animado para enquanto houver alguma.
 let modpacksInstalando = 0
@@ -459,8 +465,11 @@ function avisarJanelas(canal: string, dado: unknown): void {
 
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.servsquare.app')
+  // Fase V4: o protocolo das imagens de fundo e a migração dos fundos antigos (uma vez).
+  servirFundos()
   // Aplica o tema salvo antes de abrir a janela. Se o arquivo estiver estragado, segue o padrão.
   aplicarTema((await lerAparencia().catch(() => null))?.bioma ?? 'dia')
+  await migrarFundosDasInstalacoes().catch(() => {})
   // Modo do app (Fase M6): os serviços do ServSquare (painel do celular, convites e avisos de
   // atualização de servidor) só ligam no modo completo. No amigo e nas boas-vindas, nada escuta.
   if ((await modoPronto) === 'completo') await ligarServicosDoServ()
@@ -750,8 +759,8 @@ app.whenReady().then(async () => {
   ambos('instalados:restaurar', (_e, id: unknown) => comServidor((i) => restaurarRemovido(i, id)))
 
   // Modpacks e Pacote pros amigos (Fase 17).
-  ipcMain.handle('modpacks:buscar', (_e, termo: unknown, offset: unknown) =>
-    tentar(() => buscarModpacks(termo, offset))
+  ipcMain.handle('modpacks:buscar', (_e, termo: unknown, pagina: unknown, tamanho: unknown) =>
+    tentar(() => buscarModpacks(termo, pagina, tamanho))
   )
   ipcMain.handle('modpacks:analisarModrinth', (_e, id: unknown) =>
     tentar(() => analisarDoModrinth(id, progresso))
@@ -843,10 +852,16 @@ app.whenReady().then(async () => {
   ipcMain.handle('aparencia:ler', () => tentar(lerAparencia))
   ipcMain.handle('aparencia:salvar', (_e, valor: unknown) => tentar(() => salvarAparencia(valor)))
   ipcMain.handle('aparencia:fundo', () => tentar(lerFundo))
-  ipcMain.handle('aparencia:escolherFundo', (e) =>
-    tentar(() => escolherFundo(BrowserWindow.fromWebContents(e.sender)))
+  // Fundos (Fase V4): imagens guardadas na pasta de fundos, vistas pelo hubsquare-fundo://.
+  ipcMain.handle('fundos:escolher', (e) =>
+    tentar(() => escolherImagem(BrowserWindow.fromWebContents(e.sender)))
   )
-  ipcMain.handle('aparencia:removerFundo', () => tentar(removerFundo))
+  ipcMain.handle('fundos:arrastada', (_e, caminho: unknown) =>
+    tentar(() => guardarImagemArrastada(caminho))
+  )
+  ipcMain.handle('fundos:listar', () => tentar(async () => listarImagens(await usosDosFundos())))
+  ipcMain.handle('fundos:apagar', (_e, nome: unknown) => tentar(() => apagarImagemFundo(nome)))
+  ipcMain.handle('fundos:avisos', () => pegarAvisosDeFundo())
 
   // PlaySquare: instalações e Jogar pelo launcher oficial (Fase P1).
   ipcMain.handle('instalacoes:listar', () => tentar(listarInstalacoes))
@@ -989,19 +1004,12 @@ app.whenReady().then(async () => {
   ipcMain.handle('jogo:ligarEJogar', (_e, id: unknown, opcoes: unknown) =>
     tentar(() => ligarServidorEJogar(id, opcoes, progresso))
   )
-  ipcMain.handle('jogo:fundo', (_e, id: unknown) => tentar(() => fundoDaInstalacao(id)))
-  ipcMain.handle('jogo:escolherFundo', (e, id: unknown) =>
-    tentar(() => escolherFundoInstalacao(id, BrowserWindow.fromWebContents(e.sender)))
+  ipcMain.handle('jogo:fundo', (_e, id: unknown, escolha: unknown) =>
+    tentar(() => definirFundoInstalacao(id, escolha))
   )
-  ipcMain.handle('jogo:removerFundo', (_e, id: unknown) => tentar(() => removerFundoInstalacao(id)))
-  ipcMain.handle('jogo:bannerBioma', (_e, id: unknown, bioma: unknown) =>
-    tentar(() => definirBannerBioma(id, bioma))
+  ipcMain.handle('jogo:fundoEmTodas', (_e, escolha: unknown) =>
+    tentar(() => usarFundoEmTodas(escolha))
   )
-  ipcMain.handle('jogo:fundoPadrao', () => tentar(lerFundoPadrao))
-  ipcMain.handle('jogo:escolherFundoPadrao', (e) =>
-    tentar(() => escolherFundoPadrao(BrowserWindow.fromWebContents(e.sender)))
-  )
-  ipcMain.handle('jogo:removerFundoPadrao', () => tentar(removerFundoPadrao))
   ipcMain.handle('servidores:mensagem', (_e, id: unknown) => tentar(() => lerMensagem(id)))
   ipcMain.handle('servidores:salvarMensagem', (_e, id: unknown, texto: unknown) =>
     tentar(() => salvarMensagem(id, texto))

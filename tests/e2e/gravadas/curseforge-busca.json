@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "id": 238222,
+      "name": "Just Enough Items (JEI)",
+      "slug": "jei",
+      "summary": "View Items and Recipes",
+      "downloadCount": 412345678,
+      "thumbsUpCount": 1234,
+      "links": { "websiteUrl": "https://www.curseforge.com/minecraft/mc-mods/jei", "wikiUrl": null, "issuesUrl": null, "sourceUrl": null },
+      "logo": null,
+      "screenshots": [],
+      "authors": [{ "name": "mezz" }],
+      "categories": [{ "id": 421, "slug": "api-and-library", "name": "API and Library" }],
+      "allowModDistribution": true,
+      "dateModified": "2026-10-01T00:00:00Z"
+    }
+  ],
+  "pagination": { "index": 0, "pageSize": 1, "resultCount": 1, "totalCount": 25000 }
+}

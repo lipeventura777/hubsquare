@@ -9,10 +9,15 @@ function cabecalhos(): Record<string, string> {
   return { 'Content-Type': 'application/json' }
 }
 
-function get<T>(caminho: string, parametros: Record<string, string> = {}): Promise<T> {
+function get<T>(
+  caminho: string,
+  parametros: Record<string, string> = {},
+  signal?: AbortSignal
+): Promise<T> {
   const consulta = new URLSearchParams(parametros).toString()
   return buscarJson<T>(`${API}${caminho}${consulta ? `?${consulta}` : ''}`, {
-    headers: cabecalhos()
+    headers: cabecalhos(),
+    signal
   })
 }
 
@@ -86,15 +91,20 @@ export function buscar(
   facets: string[][],
   offset: number,
   limite: number,
-  ordem?: string
+  ordem?: string,
+  signal?: AbortSignal
 ): Promise<ResultadoBuscaApi> {
-  return get('/search', {
-    query: termo,
-    facets: JSON.stringify(facets),
-    index: ordem ?? (termo ? 'relevance' : 'downloads'),
-    offset: String(offset),
-    limit: String(limite)
-  })
+  return get(
+    '/search',
+    {
+      query: termo,
+      facets: JSON.stringify(facets),
+      index: ordem ?? (termo ? 'relevance' : 'downloads'),
+      offset: String(offset),
+      limit: String(limite)
+    },
+    signal
+  )
 }
 
 // Sem `jogo` (ou sem `loaders`), não filtra por versão do Minecraft (ou por loader).

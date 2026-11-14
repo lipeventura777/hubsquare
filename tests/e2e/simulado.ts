@@ -114,7 +114,7 @@ export function arquivosFalsos(): Arquivos {
   return arquivos
 }
 
-type Resposta = { status?: number; json?: unknown; bytes?: Buffer }
+export type Resposta = { status?: number; json?: unknown; bytes?: Buffer }
 
 function rotas(): Record<string, Resposta> {
   const a = arquivosFalsos()
@@ -169,6 +169,15 @@ function rotas(): Record<string, Resposta> {
     // Modrinth sem nada encontrado (arquivos do teste não são do Modrinth).
     'api.modrinth.com/v2/version_files': { json: {} },
     'api.modrinth.com/v2/search': { json: { hits: [], offset: 0, limit: 20, total_hits: 0 } },
+    'api.modrinth.com/v2/tag/category': { json: [] },
+    'api.modrinth.com/v2/tag/game_version': { json: [] },
+    // Plugins de desempenho (Chunky, spark, BlueMap, Dynmap) sem versão para o teste.
+    'api.modrinth.com/v2/project/fALzjamp/version': { json: [] },
+    'api.modrinth.com/v2/project/l6YH9Als/version': { json: [] },
+    'api.modrinth.com/v2/project/swbUV1cr/version': { json: [] },
+    'api.modrinth.com/v2/project/fRQREgAc/version': { json: [] },
+    // IP público (Conexão): um endereço de documentação, nunca o de verdade.
+    'api.ipify.org/': { bytes: Buffer.from('203.0.113.7') },
     // O repositório do app sem release: o aviso de versão nova não aparece.
     'api.github.com/repos/lipeventura777/hubsquare/releases/latest': { status: 404, json: {} }
   }
@@ -178,6 +187,12 @@ export interface Simulado {
   url: string
   pedidos: string[]
   desconhecidos: string[]
+  // Fase V9: o teste responde do seu jeito os caminhos que começam com o prefixo (vale antes
+  // da tabela), pela consulta do pedido e com um atraso opcional em ms.
+  responder: (
+    prefixo: string,
+    gerar: (consulta: URLSearchParams, caminho: string) => Resposta & { atraso?: number }
+  ) => void
   fechar: () => Promise<void>
 }
 
@@ -186,6 +201,10 @@ const GUARDAR = /\.(jar|zip)$/i
 
 export async function iniciarSimulado(modo: 'falso' | 'proxy' = 'falso'): Promise<Simulado> {
   const tabela = modo === 'falso' ? rotas() : {}
+  const proprias = new Map<
+    string,
+    (consulta: URLSearchParams, caminho: string) => Resposta & { atraso?: number }
+  >()
   const pedidos: string[] = []
   const desconhecidos: string[] = []
   const cache = join(RAIZ, 'cache')
@@ -212,7 +231,10 @@ export async function iniciarSimulado(modo: 'falso' | 'proxy' = 'falso'): Promis
         return res.end(String(e))
       }
     }
-    const r = tabela[semConsulta]
+    const proprio = [...proprias].find(([p]) => semConsulta.startsWith(p))
+    const gerado = proprio?.[1](new URLSearchParams(alvo.split('?')[1] ?? ''), semConsulta)
+    if (gerado?.atraso) await new Promise((ok) => setTimeout(ok, gerado.atraso))
+    const r = gerado ?? tabela[semConsulta]
     if (!r) {
       desconhecidos.push(alvo)
       res.statusCode = 404
@@ -232,6 +254,7 @@ export async function iniciarSimulado(modo: 'falso' | 'proxy' = 'falso'): Promis
     url: `http://127.0.0.1:${port}`,
     pedidos,
     desconhecidos,
+    responder: (prefixo, gerar) => void proprias.set(prefixo, gerar),
     fechar: () => new Promise((ok) => servidor.close(() => ok()))
   }
 }

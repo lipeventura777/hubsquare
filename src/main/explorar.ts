@@ -43,6 +43,7 @@ import {
 } from './explorarFontes'
 import { FONTES, NOMES_FONTES, downloadPermitido, type Fonte } from '../shared/fontes'
 import { removerArquivo } from './removidos'
+import { pedidosDaPagina, tamanhoValido } from '../shared/paginaRegras'
 
 // Aba Explorar da tela Mods (Fase 23): todos os tipos de conteúdo do Modrinth.
 // Mods e plugins do servidor seguem pelo mods.ts (Fase 16). Este arquivo cuida do resto:
@@ -153,7 +154,8 @@ function lerFiltros(f: unknown): FiltrosExplorar {
     codigoAberto: x.codigoAberto === true,
     esconderInstalados: x.esconderInstalados === true,
     ordem: ORDENS.includes(x.ordem as string) ? (x.ordem as FiltrosExplorar['ordem']) : 'relevance',
-    offset: Number.isInteger(x.offset) && (x.offset as number) >= 0 ? (x.offset as number) : 0
+    pagina: Number.isInteger(x.pagina) && (x.pagina as number) >= 1 ? (x.pagina as number) : 1,
+    tamanho: tamanhoValido(x.tamanho)
   }
 }
 
@@ -228,32 +230,48 @@ async function instalados(
   return ids
 }
 
+let buscaAtual: AbortController | null = null
+
 export async function buscarExplorar(
   info: InfoServidor,
   filtros: unknown
 ): Promise<ResultadoExplorar> {
   const f = lerFiltros(filtros)
+  // Fase V9: uma busca nova cancela os pedidos da anterior que ainda não chegaram.
+  buscaAtual?.abort()
+  const controle = new AbortController()
+  buscaAtual = controle
   const ids = await instalados(info, f.tipo, f.fonte)
-  if (f.fonte === 'curseforge') return buscarCF(f, ids, info)
-  if (f.fonte === 'hangar') return buscarHangar(f, ids)
+  // Só a página aberta: um pedido, ou mais se o tamanho passa do máximo da API.
+  const pedidos = pedidosDaPagina(f.fonte, f.pagina, f.tamanho)
+  if (f.fonte === 'curseforge') return buscarCF(f, ids, info, pedidos, controle.signal)
+  if (f.fonte === 'hangar') return buscarHangar(f, ids, pedidos, controle.signal)
   const facets = facetsExplorar(f, loadersDoServidor(f.tipo, info), [...ids])
-  const r = await modrinth.buscar(f.termo, facets, f.offset, 24, f.ordem)
+  const partes = await Promise.all(
+    pedidos.map((p) =>
+      modrinth.buscar(f.termo, facets, p.offset, p.limit, f.ordem, controle.signal)
+    )
+  )
   return {
-    total: r.total_hits,
-    itens: r.hits.map((h) => ({
-      fonte: 'modrinth' as const,
-      id: h.project_id,
-      titulo: h.title,
-      autor: h.author,
-      descricao: h.description,
-      downloads: h.downloads,
-      seguidores: h.follows ?? 0,
-      icone: h.icon_url || null,
-      // Loaders aparecem no filtro; aqui ficam só as categorias.
-      categorias: (h.display_categories ?? h.categories ?? []).filter((c) => !LOADERS_TODOS.has(c)),
-      ambiente: ambienteDe(h.environment, h.server_side, h.client_side),
-      instalado: ids.has(h.project_id)
-    }))
+    total: partes[0]?.total_hits ?? 0,
+    itens: partes
+      .flatMap((r) => r.hits)
+      .map((h) => ({
+        fonte: 'modrinth' as const,
+        id: h.project_id,
+        titulo: h.title,
+        autor: h.author,
+        descricao: h.description,
+        downloads: h.downloads,
+        seguidores: h.follows ?? 0,
+        icone: h.icon_url || null,
+        // Loaders aparecem no filtro; aqui ficam só as categorias.
+        categorias: (h.display_categories ?? h.categories ?? []).filter(
+          (c) => !LOADERS_TODOS.has(c)
+        ),
+        ambiente: ambienteDe(h.environment, h.server_side, h.client_side),
+        instalado: ids.has(h.project_id)
+      }))
   }
 }
 

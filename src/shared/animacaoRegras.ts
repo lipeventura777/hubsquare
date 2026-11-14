@@ -17,11 +17,12 @@ export interface Situacao {
   agora: number
 }
 
-// Sem preferência salva: completa, ou leve se o Windows pede menos movimento.
+// Sem preferência salva: completa, ou parado (a arte da V5) se o Windows ou o app pede menos
+// movimento (Fase V6).
 export const modoInicial = (
   salvo: ModoAnimacao | undefined,
   reduzMovimento: boolean
-): ModoAnimacao => salvo ?? (reduzMovimento ? 'leve' : 'completa')
+): ModoAnimacao => salvo ?? (reduzMovimento ? 'desligada' : 'completa')
 
 export function deveAnimar(modo: ModoAnimacao, s: Situacao): boolean {
   if (modo === 'desligada' || !s.visivel || s.jogoAberto || s.modpackInstalando) return false

@@ -32,7 +32,8 @@
   --raio-painel: 22px;
   --raio-item: 16px;
   --raio-pequeno: 12px;
-  --brilho-topo: none; /* degradê claro por cima do vidro (Mar) */
+  --brilho-topo: none; /* degradê claro por cima do vidro (Mar, Geodo de Ametista) */
+  --vidro-brilho-interno: transparent; /* luz por dentro do vidro (Deep Dark) */
   --brilho-titulo: 2px 2px 0 var(--sombra-texto);
 
   /* Cor de destaque. A tela troca --accent pela cor do bioma ou pela escolhida (useAparencia). */
@@ -234,6 +235,204 @@
   --perigo-legivel: #fecaca;
   --atencao-legivel: #fde68a;
   --online-legivel: #bbf7d0;
+}
+
+/* ---------- Os sete biomas da Fase V5 ----------
+   --accent-padrao-texto: o texto do botão na cor do bioma. Quem muda a saturação ou o brilho do
+   vidro troca o --vidro-desfoque inteiro (o Vidro leve, no fim do arquivo, continua vencendo). */
+
+[data-bioma='cerejeira'] {
+  color-scheme: light;
+  --fundo-base: #ffe3ef;
+  --vidro-rgb: 255 246 250;
+  --vidro-2-rgb: 251 233 242;
+  --vidro-alfa: 0.74;
+  --vidro-blur: 22px;
+  --vidro-borda: rgb(255 255 255 / 0.85);
+  --vidro-brilho: rgb(255 255 255 / 0.9);
+  --vidro-sombra: rgb(170 60 120 / 0.22);
+  --console-rgb: 42 12 30;
+  --text: #3a0f2a;
+  --text-muted: #6b2d52;
+  --accent-padrao: #db2777;
+  --accent-padrao-texto: #ffffff;
+  --border: rgb(58 15 42 / 0.14);
+  --border-light: rgb(255 255 255 / 0.8);
+  --border-checkbox: #8a5a76;
+  --overlay: rgb(58 15 42 / 0.35);
+  --sombra-texto: rgb(255 255 255 / 0.6);
+  --accent-legivel: #a3144f;
+  --perigo-legivel: #b91c1c;
+  --atencao-legivel: #92400e;
+  --online-legivel: #166534;
+}
+
+[data-bioma='caverna'] {
+  color-scheme: dark;
+  --fundo-base: #112419;
+  --vidro-rgb: 10 24 15;
+  --vidro-2-rgb: 24 44 30;
+  --vidro-alfa: 0.56;
+  --vidro-blur: 20px;
+  --vidro-desfoque: blur(var(--vidro-blur)) saturate(140%);
+  --vidro-borda: rgb(255 184 74 / 0.32);
+  --vidro-brilho: rgb(255 210 122 / 0.22);
+  --vidro-sombra: rgb(0 0 0 / 0.45);
+  --console-rgb: 6 14 9;
+  --text: #f7fee7;
+  --text-muted: #d9e6c8;
+  --accent-padrao: #ffb84a;
+  --accent-padrao-texto: #2a1703;
+  --border: rgb(255 184 74 / 0.14);
+  --border-light: rgb(255 184 74 / 0.3);
+  --border-checkbox: #a8b89a;
+  --overlay: rgb(3 8 5 / 0.55);
+  --brilho-titulo: 0 0 12px rgb(255 184 74 / 0.75), 2px 2px 0 var(--sombra-texto);
+  --accent-legivel: #ffb84a;
+  --perigo-legivel: #fca5a5;
+  --atencao-legivel: #fcd34d;
+  --online-legivel: #86efac;
+}
+
+[data-bioma='deepDark'] {
+  color-scheme: dark;
+  --fundo-base: #051419;
+  --vidro-rgb: 3 14 18;
+  --vidro-2-rgb: 10 32 38;
+  --vidro-alfa: 0.66;
+  --vidro-blur: 16px;
+  --vidro-desfoque: blur(var(--vidro-blur)) saturate(120%);
+  --vidro-borda: rgb(41 223 235 / 0.42);
+  --vidro-brilho: rgb(125 249 255 / 0.25);
+  --vidro-brilho-interno: rgb(41 223 235 / 0.1);
+  --vidro-sombra: rgb(0 0 0 / 0.5);
+  --console-rgb: 2 9 12;
+  --text: #ecfeff;
+  --text-muted: #bfd9dd;
+  --accent-padrao: #29dfeb;
+  --accent-padrao-texto: #02161a;
+  --border: rgb(41 223 235 / 0.14);
+  --border-light: rgb(41 223 235 / 0.3);
+  --border-checkbox: #8fb3b8;
+  --overlay: rgb(1 4 5 / 0.6);
+  --brilho-titulo: 0 0 12px rgb(41 223 235 / 0.75), 2px 2px 0 var(--sombra-texto);
+  --accent-legivel: #29dfeb;
+  --perigo-legivel: #fca5a5;
+  --atencao-legivel: #fcd34d;
+  --online-legivel: #86efac;
+}
+
+[data-bioma='deserto'] {
+  color-scheme: dark;
+  --fundo-base: #9a3412;
+  --vidro-rgb: 38 16 8;
+  --vidro-2-rgb: 62 30 16;
+  --vidro-alfa: 0.62;
+  --vidro-blur: 22px;
+  --vidro-borda: rgb(253 186 116 / 0.38);
+  --vidro-brilho: rgb(253 186 116 / 0.25);
+  --vidro-sombra: rgb(0 0 0 / 0.45);
+  --console-rgb: 22 9 4;
+  --text: #fff7ed;
+  --text-muted: #fde6cf;
+  --accent-padrao: #fbbf24;
+  --accent-padrao-texto: #2a1203;
+  --border: rgb(253 186 116 / 0.14);
+  --border-light: rgb(253 186 116 / 0.3);
+  --border-checkbox: #c9a58a;
+  --overlay: rgb(14 5 2 / 0.55);
+  --brilho-titulo: 0 0 12px rgb(251 146 60 / 0.75), 2px 2px 0 var(--sombra-texto);
+  --accent-legivel: #fbbf24;
+  --perigo-legivel: #fecaca;
+  --atencao-legivel: #fde68a;
+  --online-legivel: #bbf7d0;
+}
+
+[data-bioma='aurora'] {
+  color-scheme: dark;
+  --fundo-base: #0c2444;
+  --vidro-rgb: 8 24 48;
+  --vidro-2-rgb: 20 44 76;
+  --vidro-alfa: 0.5;
+  --vidro-blur: 12px;
+  --vidro-desfoque: blur(var(--vidro-blur)) saturate(170%) brightness(1.05);
+  --vidro-borda: rgb(224 242 254 / 0.5);
+  --vidro-brilho: rgb(240 249 255 / 0.85); /* vidro de gelo: reflexo forte na borda de cima */
+  --vidro-sombra: rgb(2 8 20 / 0.45);
+  --console-rgb: 5 14 30;
+  --text: #f8fafc;
+  --text-muted: #d5e3f2;
+  --accent-padrao: #34d399;
+  --accent-padrao-texto: #03241a;
+  --border: rgb(224 242 254 / 0.16);
+  --border-light: rgb(224 242 254 / 0.32);
+  --border-checkbox: #9fb4cc;
+  --overlay: rgb(2 8 20 / 0.55);
+  --brilho-titulo: 0 0 12px rgb(34 211 238 / 0.75), 2px 2px 0 var(--sombra-texto);
+  --accent-legivel: #34d399;
+  --perigo-legivel: #fecaca;
+  --atencao-legivel: #fde68a;
+  --online-legivel: #bbf7d0;
+}
+
+[data-bioma='ametista'] {
+  color-scheme: dark;
+  --fundo-base: #24124a;
+  --vidro-rgb: 30 14 62;
+  --vidro-2-rgb: 50 28 94;
+  --vidro-alfa: 0.6;
+  --vidro-blur: 20px;
+  --vidro-borda: rgb(221 214 254 / 0.42);
+  --vidro-brilho: rgb(221 214 254 / 0.3);
+  --vidro-sombra: rgb(0 0 0 / 0.45);
+  --console-rgb: 14 7 30;
+  --text: #faf5ff;
+  --text-muted: #e0d4f5;
+  --accent-padrao: #c4b5fd;
+  --accent-padrao-texto: #1e0e3e;
+  --border: rgb(221 214 254 / 0.14);
+  --border-light: rgb(221 214 254 / 0.3);
+  --border-checkbox: #a99cc8;
+  --overlay: rgb(8 4 18 / 0.55);
+  /* Efeito lapidado: lilás nos dois cantos, o vidro escuro no meio. */
+  --brilho-topo: linear-gradient(
+    135deg,
+    rgb(196 181 253 / 0.2),
+    transparent 50%,
+    rgb(196 181 253 / 0.14)
+  );
+  --brilho-titulo: 0 0 12px rgb(196 181 253 / 0.75), 2px 2px 0 var(--sombra-texto);
+  --accent-legivel: #c4b5fd;
+  --perigo-legivel: #fecaca;
+  --atencao-legivel: #fde68a;
+  --online-legivel: #bbf7d0;
+}
+
+[data-bioma='pantano'] {
+  color-scheme: dark;
+  --fundo-base: #2c3f2a;
+  --vidro-rgb: 16 28 18;
+  --vidro-2-rgb: 32 50 34;
+  --vidro-alfa: 0.58;
+  --vidro-blur: 24px;
+  --vidro-desfoque: blur(var(--vidro-blur)) saturate(130%);
+  --vidro-borda: rgb(234 255 122 / 0.26);
+  --vidro-brilho: rgb(234 255 122 / 0.2);
+  --vidro-sombra: rgb(0 0 0 / 0.45);
+  --console-rgb: 8 15 10;
+  --text: #f7fee7;
+  --text-muted: #dbe6c4;
+  --accent-padrao: #bef264;
+  --accent-padrao-texto: #16210a;
+  --border: rgb(234 255 122 / 0.12);
+  --border-light: rgb(234 255 122 / 0.26);
+  --border-checkbox: #a3b594;
+  --overlay: rgb(5 9 6 / 0.55);
+  --brilho-titulo: 0 0 12px rgb(190 242 100 / 0.75), 2px 2px 0 var(--sombra-texto);
+  --accent-legivel: #bef264;
+  --perigo-legivel: #fca5a5;
+  --atencao-legivel: #fcd34d;
+  --online-legivel: #86efac;
 }
 
 /* Vidro leve (Aparência): sem desfoque, só o fundo translúcido, para PCs fracos. */

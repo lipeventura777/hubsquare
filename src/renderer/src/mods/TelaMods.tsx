@@ -144,6 +144,11 @@ export function IconeProjeto({
       <img
         src={url}
         alt=""
+        // Fase V9: só baixa quando aparece, decodifica fora da tela e reserva o espaço.
+        loading="lazy"
+        decoding="async"
+        width={tam}
+        height={tam}
         style={estilo}
         className="shrink-0 bg-panel-2 object-cover"
         onError={() => setFalhou(true)}

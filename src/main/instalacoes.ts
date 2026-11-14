@@ -5,7 +5,6 @@ import { copyFile, cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } f
 import { tmpdir } from 'os'
 import { basename, dirname, extname, join, relative } from 'path'
 import {
-  BIOMAS,
   LOADERS_CLIENTE,
   type Bioma,
   type EdicaoInstalacao,
@@ -95,6 +94,14 @@ import { nomeDeExibicao } from './nomeRegras'
 import { totalmem } from 'os'
 import { proibidosDoServidor } from './convites'
 import { ativarPacks } from './compatRegras'
+import {
+  AJUSTE_PADRAO,
+  fundoInstalacaoAntigo,
+  validarEscolha,
+  type EscolhaFundo
+} from '../shared/fundoRegras'
+import { apagarArquivoDeImagem, avisarFundo, guardarImagem } from './fundos'
+import { lerAparencia, salvarAparencia } from './aparencia'
 import { lerIndice as lerIndiceServidores, lerInfo } from './servidores'
 import { tiposDeServidor } from './tipos'
 
@@ -103,11 +110,13 @@ import { tiposDeServidor } from './tipos'
 // Mundos, prints e configurações da pasta nunca são apagados por uma atualização: o app só troca
 // os arquivos que ele mesmo pôs (anotados em hubsquare-instalacao.json, dentro da pasta).
 
-type Salva = Omit<Instalacao, 'imagem' | 'convite' | 'temFundo' | 'instalada' | 'atualizar'> & {
+type Salva = Omit<Instalacao, 'imagem' | 'convite' | 'fundo' | 'instalada' | 'atualizar'> & {
+  fundo?: EscolhaFundo | null // Fase V4: null = igual ao app; sem o campo = ainda não migrada
+  bannerBioma?: Bioma | null // antes da V4 (fica no arquivo para versões antigas)
   arquivoImagem: string | null
   recusados?: string[] // recomendados do convite que o jogador não quer
   perguntouOpcoes?: boolean // já perguntou se copia o options.txt da .minecraft (Fase P3)
-  arquivoFundo?: string | null // fundo do banner da tela Jogar (Fase P4)
+  arquivoFundo?: string | null // antes da V4: imagem do banner na pasta da instalação
   instaladaEm?: string // ISO: a pasta foi montada pelo INSTALAR (Correção P1)
   assinaturaInstalada?: string // o que estava no servidor/instalação quando montou
 }
@@ -133,7 +142,6 @@ async function memoriaInicial(sugestao: number): Promise<number> {
 }
 const REGISTRO = 'hubsquare-instalacao.json' // o que o app pôs na pasta: caminho → SHA-1
 const IMAGEM = 'hubsquare-imagem'
-const FUNDO = 'hubsquare-fundo'
 const TIPOS_IMAGEM: Record<string, string> = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
@@ -290,7 +298,7 @@ export async function listarInstalacoes(): Promise<Instalacao[]> {
       ...i,
       imagem: await imagemDe({ ...i, arquivoImagem: _a }),
       convite: await estadoDoConvite({ ...i, arquivoImagem: _a }),
-      temFundo: !!i.arquivoFundo && existsSync(join(i.pasta, i.arquivoFundo)),
+      fundo: i.fundo ?? null,
       ...(await situacaoDaInstalacao({ ...i, arquivoImagem: _a }))
     }))
   )
@@ -392,20 +400,22 @@ export async function instalarPackNoJogo(
           ).catch(() => (arquivoImagem = null))
         }
       }
-      let arquivoFundo: string | null = null
+      let fundo: EscolhaFundo | null = null
       const capa =
         projeto?.gallery?.find((g: { featured?: boolean }) => g.featured) ?? projeto?.gallery?.[0]
       if (capa?.url && /^https:\/\/cdn\.modrinth\.com\//.test(capa.url)) {
         const ext = extname(new URL(capa.url).pathname).toLowerCase()
         if (TIPOS_IMAGEM[ext]) {
-          arquivoFundo = `${FUNDO}${ext}`
-          await baixar(
-            capa.url,
-            join(provisoria, arquivoFundo),
-            undefined,
-            'Baixando a capa',
-            () => {}
-          ).catch(() => (arquivoFundo = null))
+          const baixada = join(provisoria, `hubsquare-capa${ext}`)
+          await baixar(capa.url, baixada, undefined, 'Baixando a capa', () => {})
+            .then(async () => {
+              fundo = {
+                tipo: 'imagem',
+                imagem: await guardarImagem(baixada),
+                ajuste: AJUSTE_PADRAO
+              }
+            })
+            .catch(() => (fundo = null))
         }
       }
       const mods = doJogador.filter((f) => f.path.startsWith('mods/')).length
@@ -432,7 +442,7 @@ export async function instalarPackNoJogo(
         criada: new Date().toISOString(),
         ultimoUso: null,
         arquivoImagem,
-        arquivoFundo
+        fundo
       })
       pasta = null // deu certo: a pasta fica
       return id
@@ -1404,90 +1414,108 @@ async function descobrirServidor(i: Salva): Promise<string | null> {
 
 // ---------- Tela Jogar (Fase P4) ----------
 
-async function imagemComoDataUrl(arquivo: string): Promise<string | null> {
-  const tipo = TIPOS_IMAGEM[extname(arquivo).toLowerCase()]
-  const dados = tipo ? await readFile(arquivo).catch(() => null) : null
-  return dados ? `data:${tipo};base64,${dados.toString('base64')}` : null
-}
+// ---------- Fundo da instalação (Fase V4) ----------
+// Escolha guardada no índice: null = igual ao app; bioma; ou uma imagem da pasta de fundos.
 
-// Fundo do banner: o da instalação ou, sem ele, null (a tela usa o padrão).
-export async function fundoDaInstalacao(id: unknown): Promise<string | null> {
+export async function definirFundoInstalacao(id: unknown, escolha: unknown): Promise<void> {
   const i = await exigir(id)
-  return i.arquivoFundo ? imagemComoDataUrl(join(i.pasta, i.arquivoFundo)) : null
-}
-
-async function escolherImagemDoPC(
-  janela: BrowserWindow | null,
-  titulo: string
-): Promise<string | null> {
-  const opcoes = {
-    title: titulo,
-    properties: ['openFile' as const],
-    filters: [{ name: 'Imagens', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+  let fundo: EscolhaFundo | null
+  try {
+    fundo = validarEscolha(escolha)
+  } catch (e) {
+    throw new ErroApp((e as Error).message)
   }
-  const escolha = janela
-    ? await dialog.showOpenDialog(janela, opcoes)
-    : await dialog.showOpenDialog(opcoes)
-  const origem = escolha.filePaths[0]
-  if (escolha.canceled || !origem) return null
-  if (!TIPOS_IMAGEM[extname(origem).toLowerCase()])
-    throw new ErroApp('Escolha uma imagem PNG, JPG ou WEBP.')
-  if ((await stat(origem)).size > 15 * 1024 * 1024) {
-    throw new ErroApp('Essa imagem é muito grande. Escolha uma de até 15 MB.')
+  await mudar(i.id, { fundo })
+}
+
+// "Usar este fundo em todas as instalações".
+export async function usarFundoEmTodas(escolha: unknown): Promise<void> {
+  let fundo: EscolhaFundo | null
+  try {
+    fundo = validarEscolha(escolha)
+  } catch (e) {
+    throw new ErroApp((e as Error).message)
   }
-  return origem
+  const indice = await lerIndice()
+  await gravar({ ...indice, instalacoes: indice.instalacoes.map((i) => ({ ...i, fundo })) })
 }
 
-export async function escolherFundoInstalacao(
-  id: unknown,
-  janela: BrowserWindow | null
-): Promise<boolean> {
-  const i = await exigir(id)
-  const origem = await escolherImagemDoPC(janela, 'Escolha o fundo da instalação')
-  if (!origem) return false
-  const nome = `${FUNDO}${extname(origem).toLowerCase()}`
-  await mkdir(i.pasta, { recursive: true })
-  await copyFile(origem, join(i.pasta, nome))
-  if (i.arquivoFundo && i.arquivoFundo !== nome)
-    await rm(join(i.pasta, i.arquivoFundo), { force: true })
-  await mudar(i.id, { arquivoFundo: nome })
-  return true
+// Onde cada imagem guardada está em uso (o app e as instalações).
+export async function usosDosFundos(): Promise<Map<string, string[]>> {
+  const usos = new Map<string, string[]>()
+  const anotar = (nome: string, onde: string): void =>
+    void usos.set(nome, [...(usos.get(nome) ?? []), onde])
+  const app = (await lerAparencia()).fundoApp
+  if (app?.tipo === 'imagem') anotar(app.imagem, 'Fundo do app')
+  for (const i of (await lerIndice()).instalacoes)
+    if (i.fundo?.tipo === 'imagem') anotar(i.fundo.imagem, i.nome)
+  return usos
 }
 
-export async function removerFundoInstalacao(id: unknown): Promise<void> {
-  const i = await exigir(id)
-  if (i.arquivoFundo) await rm(join(i.pasta, i.arquivoFundo), { force: true })
-  await mudar(i.id, { arquivoFundo: null })
-}
-
-// Banner com um bioma (Fase V1); null volta à imagem ou capa da instalação (ou ao padrão).
-export async function definirBannerBioma(id: unknown, bioma: unknown): Promise<void> {
-  const i = await exigir(id)
-  if (bioma !== null && !BIOMAS.includes(bioma as Bioma)) {
-    throw new ErroApp('Escolha um bioma da lista.')
+// Apaga a imagem; quem usava volta para "Igual ao app" (o app volta para o bioma).
+export async function apagarImagemFundo(valor: unknown): Promise<void> {
+  const nome = await apagarArquivoDeImagem(valor)
+  const indice = await lerIndice()
+  if (indice.instalacoes.some((i) => i.fundo?.tipo === 'imagem' && i.fundo.imagem === nome)) {
+    await gravar({
+      ...indice,
+      instalacoes: indice.instalacoes.map((i) =>
+        i.fundo?.tipo === 'imagem' && i.fundo.imagem === nome ? { ...i, fundo: null } : i
+      )
+    })
   }
-  await mudar(i.id, { bannerBioma: bioma as Bioma | null })
+  const aparencia = await lerAparencia()
+  if (aparencia.fundoApp?.tipo === 'imagem' && aparencia.fundoApp.imagem === nome) {
+    await salvarAparencia({ ...aparencia, fundoApp: { tipo: 'bioma', bioma: aparencia.bioma } })
+  }
 }
 
-// Fundo padrão de todas as instalações (sem ele, a arte geométrica do próprio app).
-const pastaFundoPadrao = (): string => join(app.getPath('userData'), 'fundo-jogo')
+// Migração (Fase V4), uma vez por instalação: bioma próprio, imagem própria (copiada para a pasta
+// de fundos) ou o fundo padrão antigo de todas. Nada é apagado. Imagem que sumiu: igual ao app,
+// com um aviso.
+const pastaFundoPadraoAntiga = (): string => join(app.getPath('userData'), 'fundo-jogo')
 
-export async function lerFundoPadrao(): Promise<string | null> {
-  const nomes = await readdir(pastaFundoPadrao()).catch(() => [] as string[])
-  return nomes[0] ? imagemComoDataUrl(join(pastaFundoPadrao(), nomes[0])) : null
-}
-
-export async function escolherFundoPadrao(janela: BrowserWindow | null): Promise<boolean> {
-  const origem = await escolherImagemDoPC(janela, 'Escolha o fundo padrão da tela Jogar')
-  if (!origem) return false
-  await rm(pastaFundoPadrao(), { recursive: true, force: true })
-  await mkdir(pastaFundoPadrao(), { recursive: true })
-  await copyFile(origem, join(pastaFundoPadrao(), `fundo${extname(origem).toLowerCase()}`))
-  return true
-}
-
-export async function removerFundoPadrao(): Promise<void> {
-  await rm(pastaFundoPadrao(), { recursive: true, force: true })
+export async function migrarFundosDasInstalacoes(): Promise<void> {
+  const indice = await lerIndice()
+  if (indice.instalacoes.every((i) => i.fundo !== undefined)) return
+  const padrao = (await readdir(pastaFundoPadraoAntiga()).catch(() => [] as string[]))[0]
+  const caminhoPadrao = padrao ? join(pastaFundoPadraoAntiga(), padrao) : null
+  let imagemPadrao: string | null | undefined
+  const sumiram: string[] = []
+  const instalacoes: Salva[] = []
+  for (const i of indice.instalacoes) {
+    if (i.fundo !== undefined) {
+      instalacoes.push(i)
+      continue
+    }
+    const propria = i.arquivoFundo ? join(i.pasta, i.arquivoFundo) : null
+    const caso = fundoInstalacaoAntigo({
+      bannerBioma: i.bannerBioma,
+      imagemPropria: propria ? (existsSync(propria) ? 'existe' : 'sumiu') : null,
+      padraoAntigo: !!caminhoPadrao
+    })
+    let fundo: EscolhaFundo | null = null
+    if (caso === 'bioma') fundo = { tipo: 'bioma', bioma: i.bannerBioma! }
+    if (caso === 'imagem' || caso === 'padrao') {
+      try {
+        const nome =
+          caso === 'imagem'
+            ? await guardarImagem(propria!)
+            : (imagemPadrao ??= await guardarImagem(caminhoPadrao!))
+        fundo = { tipo: 'imagem', imagem: nome, ajuste: AJUSTE_PADRAO }
+      } catch {
+        sumiram.push(i.nome)
+      }
+    }
+    if (caso === 'sumiu') sumiram.push(i.nome)
+    instalacoes.push({ ...i, fundo })
+  }
+  await gravar({ ...indice, instalacoes })
+  if (sumiram.length) {
+    avisarFundo(
+      `A imagem de fundo de ${sumiram.join(', ')} não existe mais (ou não abre). Ficou igual ao fundo do app.`
+    )
+  }
 }
 
 async function servidorDa(i: Salva): Promise<InfoServidor | null> {
@@ -1676,15 +1704,12 @@ export async function pastaDePrints(id: unknown): Promise<PastaDePrints> {
   return (await pastasDePrints(id))[0]
 }
 
-// "Usar como fundo": copia o print para a instalação (o original fica onde está).
+// "Usar como fundo": guarda o print na pasta de fundos (o original fica onde está).
 export async function usarCapturaComoFundo(id: unknown, nome: unknown): Promise<void> {
   const i = await exigir(id)
   const origem = caminhoDaCaptura(await pastaDePrints(i.id), nome)
-  const destino = `${FUNDO}.png`
-  await copyFile(origem, join(i.pasta, destino))
-  if (i.arquivoFundo && i.arquivoFundo !== destino)
-    await rm(join(i.pasta, i.arquivoFundo), { force: true })
-  await mudar(i.id, { arquivoFundo: destino })
+  const imagem = await guardarImagem(origem)
+  await mudar(i.id, { fundo: { tipo: 'imagem', imagem, ajuste: AJUSTE_PADRAO } })
 }
 
 // Atalho na área de trabalho: só quando o jogador pede. Abre o HubSquare no Jogar da instalação.

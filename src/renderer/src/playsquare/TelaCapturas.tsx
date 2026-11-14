@@ -79,7 +79,7 @@ export function TelaCapturas(): React.JSX.Element {
                 type="button"
                 onClick={() => setAberta(c)}
                 style={{ '--ordem': n } as React.CSSProperties}
-                className="group anim-item flex flex-col overflow-hidden border-2 border-linha bg-panel text-left transition-[transform,border-color] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:border-muted active:translate-y-px"
+                className="group anim-item isolate flex flex-col overflow-hidden border-2 border-linha bg-panel text-left transition-[transform,border-color] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:border-muted active:translate-y-px"
               >
                 <span className="aspect-video overflow-hidden">
                   <img

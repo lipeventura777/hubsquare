@@ -9,8 +9,17 @@ import type {
   StatusServidorJogo,
   TravamentoMods
 } from '../../../shared/tipos'
-import { BIOMAS, NOMES_BIOMAS } from '../../../shared/tipos'
-import { FundoAnimado } from '../fundo/Fundo'
+import { ArteDoBioma, FundoAnimado } from '../fundo/Fundo'
+import { CamadaFundo } from '../fundo/CamadaFundo'
+import {
+  AjustesImagem,
+  CartaoFundo,
+  escolhaDeImagem,
+  GradeBiomas,
+  GradeImagens,
+  useImagensFundo
+} from '../fundo/EscolherFundo'
+import { fundoEfetivo, urlDoFundo, type EscolhaFundo } from '../../../shared/fundoRegras'
 import { BotaoDiagnostico } from '../componentes/Diagnostico'
 import { useAparencia } from '../aparencia/useAparencia'
 import { classesBotao } from '../componentes/estilos'
@@ -18,7 +27,7 @@ import { IconeAtencao, IconeInstalacoes } from '../componentes/icones'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { BarraProgresso, BolinhaStatus, Esqueleto } from '../componentes/movimento'
 import { CabecaJogador } from '../componentes/paineis'
-import { Botao, CaixaSelecao, EstadoVazio, Menu, Selecao, Slider } from '../componentes/ui'
+import { Aviso, Botao, CaixaSelecao, EstadoVazio, Menu, Selecao, Slider } from '../componentes/ui'
 import { abrirDownloads, useDownloads } from '../mods/DownloadsNecessarios'
 import { desatualizada, useJogar, type ModoJogar } from './useJogar'
 import {
@@ -164,7 +173,7 @@ export function TelaJogar(): React.JSX.Element {
 
   return (
     <div className="min-h-0 flex-1 overflow-auto">
-      <Banner i={escolhida} />
+      <Banner i={escolhida} aoMudar={carregar} />
       <BarraJogar
         i={escolhida}
         lista={lista}
@@ -204,92 +213,115 @@ export function TelaJogar(): React.JSX.Element {
 
 // ---------- Banner ----------
 
-function Banner({ i }: { i: Instalacao }): React.JSX.Element {
-  // Camadas do fundo: a de cima é a atual. Uma nova entra por cima com crossfade e as de baixo
-  // saem depois (nunca aparece a arte padrão "piscando" entre duas imagens).
-  const [camadas, setCamadas] = useState<{ chave: number; url: string | null; entra: boolean }[]>(
-    []
-  )
-  const [versao, setVersao] = useState(0) // relê depois de trocar o fundo
-  const { aparencia } = useAparencia()
+function Banner({
+  i,
+  aoMudar
+}: {
+  i: Instalacao
+  aoMudar: () => Promise<void>
+}): React.JSX.Element {
+  const { aparencia, fundoApp } = useAparencia()
+  const imgs = useImagensFundo()
   const [erro, setErro] = useState<ErroTela | null>(null)
-  const [padrao, setPadrao] = useState<string | null>(null)
+  const [falhou, setFalhou] = useState<string | null>(null) // imagem que não abriu
+  const [soltando, setSoltando] = useState(false)
+  // Prévia ao vivo enquanto mexe nos ajustes (salva logo depois); some quando a instalação recarrega.
+  const [previa, setPrevia] = useState<{ id: string; escolha: EscolhaFundo | null } | null>(null)
+  const salvar = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   // O nome só anima quando a instalação muda (na primeira vez a tela já está entrando).
   const [anterior, setAnterior] = useState(i.id)
   const [trocou, setTrocou] = useState(false)
   if (anterior !== i.id) {
     setAnterior(i.id)
     setTrocou(true)
+    setPrevia(null)
   }
 
+  // Ordem (fundoRegras.ts): fundo da instalação > fundo do app > bioma padrão.
+  const daInstalacao = previa && previa.id === i.id ? previa.escolha : i.fundo
+  let efetivo = fundoEfetivo(daInstalacao, fundoApp, aparencia?.bioma ?? 'dia')
+  if (efetivo.tipo === 'imagem' && efetivo.imagem === falhou) {
+    efetivo = { tipo: 'bioma', bioma: aparencia?.bioma ?? 'dia' }
+  }
+
+  // Imagens: a nova entra por cima da anterior com crossfade (a anterior sai depois).
+  const nomeImagem = efetivo.tipo === 'imagem' ? efetivo.imagem : null
+  const [camadas, setCamadas] = useState<{ nome: string; chave: number; entra: boolean }[]>(() =>
+    nomeImagem ? [{ nome: nomeImagem, chave: 0, entra: false }] : []
+  )
+  const topo = camadas[camadas.length - 1]
+  if ((topo?.nome ?? null) !== nomeImagem) {
+    setCamadas(
+      nomeImagem
+        ? [
+            ...camadas.slice(-1),
+            { nome: nomeImagem, chave: (topo?.chave ?? 0) + 1, entra: camadas.length > 0 }
+          ]
+        : []
+    )
+  }
   useEffect(() => {
-    let vivo = true
-    let limpar: ReturnType<typeof setTimeout> | undefined
-    const fundo = i.temFundo
-      ? window.api.fundoDaInstalacao(i.id)
-      : Promise.resolve({ ok: true as const, valor: null })
-    void Promise.all([fundo, window.api.lerFundoPadraoDoJogo()]).then(([f, p]) => {
-      if (!vivo) return
-      const padraoLido = p.ok ? p.valor : null
-      setPadrao(padraoLido)
-      const url = (f.ok ? f.valor : null) ?? padraoLido
-      setCamadas((c) => {
-        const topo = c[c.length - 1]
-        if (topo && topo.url === url) return c
-        return [...c.slice(-1), { chave: (topo?.chave ?? 0) + 1, url, entra: c.length > 0 }]
-      })
-      // Depois do crossfade (--dur-slow), só a de cima fica.
-      limpar = setTimeout(() => vivo && setCamadas((c) => c.slice(-1)), 400)
-    })
-    return () => {
-      vivo = false
-      clearTimeout(limpar)
-    }
-  }, [i.id, i.temFundo, versao])
+    if (camadas.length < 2) return
+    const t = setTimeout(() => setCamadas((c) => c.slice(-1)), 400) // depois do --dur-slow
+    return () => clearTimeout(t)
+  }, [camadas.length])
+  useEffect(() => () => clearTimeout(salvar.current), [])
 
-  async function rodar(acao: () => Promise<{ ok: boolean; erro?: ErroTela }>): Promise<void> {
-    const r = await acao()
-    setErro(r.ok ? null : (r.erro ?? null))
-    setVersao((v) => v + 1)
+  // Guarda a escolha da instalação. "imediato": botão; senão, depois de parar de mexer.
+  function definir(escolha: EscolhaFundo | null, imediato = true): void {
+    setPrevia({ id: i.id, escolha })
+    clearTimeout(salvar.current)
+    const id = i.id
+    salvar.current = setTimeout(
+      async () => {
+        const r = await window.api.definirFundoInstalacao(id, escolha)
+        setErro(r.ok ? null : r.erro)
+        await aoMudar() // a instalação volta com o fundo novo
+        setPrevia((p) => (p && p.id === id && p.escolha === escolha ? null : p))
+      },
+      imediato ? 0 : 300
+    )
   }
 
-  const temImagem = !!camadas[camadas.length - 1]?.url
+  async function soltar(e: React.DragEvent): Promise<void> {
+    e.preventDefault()
+    setSoltando(false)
+    const arquivo = e.dataTransfer.files[0]
+    if (!arquivo) return
+    const nome = await imgs.arrastada(arquivo)
+    if (nome) definir(escolhaDeImagem(nome, daInstalacao))
+  }
+
+  const imagemEfetiva = efetivo.tipo === 'imagem' ? efetivo : null
 
   return (
     <section
       aria-label={`Instalação ${i.nome}`}
+      onDragOver={(e) => {
+        if (![...e.dataTransfer.types].includes('Files')) return
+        e.preventDefault()
+        setSoltando(true)
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setSoltando(false)
+      }}
+      onDrop={(e) => void soltar(e)}
       className="relative flex h-[42vh] min-h-[260px] shrink-0 items-end overflow-hidden text-on-dark"
     >
-      {/* Camadas do fundo (seção 6.1.3): a nova entra por cima da anterior, com crossfade. */}
-      {camadas.length === 0 && (
-        <div aria-hidden="true" className="banner-padrao absolute inset-0" />
+      {/* Fundo (Fase V4, seção 7.2): o bioma vivo (troca de instalação com a transição da V2) ou
+          a imagem com os ajustes, com crossfade entre imagens. */}
+      {efetivo.tipo === 'bioma' && (
+        <FundoAnimado bioma={efetivo.bioma} className="absolute inset-0 h-full w-full" />
       )}
-      {camadas.map((c) =>
-        c.url ? (
-          <img
+      {imagemEfetiva &&
+        camadas.map((c) => (
+          <CamadaFundo
             key={c.chave}
-            src={c.url}
-            alt=""
-            className={`absolute inset-0 h-full w-full object-cover ${c.entra ? 'anim-fundo' : ''}`}
+            escolha={{ ...imagemEfetiva, imagem: c.nome }}
+            className={c.entra ? 'anim-fundo' : ''}
+            aoFalhar={() => setFalhou(c.nome)}
           />
-        ) : (
-          <div
-            key={c.chave}
-            aria-hidden="true"
-            className={`banner-padrao absolute inset-0 ${c.entra ? 'anim-fundo' : ''}`}
-          />
-        )
-      )}
-      {/* Bioma vivo (Fases V1 e V2): o escolhido para a instalação, ou o do app quando não há
-          imagem; sobre uma imagem, só as partículas (se ligado em Aparência). Trocar de
-          instalação troca o bioma com transição suave. */}
-      {aparencia && (i.bannerBioma || !temImagem || aparencia.particulasSobreImagem) && (
-        <FundoAnimado
-          bioma={i.bannerBioma ?? aparencia.bioma}
-          so={!i.bannerBioma && temImagem}
-          className="absolute inset-0 h-full w-full"
-        />
-      )}
+        ))}
       <div aria-hidden="true" className="banner-gradiente absolute inset-0" />
       <div
         key={i.id}
@@ -303,7 +335,10 @@ function Banner({ i }: { i: Instalacao }): React.JSX.Element {
           />
         )}
         <div className="placa-vidro min-w-0 px-5 py-3 text-texto">
-          <h2 className="texto-pixel truncate text-4xl [text-shadow:3px_3px_0_var(--sombra-texto)]">
+          <h2
+            className="texto-pixel truncate text-4xl [text-shadow:3px_3px_0_var(--sombra-texto)]"
+            title={i.nome}
+          >
             {i.nome}
           </h2>
           <p className="text-[13px] opacity-90">
@@ -312,59 +347,206 @@ function Banner({ i }: { i: Instalacao }): React.JSX.Element {
           </p>
         </div>
       </div>
+      {soltando && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-3 grid place-items-center rounded-(--raio-item) border-2 border-dashed border-accent bg-(--text-on-light)/60 text-[15px] font-bold text-on-dark"
+        >
+          Solte a imagem para usar como fundo desta instalação
+        </div>
+      )}
       <div className="absolute top-3 right-3">
         <Menu
           rotulo="Trocar o fundo"
-          classeBotao={`${classesBotao('secundario', 'pequeno')}`}
-          itens={[
-            ...BIOMAS.map((b) => ({
-              rotulo: `Bioma ${NOMES_BIOMAS[b]} nesta instalação`,
-              desabilitado: i.bannerBioma === b,
-              aoClicar: () => void rodar(() => window.api.definirBannerBioma(i.id, b))
-            })),
-            {
-              rotulo: i.temFundo
-                ? 'Usar a imagem ou a capa desta instalação'
-                : 'Usar o fundo padrão (sem bioma próprio)',
-              desabilitado: !i.bannerBioma,
-              aoClicar: () => void rodar(() => window.api.definirBannerBioma(i.id, null))
-            },
-            {
-              rotulo: 'Escolher imagem para esta instalação',
-              aoClicar: () =>
-                void rodar(async () => {
-                  const r = await window.api.escolherFundoInstalacao(i.id)
-                  // A imagem nova aparece no lugar do bioma próprio.
-                  if (r.ok && r.valor && i.bannerBioma)
-                    await window.api.definirBannerBioma(i.id, null)
-                  return r
-                })
-            },
-            {
-              rotulo: 'Usar o fundo padrão nesta instalação',
-              desabilitado: !i.temFundo,
-              aoClicar: () => void rodar(() => window.api.removerFundoInstalacao(i.id))
-            },
-            {
-              rotulo: 'Escolher o fundo padrão (todas)',
-              aoClicar: () => void rodar(() => window.api.escolherFundoPadraoDoJogo())
-            },
-            {
-              rotulo: 'Voltar o padrão para a arte do app',
-              desabilitado: !padrao,
-              aoClicar: () => void rodar(() => window.api.removerFundoPadraoDoJogo())
-            }
-          ]}
+          classeBotao={classesBotao('secundario', 'pequeno')}
+          painel={
+            <PainelFundo
+              i={i}
+              daInstalacao={daInstalacao}
+              definir={definir}
+              imgs={imgs}
+              aoErro={setErro}
+              aoMudar={aoMudar}
+            />
+          }
         >
           Fundo
         </Menu>
       </div>
-      {erro && (
-        <div className="absolute top-14 right-3 max-w-sm">
-          <MensagemErro erro={erro} />
+      {(erro ||
+        falhou === nomeImagem ||
+        (falhou && efetivo.tipo === 'bioma' && i.fundo?.tipo === 'imagem')) && (
+        <div className="absolute top-14 right-3 flex max-w-sm flex-col gap-2">
+          {erro && <MensagemErro erro={erro} />}
+          {falhou && i.fundo?.tipo === 'imagem' && i.fundo.imagem === falhou && (
+            <Aviso tipo="atencao">
+              <span>A imagem desta instalação não abriu. Mostrando o bioma.</span>
+            </Aviso>
+          )}
         </div>
       )}
     </section>
+  )
+}
+
+// Painel "Fundo" da tela Jogar (Fase V4, seção 7.2): Igual ao app, Bioma ou Imagem, com a prévia
+// de cada um; embaixo, usar em todas as instalações (com confirmação) e voltar ao fundo do app.
+function PainelFundo({
+  i,
+  daInstalacao,
+  definir,
+  imgs,
+  aoErro,
+  aoMudar
+}: {
+  i: Instalacao
+  daInstalacao: EscolhaFundo | null
+  definir: (escolha: EscolhaFundo | null, imediato?: boolean) => void
+  imgs: ReturnType<typeof useImagensFundo>
+  aoErro: (e: ErroTela | null) => void
+  aoMudar: () => Promise<void>
+}): React.JSX.Element {
+  const { aparencia, fundoApp } = useAparencia()
+  const [modo, setModo] = useState<'app' | 'bioma' | 'imagem'>(daInstalacao?.tipo ?? 'app')
+  const [confirmar, setConfirmar] = useState(false)
+  const biomaApp = aparencia?.bioma ?? 'dia'
+  const doApp = fundoApp ?? { tipo: 'bioma' as const, bioma: biomaApp }
+  const imagem = daInstalacao?.tipo === 'imagem' ? daInstalacao : null
+
+  async function emTodas(): Promise<void> {
+    const r = await window.api.usarFundoEmTodas(daInstalacao)
+    aoErro(r.ok ? null : r.erro)
+    setConfirmar(false)
+    await aoMudar()
+  }
+
+  const opcoes = [
+    {
+      modo: 'app' as const,
+      rotulo: 'Igual ao app',
+      previa: <CamadaFundo escolha={doApp} parado />,
+      escolher: () => definir(null)
+    },
+    {
+      modo: 'bioma' as const,
+      rotulo: 'Bioma',
+      previa: (
+        <ArteDoBioma
+          bioma={daInstalacao?.tipo === 'bioma' ? daInstalacao.bioma : biomaApp}
+          className="absolute inset-0 h-full w-full"
+        />
+      ),
+      escolher: () => daInstalacao?.tipo !== 'bioma' && definir({ tipo: 'bioma', bioma: biomaApp })
+    },
+    {
+      modo: 'imagem' as const,
+      rotulo: 'Imagem',
+      previa: imagem ? (
+        <CamadaFundo escolha={imagem} parado />
+      ) : (
+        <span className="absolute inset-0 grid place-items-center bg-panel-2 px-2 text-center text-xs text-muted">
+          Uma imagem sua
+        </span>
+      ),
+      // Escolher "Imagem" sem imagem ainda só abre a lista (nada muda até escolher uma).
+      escolher: () => {
+        const primeira = imgs.imagens?.[0]
+        if (!imagem && primeira) definir(escolhaDeImagem(primeira.nome, daInstalacao))
+      }
+    }
+  ]
+
+  return (
+    <div className="flex w-[380px] max-w-[calc(100vw-48px)] flex-col gap-3">
+      <p className="font-bold">Fundo de {i.nome}</p>
+      <div role="radiogroup" aria-label="Fundo da instalação" className="grid grid-cols-3 gap-2">
+        {opcoes.map((o) => (
+          <CartaoFundo
+            key={o.modo}
+            rotulo={o.rotulo}
+            marcado={modo === o.modo}
+            aoEscolher={() => {
+              setModo(o.modo)
+              o.escolher()
+            }}
+          >
+            {o.previa}
+          </CartaoFundo>
+        ))}
+      </div>
+      {modo === 'app' && (
+        <p className="text-xs text-muted">
+          Usa o fundo do app (Aparência › Fundo). Mudando lá, muda aqui também.
+        </p>
+      )}
+      {modo === 'bioma' && (
+        <GradeBiomas
+          atual={daInstalacao?.tipo === 'bioma' ? daInstalacao.bioma : null}
+          aoEscolher={(b) => definir({ tipo: 'bioma', bioma: b })}
+          pequeno
+        />
+      )}
+      {modo === 'imagem' && (
+        <>
+          <GradeImagens
+            imagens={imgs.imagens}
+            atual={imagem?.imagem ?? null}
+            aoEscolher={(nome) => definir(escolhaDeImagem(nome, daInstalacao))}
+            aoEscolherOutra={async () => {
+              const nome = await imgs.escolher()
+              if (nome) definir(escolhaDeImagem(nome, daInstalacao))
+            }}
+            pequeno
+          />
+          {imgs.erro && <MensagemErro erro={imgs.erro} />}
+          {imagem && (
+            <AjustesImagem
+              url={urlDoFundo(imagem.imagem)}
+              ajuste={imagem.ajuste}
+              aoMudar={(ajuste) => definir({ ...imagem, ajuste }, false)}
+            />
+          )}
+        </>
+      )}
+      <div className="flex flex-col items-start gap-1 border-t border-linha pt-3">
+        {confirmar ? (
+          <div className="flex flex-col gap-2">
+            <p>
+              Trocar o fundo de todas as instalações por {daInstalacao ? 'este' : '"Igual ao app"'}?
+              Cada uma pode ser mudada de novo depois.
+            </p>
+            <div className="flex gap-2">
+              <Botao tamanho="pequeno" variante="primario" onClick={() => void emTodas()}>
+                Usar em todas
+              </Botao>
+              <Botao tamanho="pequeno" onClick={() => setConfirmar(false)}>
+                Cancelar
+              </Botao>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmar(true)}
+            className="text-[13px] underline hover:text-accent"
+          >
+            Usar este fundo em todas as instalações
+          </button>
+        )}
+        {daInstalacao && (
+          <button
+            type="button"
+            onClick={() => {
+              setModo('app')
+              definir(null)
+            }}
+            className="text-[13px] underline hover:text-accent"
+          >
+            Voltar ao fundo do app
+          </button>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -958,7 +1140,7 @@ function CardInstalacao({
       aria-pressed={selecionada}
       style={{ '--ordem': ordem } as React.CSSProperties}
       // Hover: sobe 2px e a imagem dá zoom leve; clique: afunda 1px (seção 6.1.3).
-      className={`group anim-item flex flex-col overflow-hidden border-2 bg-panel text-left transition-[transform,border-color] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 active:translate-y-px ${
+      className={`group anim-item isolate flex flex-col overflow-hidden border-2 bg-panel text-left transition-[transform,border-color] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 active:translate-y-px ${
         selecionada ? 'border-accent' : 'border-linha hover:border-muted'
       }`}
     >
@@ -975,7 +1157,7 @@ function CardInstalacao({
             className="banner-padrao h-full w-full transition-transform duration-(--dur-fast) group-hover:scale-[1.03]"
           />
         )}
-        <span className="absolute bottom-2 left-2 bg-accent px-2 py-0.5 text-xs font-bold text-accent-text">
+        <span className="absolute bottom-2 left-2 rounded-[calc(var(--raio-pequeno)/2)] bg-accent px-2 py-0.5 text-xs font-bold text-accent-text">
           {NOMES_LOADER[i.loader]}
         </span>
       </div>

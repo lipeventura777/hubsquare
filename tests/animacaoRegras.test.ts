@@ -81,7 +81,7 @@ test('cai para leve quando o desenho passa de 4 ms em média', () => {
 })
 
 test('reduzir movimento do Windows começa no modo leve (sem escolha salva)', () => {
-  assert.equal(modoInicial(undefined, true), 'leve')
+  assert.equal(modoInicial(undefined, true), 'desligada') // Fase V6: menos movimento = arte parada
   assert.equal(modoInicial(undefined, false), 'completa')
   assert.equal(modoInicial('completa', true), 'completa') // escolha do usuário vale
 })

@@ -56,7 +56,8 @@ export interface VersaoHangar {
   platformDependencies: Record<string, string[] | undefined>
 }
 
-const get = <T>(caminho: string): Promise<T> => buscarJson<T>(`${API}${caminho}`)
+const get = <T>(caminho: string, signal?: AbortSignal): Promise<T> =>
+  buscarJson<T>(`${API}${caminho}`, { signal })
 
 export async function buscar(p: {
   termo: string
@@ -65,6 +66,7 @@ export async function buscar(p: {
   ordem: string
   offset: number
   limite: number
+  signal?: AbortSignal
 }): Promise<{ itens: ProjetoHangar[]; total: number }> {
   const q = new URLSearchParams({
     platform: 'PAPER',
@@ -75,7 +77,10 @@ export async function buscar(p: {
   if (p.termo) q.set('q', p.termo)
   if (p.versao) q.set('version', p.versao)
   if (p.categoria) q.set('category', p.categoria)
-  const r = await get<{ pagination: { count: number }; result: ProjetoHangar[] }>(`/projects?${q}`)
+  const r = await get<{ pagination: { count: number }; result: ProjetoHangar[] }>(
+    `/projects?${q}`,
+    p.signal
+  )
   return { itens: r.result, total: r.pagination.count }
 }
 

@@ -1,17 +1,26 @@
-import { BIOMAS, NOMES_BIOMAS } from '../../../shared/tipos'
+import { useEffect, useRef, useState } from 'react'
+import type { Bioma, ErroTela, ImagemFundo } from '../../../shared/tipos'
+import { mesmaEscolha, urlDoFundo, type EscolhaFundo } from '../../../shared/fundoRegras'
+import { CamadaFundo } from '../fundo/CamadaFundo'
+import {
+  AjustesImagem,
+  escolhaDeImagem,
+  GradeBiomas,
+  GradeImagens,
+  useImagensFundo
+} from '../fundo/EscolherFundo'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { Esqueleto } from '../componentes/movimento'
 import {
+  Aviso,
   Botao,
-  CaixaSelecao,
+  Dialogo,
   LinhaControle,
   OpcaoRadio,
   PaginaAjustes,
-  Secao,
-  Slider
+  Secao
 } from '../componentes/ui'
 import { MODOS_ANIMACAO, modoInicial, type ModoAnimacao } from '../../../shared/animacaoRegras'
-import { ArteDoBioma } from '../fundo/Fundo'
 import { corDaSugestao, NOMES_SUGESTOES } from './tema'
 import { useAparencia } from './useAparencia'
 
@@ -46,37 +55,6 @@ function AbaTema(): React.JSX.Element {
 
   return (
     <>
-      <Secao titulo="Bioma">
-        <div
-          role="radiogroup"
-          aria-label="Bioma"
-          className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3"
-        >
-          {BIOMAS.map((b) => {
-            const ativo = aparencia.bioma === b
-            return (
-              <button
-                key={b}
-                type="button"
-                role="radio"
-                aria-checked={ativo}
-                onClick={() => mudar({ bioma: b })}
-                className={`flex flex-col overflow-hidden rounded-[var(--raio-item)] border-2 bg-panel text-left transition-colors duration-(--dur-fast) ${
-                  ativo ? 'border-accent' : 'border-linha hover:border-muted'
-                }`}
-              >
-                <ArteDoBioma bioma={b} className="aspect-video w-full" />
-                <span className="px-3 py-2 text-[13px] font-bold">{NOMES_BIOMAS[b]}</span>
-              </button>
-            )
-          })}
-        </div>
-        <p className="text-xs text-muted">
-          O fundo de todas as telas. O vidro fica mais opaco sozinho onde precisa, para o texto
-          continuar fácil de ler.
-        </p>
-      </Secao>
-
       <Secao titulo="Vidro">
         <LinhaControle
           rotulo="Vidro leve"
@@ -101,7 +79,7 @@ const NOMES_ANIMACAO: Record<ModoAnimacao, string> = {
   desligada: 'Desligada (fundo parado)'
 }
 
-// Animação do fundo (Fase V2). Sem escolha salva: completa, ou leve com menos movimento pedido.
+// Animação do fundo (Fase V2). Sem escolha salva: completa, ou desligada (arte parada) com menos movimento pedido.
 function AnimacaoDoFundo(): React.JSX.Element {
   const { aparencia, mudar, windowsReduzAnimacoes } = useAparencia()
   if (!aparencia) return <></>
@@ -123,13 +101,6 @@ function AnimacaoDoFundo(): React.JSX.Element {
           </OpcaoRadio>
         ))}
       </div>
-      <LinhaControle
-        rotulo="Partículas sobre a minha imagem"
-        ligado={aparencia.particulasSobreImagem}
-        aoMudar={(v) => mudar({ particulasSobreImagem: v })}
-      >
-        Com uma imagem sua no fundo ou no banner, as partículas do bioma passam por cima dela.
-      </LinhaControle>
       <p className="text-xs text-muted">
         O fundo para sozinho com o jogo aberto, com o app minimizado ou na bandeja, sem uso por 30
         segundos e enquanto um modpack instala.
@@ -210,57 +181,94 @@ function CorDaArea({
   )
 }
 
+// Aba Fundo (Fase V4, DESIGN.md seção 7.2): o fundo do app inteiro. Biomas claros e escuros ou
+// uma imagem minha, com ajustes, prévia ao vivo e "Desfazer" por 10 segundos depois de trocar.
 function AbaFundo(): React.JSX.Element {
-  const { aparencia, fundoUrl, screenshots, mudar, escolherFundo, usarScreenshot, removerFundo } =
-    useAparencia()
+  const { aparencia, fundoApp, screenshots, mudar, usarScreenshot } = useAparencia()
+  const imgs = useImagensFundo()
+  const [desfazer, setDesfazer] = useState<{ escolha: EscolhaFundo; bioma: Bioma } | null>(null)
+  const relogio = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [apagar, setApagar] = useState<ImagemFundo | null>(null)
+  const [erro, setErro] = useState<ErroTela | null>(null)
+  useEffect(() => () => clearTimeout(relogio.current), [])
   if (!aparencia) return <></>
-  // Ao escolher "em todo o app", o escurecimento começa no mínimo de 40% (seção 7).
-  const escurecimento = Math.max(0.4, aparencia.escurecimento)
+  const atual: EscolhaFundo = aparencia.fundoApp ?? { tipo: 'bioma', bioma: aparencia.bioma }
 
+  // Trocar de fundo (não os ajustes) guarda o anterior para o "Desfazer" por 10 segundos.
+  function trocar(nova: EscolhaFundo, guardarAnterior = true): void {
+    if (!aparencia) return
+    if (guardarAnterior && !mesmaEscolha(nova, atual)) {
+      setDesfazer({ escolha: atual, bioma: aparencia.bioma })
+      clearTimeout(relogio.current)
+      relogio.current = setTimeout(() => setDesfazer(null), 10_000)
+    }
+    mudar({ fundoApp: nova, ...(nova.tipo === 'bioma' ? { bioma: nova.bioma } : {}) })
+  }
+
+  async function confirmarApagar(): Promise<void> {
+    if (!apagar) return
+    const r = await window.api.apagarImagemFundo(apagar.nome)
+    if (!r.ok) return setErro(r.erro)
+    setErro(null)
+    if (atual.tipo === 'imagem' && atual.imagem === apagar.nome) {
+      mudar({ fundoApp: { tipo: 'bioma', bioma: aparencia!.bioma } })
+    }
+    setApagar(null)
+    await imgs.recarregar()
+  }
+
+  const imagemAtual = atual.tipo === 'imagem' ? atual : null
   return (
     <>
-      <Secao titulo="Imagem de fundo">
-        <div className="flex max-w-[720px] flex-col gap-3">
-          <p className="text-[13px] text-muted">
-            A imagem aparece no banner do Painel. Ela é copiada para a pasta do HubSquare, então
-            você pode apagar ou mover o arquivo original.
-          </p>
-          {fundoUrl && (
-            <img
-              src={fundoUrl}
-              alt=""
-              className="aspect-video w-[300px] border border-linha object-cover"
-            />
-          )}
-          <div className="flex gap-2">
-            <Botao variante="primario" onClick={escolherFundo}>
-              {fundoUrl ? 'Trocar imagem…' : 'Escolher imagem…'}
-            </Botao>
-            {fundoUrl && (
-              <Botao variante="perigo" onClick={removerFundo}>
-                Remover imagem
-              </Botao>
-            )}
+      <Secao titulo="Prévia">
+        <div className="relative aspect-video w-full max-w-[480px] overflow-hidden rounded-(--raio-item) border border-linha">
+          <CamadaFundo escolha={fundoApp ?? atual} />
+          <div className="vidro-painel absolute right-4 bottom-4 left-4 px-4 py-3 text-[13px]">
+            <b>Assim fica o vidro</b>
+            <p className="text-muted">O texto continua fácil de ler sobre qualquer fundo.</p>
           </div>
-          <CaixaSelecao
-            marcada={aparencia.fundoEmTodoApp}
-            disabled={!fundoUrl}
-            aoMudar={(v) => mudar({ fundoEmTodoApp: v, escurecimento })}
-          >
-            Usar em todo o app (atrás do conteúdo de todas as telas)
-          </CaixaSelecao>
-          {aparencia.fundoEmTodoApp && fundoUrl && (
-            <Slider
-              rotulo="Escurecimento (aumente se o texto ficar difícil de ler)"
-              valor={Math.round(escurecimento * 100)}
-              min={40}
-              max={90}
-              passo={5}
-              aoMudar={(v) => mudar({ escurecimento: v / 100 })}
-              formatar={(v) => `${v}%`}
-            />
-          )}
         </div>
+        {desfazer && (
+          <Aviso tipo="sucesso">
+            <span className="flex-1">Fundo do app trocado.</span>
+            <Botao
+              tamanho="pequeno"
+              onClick={() => {
+                mudar({ fundoApp: desfazer.escolha, bioma: desfazer.bioma })
+                setDesfazer(null)
+              }}
+            >
+              Desfazer
+            </Botao>
+          </Aviso>
+        )}
+      </Secao>
+
+      <Secao titulo="Bioma">
+        <GradeBiomas
+          atual={atual.tipo === 'bioma' ? atual.bioma : null}
+          aoEscolher={(b) => trocar({ tipo: 'bioma', bioma: b })}
+        />
+      </Secao>
+
+      <Secao titulo="Minha imagem">
+        <GradeImagens
+          imagens={imgs.imagens}
+          atual={imagemAtual?.imagem ?? null}
+          aoEscolher={(nome) => trocar(escolhaDeImagem(nome, atual))}
+          aoEscolherOutra={async () => {
+            const nome = await imgs.escolher()
+            if (nome) trocar(escolhaDeImagem(nome, atual))
+          }}
+        />
+        {imgs.erro && <MensagemErro erro={imgs.erro} />}
+        {imagemAtual && (
+          <AjustesImagem
+            url={urlDoFundo(imagemAtual.imagem)}
+            ajuste={imagemAtual.ajuste}
+            aoMudar={(ajuste) => trocar({ ...imagemAtual, ajuste }, false)}
+          />
+        )}
       </Secao>
 
       <Secao titulo="Seus prints do jogo">
@@ -272,8 +280,8 @@ function AbaFundo(): React.JSX.Element {
         ) : (
           <>
             <p className="text-[13px] text-muted">
-              Clique num print para usar como fundo. Os mais recentes também aparecem nos cards de
-              backup e de mundo.
+              Clique num print para usar como fundo do app. Os mais recentes também aparecem nos
+              cards de backup e de mundo.
             </p>
             <ul className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
               {screenshots.map((s, i) => (
@@ -284,9 +292,14 @@ function AbaFundo(): React.JSX.Element {
                 >
                   <button
                     type="button"
-                    onClick={() => usarScreenshot(s.nome)}
+                    onClick={async () => {
+                      const nome = await usarScreenshot(s.nome)
+                      if (!nome) return
+                      await imgs.recarregar()
+                      trocar(escolhaDeImagem(nome, atual))
+                    }}
                     title={`Usar ${s.nome} como fundo`}
-                    className="block w-full border border-linha transition-colors duration-(--dur-fast) hover:border-muted"
+                    className="block w-full overflow-hidden rounded-(--raio-pequeno) border border-linha transition-colors duration-(--dur-fast) hover:border-muted"
                   >
                     <img
                       src={s.miniatura}
@@ -300,6 +313,58 @@ function AbaFundo(): React.JSX.Element {
           </>
         )}
       </Secao>
+
+      <Secao titulo="Minhas imagens">
+        {erro && <MensagemErro erro={erro} />}
+        {imgs.imagens === null ? (
+          <Esqueleto linhas={2} />
+        ) : imgs.imagens.length === 0 ? (
+          <p className="text-[13px] text-muted">
+            Nenhuma imagem guardada ainda. As que você escolher para o app ou para uma instalação
+            aparecem aqui.
+          </p>
+        ) : (
+          <ul className="flex max-w-[720px] flex-col gap-2">
+            {imgs.imagens.map((img, n) => (
+              <li
+                key={img.nome}
+                className="flex items-center gap-3 rounded-(--raio-pequeno) border border-linha bg-panel-2 p-2"
+              >
+                <img
+                  src={img.url}
+                  alt={`Imagem ${n + 1}`}
+                  className="aspect-video w-28 shrink-0 rounded-[calc(var(--raio-pequeno)-4px)] object-cover"
+                />
+                <span className="min-w-0 flex-1 text-[13px]">
+                  <b>Imagem {n + 1}</b>
+                  <span className="block text-muted">
+                    {img.usadaEm.length ? `Em uso: ${img.usadaEm.join(', ')}` : 'Sem uso'}
+                  </span>
+                </span>
+                <Botao variante="perigo" tamanho="pequeno" onClick={() => setApagar(img)}>
+                  Apagar…
+                </Botao>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Secao>
+
+      <Dialogo
+        aberto={apagar !== null}
+        titulo="Apagar esta imagem?"
+        aoCancelar={() => setApagar(null)}
+        acao={{ rotulo: 'Apagar', variante: 'perigo', aoClicar: () => void confirmarApagar() }}
+      >
+        <p className="text-[13px]">
+          A cópia guardada pelo app sai da pasta de fundos (o seu arquivo original não muda).
+          {apagar?.usadaEm.length
+            ? ` Quem usa esta imagem (${apagar.usadaEm.join(', ')}) volta para ${
+                apagar.usadaEm.includes('Fundo do app') ? 'o bioma' : '"Igual ao app"'
+              }.`
+            : ''}
+        </p>
+      </Dialogo>
     </>
   )
 }

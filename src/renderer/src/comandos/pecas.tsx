@@ -30,7 +30,7 @@ export function Respostas({
       {respostas.map((r, i) => (
         <li
           key={i}
-          className={`border-l-4 px-3 py-1.5 ${
+          className={`isolate overflow-hidden rounded-(--raio-pequeno) border-l-4 px-3 py-1.5 ${
             r.ok === true
               ? 'border-online bg-online/12'
               : r.ok === false

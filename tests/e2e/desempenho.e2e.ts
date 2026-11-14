@@ -1,13 +1,14 @@
 import { mkdirSync, writeFileSync, appendFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from './apoio'
+import { BIOMAS } from '../../src/shared/tipos'
 
 // Desempenho do fundo animado (Fase V2, @desempenho, npm run desempenho:fundo). Para cada bioma,
 // o app fica 60 s aberto (no assistente, com os painéis de vidro sobre o fundo) em cada
 // situação, e mede a CPU do processo da tela e da GPU (app.getAppMetrics do Electron).
 // Pausado = janela minimizada (o mesmo caminho da pausa de verdade).
 
-const BIOMAS = ['diaClaro', 'dia', 'noite', 'mar', 'nether'] as const
+// Os doze biomas (Fase V6: os sete novos também estão vivos).
 const SITUACOES = [
   { nome: 'completa', prefs: { animacaoFundo: 'completa', vidroLeve: false } },
   { nome: 'completa + vidro leve', prefs: { animacaoFundo: 'completa', vidroLeve: true } },
@@ -15,7 +16,7 @@ const SITUACOES = [
   { nome: 'pausado (minimizado)', prefs: { animacaoFundo: 'completa', vidroLeve: false } }
 ] as const
 const SEGUNDOS = Number(process.env.SEGUNDOS ?? 60)
-const TABELA = join(__dirname, '..', '..', '.teste', 'resultados-desempenho', 'fundo.md')
+const TABELA = join(__dirname, '..', '..', '.teste', 'resultados-desempenho', 'fundo-v6.md')
 
 for (const bioma of BIOMAS) {
   for (const s of SITUACOES) {

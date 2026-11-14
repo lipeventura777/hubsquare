@@ -18,6 +18,15 @@ import { IconeMods } from '../componentes/icones'
 import { Aviso, Botao, CaixaSelecao, EstadoVazio, OpcaoRadio, Selecao } from '../componentes/ui'
 import { abrirTela } from '../estrutura/navegar'
 import { FONTES, NOMES_FONTES, type Fonte } from '../../../shared/fontes'
+import {
+  muitosResultados,
+  paginaValida,
+  tamanhoValido,
+  totalAlcancavel,
+  totalPaginas
+} from '../../../shared/paginaRegras'
+import { BarraDePaginas, TopoDaLista } from '../componentes/Paginas'
+import type { ResultadoExplorar } from '../../../shared/tipos'
 import { DetalhesDoProjeto } from './DetalhesProjeto'
 import { NOMES_AMBIENTE, nomeCategoria, nomeGrupo, nomeLoader } from './nomesModrinth'
 import {
@@ -111,11 +120,20 @@ function fraseDoTipo(tipo: TipoConteudo, info: InfoServidor): string {
   }
 }
 
+// Páginas já vistas (Fase V9): a mesma busca, filtros, página e tamanho por 5 minutos.
+const GUARDAR_MS = 5 * 60_000
+const guardadas = new Map<string, { quando: number; valor: ResultadoExplorar }>()
+const guardada = (chave: string): ResultadoExplorar | null => {
+  const g = guardadas.get(chave)
+  return g && Date.now() - g.quando < GUARDAR_MS ? g.valor : null
+}
+
 function filtrosIniciais(
   tipo: TipoConteudo,
   info: InfoServidor,
   termo = '',
-  fonte: Fonte = 'modrinth'
+  fonte: Fonte = 'modrinth',
+  tamanho = 24
 ): FiltrosExplorar {
   return {
     fonte,
@@ -128,7 +146,8 @@ function filtrosIniciais(
     codigoAberto: false,
     esconderInstalados: false,
     ordem: 'relevance',
-    offset: 0
+    pagina: 1,
+    tamanho
   }
 }
 
@@ -140,7 +159,15 @@ export function Explorar({
   aoInstalar: () => Promise<void>
 }): React.JSX.Element {
   const api = useApi()
-  const [filtros, setFiltros] = useState<FiltrosExplorar>(() => filtrosIniciais('mod', info))
+  // O tamanho da página fica salvo por tela (ServSquare e PlaySquare).
+  const [tamanhoSalvo, setTamanhoSalvo] = usePreferencia(
+    `hubsquare:explorar-por-pagina:${info.jogador ? 'play' : 'serv'}`,
+    '24'
+  )
+  const tamanho = tamanhoValido(Number(tamanhoSalvo))
+  const [filtros, setFiltros] = useState<FiltrosExplorar>(() =>
+    filtrosIniciais('mod', info, '', 'modrinth', tamanho)
+  )
   const [termo, setTermo] = useState('')
   const [opcoes, setOpcoes] = useState<OpcoesExplorar | null>(null)
   const [itens, setItens] = useState<ProjetoExplorar[] | null>(null)
@@ -151,8 +178,9 @@ export function Explorar({
   const [painelSalvo, setPainel] = usePreferencia('servsquare:explorar-filtros', 'aberto')
   const painel = painelSalvo === 'aberto'
   const [aberto, setAberto] = useState<ProjetoExplorar | null>(null)
-  const pedido = useRef(0)
-  const fim = useRef<HTMLDivElement>(null)
+  const controle = useRef<AbortController | null>(null)
+  const topo = useRef<HTMLDivElement>(null)
+  const rolagemAntes = useRef(0)
   // CurseForge sem a chave do usuário: aviso com "Configurar" no lugar da busca.
   const [temChave, setTemChave] = useState<boolean | null>(null)
   const fonte = filtros.fonte
@@ -177,52 +205,92 @@ export function Explorar({
     }
   }, [api, filtros.tipo, fonte, pronta])
 
-  const buscar = useCallback(
-    async (f: FiltrosExplorar): Promise<void> => {
-      const meu = ++pedido.current
-      setCarregando(true)
-      setErro(null)
-      if (!f.offset) setItens(null)
-      const r = await api.buscarExplorar(f)
-      if (meu !== pedido.current) return // chegou depois de outra busca
-      setCarregando(false)
-      if (!r.ok) return setErro(r.erro)
-      setTotal(r.valor.total)
-      setItens((atuais) => (f.offset ? [...(atuais ?? []), ...r.valor.itens] : r.valor.itens))
-    },
-    [api]
+  // A chave da página guardada: os filtros (com página e tamanho) e o servidor ou instalação.
+  const chaveDe = useCallback(
+    (f: FiltrosExplorar): string => `${info.id}|${JSON.stringify(f)}`,
+    [info.id]
   )
 
-  // Toda mudança de filtro volta para o começo da lista.
+  // Só a página aberta. Trocar de página cancela o que a anterior ainda esperava: o processo
+  // principal aborta os pedidos, e os cards (e as imagens) da anterior saem da tela.
+  const buscar = useCallback(
+    async (f: FiltrosExplorar): Promise<void> => {
+      controle.current?.abort()
+      const c = new AbortController()
+      controle.current = c
+      setErro(null)
+      const pronto = guardada(chaveDe(f))
+      if (pronto) {
+        setCarregando(false)
+        setTotal(pronto.total)
+        setItens(pronto.itens)
+        return
+      }
+      setItens(null)
+      setCarregando(true)
+      const r = await api.buscarExplorar(f)
+      if (c.signal.aborted) return // chegou depois de outra página
+      setCarregando(false)
+      if (!r.ok) return setErro(r.erro)
+      guardadas.set(chaveDe(f), { quando: Date.now(), valor: r.valor })
+      setTotal(r.valor.total)
+      setItens(r.valor.itens)
+    },
+    [api, chaveDe]
+  )
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- busca ao mudar os filtros
     if (pronta) void buscar(filtros)
   }, [filtros, buscar, pronta])
 
-  // Carregamento infinito: busca a próxima página quando o fim da lista aparece.
-  const carregarMais = useCallback((): void => {
-    if (carregando || !itens || itens.length >= total) return
-    void buscar({ ...filtros, offset: itens.length })
-  }, [buscar, carregando, filtros, itens, total])
-
+  // Com o app parado, adianta só os dados da próxima página (as imagens, nunca).
+  const alcancavel = totalAlcancavel(fonte, total)
   useEffect(() => {
-    const alvo = fim.current
-    if (!alvo) return
-    const obs = new IntersectionObserver((e) => e[0]?.isIntersecting && carregarMais(), {
-      rootMargin: '400px'
-    })
-    obs.observe(alvo)
-    return () => obs.disconnect()
-  }, [carregarMais])
+    if (!itens || carregando || !pronta) return
+    const proxima = { ...filtros, pagina: filtros.pagina + 1 }
+    if (proxima.pagina > totalPaginas(alcancavel, filtros.tamanho)) return
+    if (guardada(chaveDe(proxima))) return
+    const id = requestIdleCallback(
+      () =>
+        void api.buscarExplorar(proxima).then((r) => {
+          if (r.ok) guardadas.set(chaveDe(proxima), { quando: Date.now(), valor: r.valor })
+        }),
+      { timeout: 3000 }
+    )
+    return () => cancelIdleCallback(id)
+  }, [api, alcancavel, carregando, chaveDe, filtros, itens, pronta])
 
+  // Busca, filtro, ordem ou tamanho novos: volta para a página 1.
   function mudar(parcial: Partial<FiltrosExplorar>): void {
-    setFiltros((f) => ({ ...f, ...parcial, offset: 0 }))
+    setFiltros((f) => ({ ...f, ...parcial, pagina: 1 }))
+  }
+
+  // Trocar de página mantém os filtros e leva a lista para o topo.
+  function irPara(pagina: number): void {
+    setFiltros((f) => ({ ...f, pagina: paginaValida(pagina, alcancavel, f.tamanho) }))
+    topo.current?.scrollIntoView({ block: 'start' })
+  }
+
+  // Os detalhes abrem no lugar da lista; voltar devolve a mesma página e a mesma posição.
+  const rolagem = (): HTMLElement | null =>
+    topo.current?.closest<HTMLElement>('.overflow-auto') ?? null
+  function abrir(p: ProjetoExplorar): void {
+    rolagemAntes.current = rolagem()?.scrollTop ?? 0
+    setAberto(p)
+  }
+  function voltar(): void {
+    setAberto(null)
+    requestAnimationFrame(() => {
+      const r = rolagem()
+      if (r) r.scrollTop = rolagemAntes.current
+    })
   }
 
   function trocarTipo(tipo: TipoConteudo): void {
     setOpcoes(null)
     setAberto(null)
-    setFiltros(filtrosIniciais(tipo, info, filtros.termo, fonte))
+    setFiltros(filtrosIniciais(tipo, info, filtros.termo, fonte, tamanho))
   }
 
   function trocarFonte(nova: Fonte): void {
@@ -237,7 +305,8 @@ export function Explorar({
         tipos.includes(filtros.tipo) ? filtros.tipo : tipos[0],
         info,
         filtros.termo,
-        nova
+        nova,
+        tamanho
       )
     )
   }
@@ -344,8 +413,9 @@ export function Explorar({
           projeto={aberto}
           tipo={filtros.tipo}
           info={info}
-          aoVoltar={() => setAberto(null)}
+          aoVoltar={voltar}
           aoMudar={async (instalado) => {
+            guardadas.clear() // o "Instalado" das páginas guardadas mudou
             setItens(
               (atuais) => atuais?.map((p) => (p.id === aberto.id ? { ...p, instalado } : p)) ?? null
             )
@@ -492,16 +562,34 @@ export function Explorar({
             </PainelDeFiltros>
           )}
 
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            {erro && <MensagemErro erro={erro} />}
-            {itens && (
-              <p className="text-xs text-muted">
-                {numero.format(total)} {total === 1 ? 'resultado' : 'resultados'} no{' '}
-                {NOMES_FONTES[fonte]}
-              </p>
+          <div ref={topo} className="flex min-w-0 flex-1 scroll-mt-4 flex-col gap-3">
+            <TopoDaLista
+              pagina={filtros.pagina}
+              tamanho={filtros.tamanho}
+              total={itens ? alcancavel : 0}
+              aoMudarTamanho={(t) => {
+                setTamanhoSalvo(String(t))
+                mudar({ tamanho: t })
+              }}
+            />
+            {itens && muitosResultados(fonte, total) && (
+              <Aviso tipo="atencao">Muitos resultados. Use os filtros para refinar a busca.</Aviso>
             )}
-            {!itens ? (
-              !erro && <EsqueletoDeCards vista={vista} />
+            {erro ? (
+              // A página que falhou fica com o erro e o "Tentar de novo"; filtros e página continuam.
+              <div className="flex flex-col items-start gap-3">
+                <MensagemErro erro={erro} />
+                <Botao onClick={() => void buscar(filtros)}>Tentar de novo</Botao>
+              </div>
+            ) : !itens ? (
+              <EsqueletoDeCards
+                vista={vista}
+                quantos={Math.min(
+                  filtros.tamanho,
+                  Math.max(1, alcancavel - (filtros.pagina - 1) * filtros.tamanho) ||
+                    filtros.tamanho
+                )}
+              />
             ) : !itens.length ? (
               <EstadoVazio
                 icone={<IconeMods />}
@@ -518,7 +606,7 @@ export function Explorar({
                     linha={`por ${p.autor} · ${numero.format(p.downloads)} downloads · ${numero.format(p.seguidores)} ${SEGUIDORES[p.fonte].card}`}
                     descricao={p.descricao}
                     vista={vista}
-                    aoAbrir={() => setAberto(p)}
+                    aoAbrir={() => abrir(p)}
                     etiquetas={
                       <>
                         {p.instalado && (
@@ -541,8 +629,14 @@ export function Explorar({
                 ))}
               </ListaDeCards>
             )}
-            {itens && carregando && <EsqueletoDeCards vista={vista} quantos={3} />}
-            <div ref={fim} aria-hidden="true" className="h-px" />
+            {itens && !erro && (
+              <BarraDePaginas
+                pagina={filtros.pagina}
+                tamanho={filtros.tamanho}
+                total={alcancavel}
+                aoIr={irPara}
+              />
+            )}
           </div>
         </div>
       </div>

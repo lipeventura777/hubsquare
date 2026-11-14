@@ -72,6 +72,7 @@ import {
 import { ARQUIVO_INFO, registrar } from './servidores'
 import { maisNovaEstavel } from './tipos/fabric'
 import { argsDoRunBat } from './tipos/versoesLoader'
+import { pedidosDaPagina, tamanhoValido } from '../shared/paginaRegras'
 
 // Modpacks no formato do Modrinth (.mrpack): criar servidor, atualizar o pack e gerar o
 // "Pacote pros amigos". O pack original fica guardado na pasta do servidor para as Fases 17 e 18.
@@ -441,32 +442,40 @@ async function baixarUm(
 
 export async function buscarModpacks(
   termo: unknown,
-  offset: unknown
+  pagina: unknown,
+  tamanho: unknown
 ): Promise<ResultadoBuscaModpacks> {
   const texto = typeof termo === 'string' ? termo.trim().slice(0, 100) : ''
-  const inicio = Number.isInteger(offset) && (offset as number) >= 0 ? (offset as number) : 0
-  const r = await modrinth.buscar(
-    texto,
-    [['project_type:modpack'], LOADERS_MODRINTH.map((l) => `categories:${l}`)],
-    inicio,
-    20
+  const p = Number.isInteger(pagina) && (pagina as number) >= 1 ? (pagina as number) : 1
+  // Fase V9: só a página aberta (um pedido, ou mais se o tamanho passar do máximo do Modrinth).
+  const partes = await Promise.all(
+    pedidosDaPagina('modrinth', p, tamanhoValido(tamanho)).map((q) =>
+      modrinth.buscar(
+        texto,
+        [['project_type:modpack'], LOADERS_MODRINTH.map((l) => `categories:${l}`)],
+        q.offset,
+        q.limit
+      )
+    )
   )
   return {
-    total: r.total_hits,
-    itens: r.hits.map((h) => ({
-      id: h.project_id,
-      titulo: h.title,
-      autor: h.author,
-      descricao: h.description,
-      downloads: h.downloads,
-      icone: h.icon_url || null,
-      // Só versões "1.21.1"/"26.3" (sem snapshots), a mais nova primeiro.
-      versaoJogo:
-        (h.versions ?? [])
-          .filter((v) => /^\d+(\.\d+)+$/.test(v))
-          .sort((a, b) => compararVersoes(b, a))[0] ?? null,
-      loaders: (h.categories ?? []).filter((c): c is TipoId => LOADERS_MODRINTH.includes(c))
-    }))
+    total: partes[0]?.total_hits ?? 0,
+    itens: partes
+      .flatMap((r) => r.hits)
+      .map((h) => ({
+        id: h.project_id,
+        titulo: h.title,
+        autor: h.author,
+        descricao: h.description,
+        downloads: h.downloads,
+        icone: h.icon_url || null,
+        // Só versões "1.21.1"/"26.3" (sem snapshots), a mais nova primeiro.
+        versaoJogo:
+          (h.versions ?? [])
+            .filter((v) => /^\d+(\.\d+)+$/.test(v))
+            .sort((a, b) => compararVersoes(b, a))[0] ?? null,
+        loaders: (h.categories ?? []).filter((c): c is TipoId => LOADERS_MODRINTH.includes(c))
+      }))
   }
 }
 

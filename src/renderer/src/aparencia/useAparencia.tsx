@@ -3,7 +3,8 @@ import { ajustarContraste, amostrarImagem, aplicarAccent, aplicarBioma } from '.
 import { ARTE } from '../fundo/biomas'
 import { definirModo } from '../fundo/pausa'
 import { modoInicial } from '../../../shared/animacaoRegras'
-import { hex } from '../../../shared/contrasteRegras'
+import { hex, luminancia, type Rgb } from '../../../shared/contrasteRegras'
+import { camadaDeLuz, tomDoVidro, urlDoFundo, type EscolhaFundo } from '../../../shared/fundoRegras'
 import type { Aparencia, ErroTela, Screenshot } from '../../../shared/tipos'
 
 // Área do app aberta agora: cada uma tem a própria cor de destaque.
@@ -13,16 +14,22 @@ interface ContextoAparencia {
   aparencia: Aparencia | null
   area: Area
   setArea: (area: Area) => void
+  // Banner do Painel: a imagem do fundo do app (ou a antiga, só do banner, de antes da V4).
   fundoUrl: string | null
+  // Fase V4: o fundo do app que vale agora (a imagem que não abriu volta para o bioma).
+  fundoApp: EscolhaFundo | null
+  imagemFalhou: () => void
+  falhou: boolean
+  // Avisos da migração dos fundos antigos (mostrados uma vez).
+  avisosFundo: string[]
+  fecharAvisosFundo: () => void
   // Prints do Minecraft (mais recentes primeiro): galeria do fundo e imagens dos cards.
   screenshots: Screenshot[]
   // O Windows pediu menos movimento: as animações ficam reduzidas mesmo com o interruptor desligado.
   windowsReduzAnimacoes: boolean
   erro: ErroTela | null
   mudar: (mudancas: Partial<Omit<Aparencia, 'fundo'>>) => void
-  escolherFundo: () => Promise<void>
-  usarScreenshot: (nome: string) => Promise<void>
-  removerFundo: () => Promise<void>
+  usarScreenshot: (nome: string) => Promise<string | null>
 }
 
 const Contexto = createContext<ContextoAparencia | null>(null)
@@ -31,7 +38,9 @@ const Contexto = createContext<ContextoAparencia | null>(null)
 // O tema claro/escuro o processo principal já aplicou antes de a janela abrir.
 export function AparenciaProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const [aparencia, setAparencia] = useState<Aparencia | null>(null)
-  const [fundoUrl, setFundoUrl] = useState<string | null>(null)
+  const [fundoAntigo, setFundoAntigo] = useState<string | null>(null)
+  const [falhou, setFalhou] = useState<string | null>(null) // nome da imagem que não abriu
+  const [avisosFundo, setAvisosFundo] = useState<string[]>([])
   const [screenshots, setScreenshots] = useState<Screenshot[]>([])
   const [erro, setErro] = useState<ErroTela | null>(null)
   const [area, setArea] = useState<Area>('serv')
@@ -39,25 +48,47 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
 
   useEffect(() => {
     window.api.lerAparencia().then((r) => (r.ok ? setAparencia(r.valor) : setErro(r.erro)))
-    window.api.lerFundo().then((r) => r.ok && setFundoUrl(r.valor))
+    window.api.lerFundo().then((r) => r.ok && setFundoAntigo(r.valor))
+    window.api.avisosDeFundo().then(setAvisosFundo)
     window.api.listarScreenshots().then((r) => r.ok && setScreenshots(r.valor))
   }, [])
 
+  // O fundo do app que vale agora: a imagem que não abriu fica de fora (vale o bioma).
+  const escolhido = aparencia?.fundoApp ?? null
+  const fundoApp = escolhido?.tipo === 'imagem' && escolhido.imagem === falhou ? null : escolhido
+  const imagemApp = fundoApp?.tipo === 'imagem' ? fundoApp : null
+  const fundoUrl = imagemApp ? urlDoFundo(imagemApp.imagem) : fundoAntigo
+
   // Bioma, cor de destaque da área e contraste (o vidro fica mais opaco se o fundo pedir).
+  // Fase V4: sobre uma imagem, o tom do vidro (claro ou escuro) sai da luz da imagem.
   useEffect(() => {
     if (!aparencia) return
     let ativo = true
-    aplicarBioma(aparencia.bioma, aparencia.vidroLeve)
-    const accent = aplicarAccent(area === 'play' ? aparencia.destaquePlay : aparencia.destaque)
-    const imagem = fundoUrl && aparencia.fundoEmTodoApp
-    ;(imagem
-      ? amostrarImagem(fundoUrl, aparencia.escurecimento)
-      : Promise.resolve(ARTE[aparencia.bioma].paleta.map(hex))
-    ).then((fundos) => ativo && fundos.length && ajustarContraste(fundos, accent))
+    const e = aparencia.fundoApp
+    const imagemApp = e?.tipo === 'imagem' && e.imagem !== falhou ? e : null
+    const luz = imagemApp ? camadaDeLuz(imagemApp.ajuste.luz) : null
+    const camada = luz
+      ? {
+          cor: (luz.cor === 'preto' ? [0, 0, 0] : [255, 255, 255]) as Rgb,
+          opacidade: luz.opacidade
+        }
+      : null
+    ;(imagemApp
+      ? amostrarImagem(urlDoFundo(imagemApp.imagem), camada)
+      : Promise.resolve([] as Rgb[])
+    ).then((amostra) => {
+      if (!ativo) return
+      const bioma = amostra.length
+        ? tomDoVidro(amostra.reduce((t, c) => t + luminancia(c), 0) / amostra.length)
+        : aparencia.bioma
+      aplicarBioma(bioma, aparencia.vidroLeve)
+      const accent = aplicarAccent(area === 'play' ? aparencia.destaquePlay : aparencia.destaque)
+      ajustarContraste(amostra.length ? amostra : ARTE[bioma].paleta.map(hex), accent)
+    })
     return () => {
       ativo = false
     }
-  }, [aparencia, area, fundoUrl])
+  }, [aparencia, area, falhou])
 
   const windowsReduzAnimacoes = useWindowsReduzAnimacoes()
   const reduzir = windowsReduzAnimacoes || !!aparencia?.reduzirAnimacoes
@@ -82,19 +113,15 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
     }, 300)
   }
 
-  async function trocarFundo(
-    pedido: Promise<{ ok: true; valor: string | null } | { ok: false; erro: ErroTela }>
-  ): Promise<void> {
-    const r = await pedido
-    if (!r.ok) return setErro(r.erro)
+  // Print do jogo: guardado na pasta de fundos; devolve o nome para a tela usar.
+  async function usarScreenshot(nome: string): Promise<string | null> {
+    const r = await window.api.usarScreenshotComoFundo(nome)
+    if (!r.ok) {
+      setErro(r.erro)
+      return null
+    }
     setErro(null)
-    if (r.valor) setFundoUrl(r.valor)
-  }
-
-  async function removerFundo(): Promise<void> {
-    const r = await window.api.removerFundo()
-    if (!r.ok) return setErro(r.erro)
-    setFundoUrl(null)
+    return r.valor
   }
 
   return (
@@ -104,13 +131,16 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
         area,
         setArea,
         fundoUrl,
+        fundoApp,
+        imagemFalhou: () => imagemApp && setFalhou(imagemApp.imagem),
+        falhou: !!falhou && escolhido?.tipo === 'imagem' && escolhido.imagem === falhou,
+        avisosFundo,
+        fecharAvisosFundo: () => setAvisosFundo([]),
         screenshots,
         windowsReduzAnimacoes,
         erro,
         mudar,
-        escolherFundo: () => trocarFundo(window.api.escolherFundo()),
-        usarScreenshot: (nome) => trocarFundo(window.api.usarScreenshotComoFundo(nome)),
-        removerFundo
+        usarScreenshot
       }}
     >
       {children}

@@ -21,7 +21,6 @@ import type {
   EstadoModo,
   PedidoConvite,
   PedidoParaEntrar,
-  Bioma,
   AtualizacoesDisponiveis,
   EstadoCelular,
   AcaoApp,
@@ -79,6 +78,7 @@ import type {
   ItemServidor,
   PedidoImportacao,
   PedidoReceber,
+  ImagemFundo,
   OpcoesRelatorio,
   PedidoRelatorio,
   RelatorioGerado,
@@ -108,6 +108,7 @@ import type {
 } from '../shared/tipos'
 import type { Conserto, LinhaDiagnostico } from '../shared/diagnosticoRegras'
 import type { ModoApp } from '../shared/modoRegras'
+import type { EscolhaFundo } from '../shared/fundoRegras'
 
 // Assina um aviso do processo principal; devolve a função que cancela a assinatura.
 function ouvir<T>(canal: string, aoReceber: (dado: T) => void): () => void {
@@ -377,8 +378,12 @@ const api = {
     ipcRenderer.invoke('console:favorito', comando, favorito),
 
   // Mods personalizáveis (Fase 25). Salvar/restaurar config devolve true com o servidor ligado.,
-  buscarModpacks: (termo: string, offset: number): Promise<Resultado<ResultadoBuscaModpacks>> =>
-    ipcRenderer.invoke('modpacks:buscar', termo, offset),
+  buscarModpacks: (
+    termo: string,
+    pagina: number,
+    tamanho: number
+  ): Promise<Resultado<ResultadoBuscaModpacks>> =>
+    ipcRenderer.invoke('modpacks:buscar', termo, pagina, tamanho),
   analisarModpackModrinth: (projetoId: string): Promise<Resultado<AnaliseModpack>> =>
     ipcRenderer.invoke('modpacks:analisarModrinth', projetoId),
   analisarModpackArquivo: (): Promise<Resultado<AnaliseModpack | null>> =>
@@ -504,13 +509,20 @@ const api = {
     ipcRenderer.invoke('aparencia:salvar', a),
   // Imagem de fundo como data URL (ou null se não houver).,
   lerFundo: (): Promise<Resultado<string | null>> => ipcRenderer.invoke('aparencia:fundo'),
-  escolherFundo: (): Promise<Resultado<string | null>> =>
-    ipcRenderer.invoke('aparencia:escolherFundo'),
-  removerFundo: (): Promise<Resultado<void>> => ipcRenderer.invoke('aparencia:removerFundo'),
+  // Fundos (Fase V4): imagens guardadas na pasta de fundos (devolvem o nome guardado).
+  escolherImagemFundo: (): Promise<Resultado<string | null>> =>
+    ipcRenderer.invoke('fundos:escolher'),
+  guardarImagemArrastada: (arquivo: File): Promise<Resultado<string>> =>
+    ipcRenderer.invoke('fundos:arrastada', webUtils.getPathForFile(arquivo)),
+  listarImagensFundo: (): Promise<Resultado<ImagemFundo[]>> => ipcRenderer.invoke('fundos:listar'),
+  apagarImagemFundo: (nome: string): Promise<Resultado<void>> =>
+    ipcRenderer.invoke('fundos:apagar', nome),
+  // Avisos da migração dos fundos antigos (uma vez).
+  avisosDeFundo: (): Promise<string[]> => ipcRenderer.invoke('fundos:avisos'),
   // Prints do Minecraft (os mais recentes primeiro), com miniatura.,
   listarScreenshots: (): Promise<Resultado<Screenshot[]>> =>
     ipcRenderer.invoke('aparencia:screenshots'),
-  usarScreenshotComoFundo: (nome: string): Promise<Resultado<string | null>> =>
+  usarScreenshotComoFundo: (nome: string): Promise<Resultado<string>> =>
     ipcRenderer.invoke('aparencia:usarScreenshot', nome),
 
   // null quando o servidor desliga.,
@@ -597,20 +609,11 @@ const api = {
     id: string,
     opcoes?: { atualizar?: boolean; recusados?: string[]; copiarOpcoes?: boolean }
   ): Promise<Resultado<ResultadoJogar>> => ipcRenderer.invoke('jogo:ligarEJogar', id, opcoes),
-  fundoDaInstalacao: (id: string): Promise<Resultado<string | null>> =>
-    ipcRenderer.invoke('jogo:fundo', id),
-  escolherFundoInstalacao: (id: string): Promise<Resultado<boolean>> =>
-    ipcRenderer.invoke('jogo:escolherFundo', id),
-  removerFundoInstalacao: (id: string): Promise<Resultado<void>> =>
-    ipcRenderer.invoke('jogo:removerFundo', id),
-  definirBannerBioma: (id: string, bioma: Bioma | null): Promise<Resultado<void>> =>
-    ipcRenderer.invoke('jogo:bannerBioma', id, bioma),
-  lerFundoPadraoDoJogo: (): Promise<Resultado<string | null>> =>
-    ipcRenderer.invoke('jogo:fundoPadrao'),
-  escolherFundoPadraoDoJogo: (): Promise<Resultado<boolean>> =>
-    ipcRenderer.invoke('jogo:escolherFundoPadrao'),
-  removerFundoPadraoDoJogo: (): Promise<Resultado<void>> =>
-    ipcRenderer.invoke('jogo:removerFundoPadrao'),
+  // Fase V4: fundo da instalação (null = igual ao app) e "Usar este fundo em todas".
+  definirFundoInstalacao: (id: string, escolha: EscolhaFundo | null): Promise<Resultado<void>> =>
+    ipcRenderer.invoke('jogo:fundo', id, escolha),
+  usarFundoEmTodas: (escolha: EscolhaFundo | null): Promise<Resultado<void>> =>
+    ipcRenderer.invoke('jogo:fundoEmTodas', escolha),
   // Correção P1: INSTALAR monta a pasta da instalação; o Jogar fica "Em breve" (opção interna).
   abrirLauncherLigado: (): Promise<boolean> => ipcRenderer.invoke('jogo:abrirLauncherLigado'),
   instalarInstalacao: (
