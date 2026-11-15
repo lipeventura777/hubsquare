@@ -11,6 +11,7 @@ import { IconeArquivos, IconeRegistro } from '../componentes/icones'
 import { Esqueleto } from '../componentes/movimento'
 import { Aviso, Botao, Campo, Dialogo, EstadoVazio, Menu } from '../componentes/ui'
 import { useEstadoServidor } from '../servidor/comandos'
+import { t } from '../../../shared/i18n'
 
 const juntar = (pasta: string, nome: string): string => (pasta ? `${pasta}/${nome}` : nome)
 const ehTexto = (nome: string): boolean =>
@@ -75,7 +76,7 @@ export function TelaArquivos(): React.JSX.Element {
   async function baixar(item: ItemArquivo): Promise<void> {
     const r = await window.api.baixarArquivo(juntar(caminho, item.nome))
     if (!r.ok) setErro(r.erro)
-    else if (r.valor) setAviso(`Cópia de "${item.nome}" salva.`)
+    else if (r.valor) setAviso(t('telaArquivos.copiaDeSalva', { nome: item.nome }))
   }
 
   function soltar(e: React.DragEvent): void {
@@ -92,8 +93,11 @@ export function TelaArquivos(): React.JSX.Element {
     <div className="min-h-0 flex-1 overflow-auto">
       <div className="flex flex-col gap-4 p-10">
         {/* Migalhas: Servidor › plugins › config.yml */}
-        <nav aria-label="Pasta atual" className="flex flex-wrap items-center gap-1 text-sm">
-          {['Servidor', ...partes].map((p, i) => {
+        <nav
+          aria-label={t('telaArquivos.pastaAtual')}
+          className="flex flex-wrap items-center gap-1 text-sm"
+        >
+          {[t('telaArquivos.servidor'), ...partes].map((p, i) => {
             const destino = partes.slice(0, i).join('/')
             const ultima = i === partes.length && !editando
             return (
@@ -121,12 +125,7 @@ export function TelaArquivos(): React.JSX.Element {
           )}
         </nav>
 
-        {ligado && (
-          <Aviso tipo="atencao">
-            O servidor está ligado: mudanças em arquivos de configuração só valem depois de
-            reiniciar. A pasta do mundo que está rodando não pode ser apagada nem renomeada.
-          </Aviso>
-        )}
+        {ligado && <Aviso tipo="atencao">{t('telaArquivos.oServidorEstaLigadoMudancas')}</Aviso>}
         {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}
         {erro && <MensagemErro erro={erro} />}
 
@@ -138,8 +137,8 @@ export function TelaArquivos(): React.JSX.Element {
             aoSalvar={(reiniciar) =>
               setAviso(
                 reiniciar
-                  ? 'Salvo. Reinicie o servidor para a mudança valer.'
-                  : 'Salvo. A mudança vale na próxima vez que o servidor ligar.'
+                  ? t('telaArquivos.salvoReinicieOServidorPara')
+                  : t('telaArquivos.salvoAMudancaValeNa')
               )
             }
           />
@@ -147,7 +146,7 @@ export function TelaArquivos(): React.JSX.Element {
           !erro && <Esqueleto linhas={6} />
         ) : (
           <section
-            aria-label="Arquivos da pasta"
+            aria-label={t('telaArquivos.arquivosDaPasta')}
             onDragOver={(e) => {
               e.preventDefault()
               setArrastando(true)
@@ -158,7 +157,7 @@ export function TelaArquivos(): React.JSX.Element {
           >
             <header className="flex h-12 items-center justify-between gap-3 border-b border-linha px-4">
               <span className="text-xs text-muted">
-                Arraste arquivos do Windows para cá para enviar.
+                {t('telaArquivos.arrasteArquivosDoWindowsPara')}
               </span>
               <div className="flex gap-2">
                 <Botao
@@ -168,12 +167,12 @@ export function TelaArquivos(): React.JSX.Element {
                     setPedido({ tipo: 'novaPasta' })
                   }}
                 >
-                  Nova pasta
+                  {t('telaArquivos.novaPasta')}
                 </Botao>
                 <Botao
                   tamanho="pequeno"
-                  title="Atualizar"
-                  aria-label="Atualizar"
+                  title={t('telaArquivos.atualizar')}
+                  aria-label={t('telaArquivos.atualizar')}
                   onClick={() => void abrir(caminho)}
                 >
                   ⟳
@@ -181,14 +180,16 @@ export function TelaArquivos(): React.JSX.Element {
               </div>
             </header>
             {lista.itens.length === 0 ? (
-              <EstadoVazio icone={<IconeArquivos />} titulo="Pasta vazia" />
+              <EstadoVazio icone={<IconeArquivos />} titulo={t('telaArquivos.pastaVazia')} />
             ) : (
               <table className="w-full text-[13px]">
                 <thead className="text-left text-xs text-muted">
                   <tr>
-                    <th className="px-4 py-2 font-normal">Nome</th>
-                    <th className="w-28 px-2 py-2 text-right font-normal">Tamanho</th>
-                    <th className="w-40 px-2 py-2 font-normal">Modificado</th>
+                    <th className="px-4 py-2 font-normal">{t('telaArquivos.nome')}</th>
+                    <th className="w-28 px-2 py-2 text-right font-normal">
+                      {t('telaArquivos.tamanho')}
+                    </th>
+                    <th className="w-40 px-2 py-2 font-normal">{t('telaArquivos.modificado')}</th>
                     <th className="w-12" />
                   </tr>
                 </thead>
@@ -210,7 +211,9 @@ export function TelaArquivos(): React.JSX.Element {
                               <IconeRegistro className="h-4 w-4 shrink-0 text-muted" />
                             )}
                             <span className="break-all">{item.nome}</span>
-                            {item.protegido && <span className="text-xs text-muted">(em uso)</span>}
+                            {item.protegido && (
+                              <span className="text-xs text-muted">{t('telaArquivos.emUso')}</span>
+                            )}
                           </button>
                         </td>
                         <td className="px-2 text-right font-mono text-xs text-muted">
@@ -219,16 +222,16 @@ export function TelaArquivos(): React.JSX.Element {
                         <td className="px-2 text-xs text-muted">{dataHora(item.data)}</td>
                         <td className="px-2">
                           <Menu
-                            rotulo={`Ações de ${item.nome}`}
+                            rotulo={t('telaArquivos.acoesDe', { nome: item.nome })}
                             classeBotao="flex h-8 w-8 items-center justify-center hover:bg-tile-active"
                             itens={[
                               {
-                                rotulo: 'Abrir',
+                                rotulo: t('telaArquivos.abrir'),
                                 desabilitado: !abrivel,
                                 aoClicar: () => abrirItem(item)
                               },
                               {
-                                rotulo: 'Renomear',
+                                rotulo: t('telaArquivos.renomear'),
                                 desabilitado: item.protegido,
                                 aoClicar: () => {
                                   setNome(item.nome)
@@ -236,12 +239,12 @@ export function TelaArquivos(): React.JSX.Element {
                                 }
                               },
                               {
-                                rotulo: 'Baixar',
+                                rotulo: t('telaArquivos.baixar'),
                                 desabilitado: item.pasta,
                                 aoClicar: () => void baixar(item)
                               },
                               {
-                                rotulo: 'Apagar',
+                                rotulo: t('telaArquivos.apagar'),
                                 desabilitado: item.protegido,
                                 aoClicar: () => setPedido({ tipo: 'apagar', item })
                               }
@@ -264,19 +267,19 @@ export function TelaArquivos(): React.JSX.Element {
         aberto={!!pedido}
         titulo={
           pedido?.tipo === 'apagar'
-            ? `Apagar "${pedido.item.nome}"?`
+            ? t('telaArquivos.apagar2', { nome: pedido.item.nome })
             : pedido?.tipo === 'renomear'
-              ? 'Renomear'
-              : 'Nova pasta'
+              ? t('telaArquivos.renomear')
+              : t('telaArquivos.novaPasta')
         }
         aoCancelar={() => setPedido(null)}
         acao={{
           rotulo:
             pedido?.tipo === 'apagar'
-              ? 'Apagar'
+              ? t('telaArquivos.apagar')
               : pedido?.tipo === 'renomear'
-                ? 'Renomear'
-                : 'Criar',
+                ? t('telaArquivos.renomear')
+                : t('telaArquivos.criar'),
           variante: pedido?.tipo === 'apagar' ? 'perigo' : 'primario',
           aoClicar: confirmar,
           ocupado,
@@ -286,13 +289,13 @@ export function TelaArquivos(): React.JSX.Element {
         {pedido?.tipo === 'apagar' ? (
           <p>
             {pedido.item.pasta
-              ? 'A pasta e tudo o que tem dentro dela vão ser apagados.'
-              : 'O arquivo vai ser apagado.'}{' '}
-            Isso não pode ser desfeito.
+              ? t('telaArquivos.aPastaETudoO')
+              : t('telaArquivos.oArquivoVaiSerApagado')}{' '}
+            {t('telaArquivos.issoNaoPodeSerDesfeito')}
           </p>
         ) : (
           <Campo
-            aria-label="Nome"
+            aria-label={t('telaArquivos.nome')}
             autoFocus
             value={nome}
             onChange={(e) => setNome(e.target.value)}
@@ -359,7 +362,7 @@ export function Editor({
     <section className="flex flex-col border border-linha bg-panel">
       <header className="flex h-12 items-center justify-between gap-3 border-b border-linha px-4">
         <span className="text-xs text-warning" aria-live="polite">
-          {alterado ? 'Alterações não salvas' : ''}
+          {alterado ? t('telaArquivos.alteracoesNaoSalvas') : ''}
         </span>
         <div className="flex gap-2">
           <Botao
@@ -367,7 +370,7 @@ export function Editor({
             onClick={() => (alterado ? setDescartando(true) : aoFechar())}
             disabled={salvando}
           >
-            Cancelar
+            {t('telaArquivos.cancelar')}
           </Botao>
           <Botao
             tamanho="pequeno"
@@ -376,7 +379,7 @@ export function Editor({
             onClick={() => void salvar()}
             title="Ctrl+S"
           >
-            Salvar
+            {t('telaArquivos.salvar')}
           </Botao>
         </div>
       </header>
@@ -392,7 +395,7 @@ export function Editor({
           ))}
         </div>
         <textarea
-          aria-label={`Conteúdo de ${caminho}`}
+          aria-label={t('telaArquivos.conteudoDe', { caminho })}
           spellCheck={false}
           wrap="off"
           value={texto}
@@ -405,11 +408,11 @@ export function Editor({
       </div>
       <Dialogo
         aberto={descartando}
-        titulo="Descartar alterações?"
+        titulo={t('telaArquivos.descartarAlteracoes')}
         aoCancelar={() => setDescartando(false)}
-        acao={{ rotulo: 'Descartar', variante: 'perigo', aoClicar: aoFechar }}
+        acao={{ rotulo: t('telaArquivos.descartar'), variante: 'perigo', aoClicar: aoFechar }}
       >
-        As mudanças que você fez neste arquivo vão ser perdidas.
+        {t('telaArquivos.asMudancasQueVoceFez')}
       </Dialogo>
     </section>
   )

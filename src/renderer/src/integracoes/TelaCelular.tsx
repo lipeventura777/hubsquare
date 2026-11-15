@@ -14,6 +14,7 @@ import {
   PaginaAjustes,
   Secao
 } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // QR em preto no branco: os leitores precisam desse contraste, nos dois temas.
 function Qr({ texto }: { texto: string }): React.JSX.Element {
@@ -21,7 +22,7 @@ function Qr({ texto }: { texto: string }): React.JSX.Element {
   return (
     <div
       role="img"
-      aria-label={`QR code para abrir ${texto}`}
+      aria-label={t('telaCelular.qrCodeParaAbrir', { texto })}
       className="h-40 w-40 shrink-0 [&>svg]:h-full [&>svg]:w-full"
       // O SVG é gerado aqui mesmo, a partir do nosso endereço.
       dangerouslySetInnerHTML={{ __html: svg }}
@@ -82,28 +83,26 @@ export function TelaCelular(): React.JSX.Element {
   const pinOk = /^\d{6,8}$/.test(pin) && pin === pin2
   return (
     <PaginaAjustes>
-      <Secao titulo="Painel pelo celular">
+      <Secao titulo={t('telaCelular.painelPeloCelular')}>
         <LinhaControle
-          rotulo="Abrir o painel no celular"
+          rotulo={t('telaCelular.abrirOPainelNoCelular')}
           ligado={e.ativo}
           disabled={ocupado || (!e.ativo && !e.temPin)}
           aoMudar={(v) => rodar(() => window.api.ativarCelular(v))}
         />
         <p className="text-[13px] text-muted">
-          Pelo navegador do celular você vê o status, os jogadores, CPU e RAM, e liga, desliga ou
-          reinicia o servidor. O painel só abre na rede local, no Radmin e no Tailscale, nunca na
-          internet.
-          {!e.temPin && ' Crie um PIN abaixo para ligar.'}
+          {t('telaCelular.peloNavegadorDoCelularVoce')}
+          {!e.temPin && t('telaCelular.crieUmPinAbaixoPara')}
         </p>
         {e.erro && <Aviso tipo="atencao">{e.erro}</Aviso>}
         {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}
         {erro && <MensagemErro erro={erro} />}
       </Secao>
 
-      <Secao titulo="PIN">
+      <Secao titulo={t('telaCelular.pin')}>
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1 text-[13px]">
-            {e.temPin ? 'Novo PIN' : 'PIN (6 a 8 números)'}
+            {e.temPin ? t('telaCelular.novoPin') : t('telaCelular.pin6A8Numeros')}
             <Campo
               type="password"
               inputMode="numeric"
@@ -114,7 +113,7 @@ export function TelaCelular(): React.JSX.Element {
             />
           </label>
           <label className="flex flex-col gap-1 text-[13px]">
-            Repita o PIN
+            {t('telaCelular.repitaOPin')}
             <Campo
               type="password"
               inputMode="numeric"
@@ -126,7 +125,7 @@ export function TelaCelular(): React.JSX.Element {
           </label>
         </div>
         {pin2.length >= 6 && pin !== pin2 && (
-          <p className="text-xs text-warning">Os dois PINs estão diferentes.</p>
+          <p className="text-xs text-warning">{t('telaCelular.osDoisPinsEstaoDiferentes')}</p>
         )}
         <Botao
           variante="primario"
@@ -137,8 +136,8 @@ export function TelaCelular(): React.JSX.Element {
               await rodar(
                 () => window.api.definirPinCelular(pin),
                 e.temPin
-                  ? 'PIN trocado. Os aparelhos precisam entrar de novo.'
-                  : 'PIN criado. Agora ligue o painel.'
+                  ? t('telaCelular.pinTrocadoOsAparelhosPrecisam')
+                  : t('telaCelular.pinCriadoAgoraLigueO')
               )
             ) {
               setPin('')
@@ -146,15 +145,15 @@ export function TelaCelular(): React.JSX.Element {
             }
           }}
         >
-          {e.temPin ? 'Trocar PIN' : 'Criar PIN'}
+          {e.temPin ? t('telaCelular.trocarPin') : t('telaCelular.criarPin')}
         </Botao>
         <p className="text-xs text-muted">
-          O app guarda só uma versão embaralhada do PIN. Depois de 5 PINs errados, o painel bloqueia
-          por 15 minutos.{e.temPin && ' Trocar o PIN desconecta todos os aparelhos.'}
+          {t('telaCelular.oAppGuardaSoUma')}
+          {e.temPin && t('telaCelular.trocarOPinDesconectaTodos')}
         </p>
       </Secao>
 
-      <Secao titulo="Porta">
+      <Secao titulo={t('telaCelular.porta')}>
         <div className="flex items-center gap-2">
           <Campo
             type="number"
@@ -163,25 +162,26 @@ export function TelaCelular(): React.JSX.Element {
             value={porta}
             onChange={(ev) => setPorta(ev.target.value)}
             className="w-32"
-            aria-label="Porta do painel"
+            aria-label={t('telaCelular.portaDoPainel')}
           />
           <Botao
             disabled={ocupado || Number(porta) === e.porta}
             onClick={() =>
-              rodar(() => window.api.definirPortaCelular(Math.round(Number(porta))), 'Porta salva.')
+              rodar(
+                () => window.api.definirPortaCelular(Math.round(Number(porta))),
+                t('telaCelular.portaSalva')
+              )
             }
           >
-            Salvar porta
+            {t('telaCelular.salvarPorta')}
           </Botao>
         </div>
-        <p className="text-xs text-muted">
-          Padrão: 8787. Só mude se outro programa já usar essa porta.
-        </p>
+        <p className="text-xs text-muted">{t('telaCelular.padrao8787SoMudeSe')}</p>
       </Secao>
 
-      <Secao titulo="Endereços">
+      <Secao titulo={t('telaCelular.enderecos')}>
         {!e.ativo && (
-          <p className="text-[13px] text-muted">Ligue o painel para abrir os endereços.</p>
+          <p className="text-[13px] text-muted">{t('telaCelular.ligueOPainelParaAbrir')}</p>
         )}
         <div className="flex flex-col gap-3">
           {e.enderecos.map((a) => (
@@ -189,10 +189,10 @@ export function TelaCelular(): React.JSX.Element {
               {!a.url ? (
                 <p className="text-[13px] text-muted">
                   {a.rotulo.startsWith('Tailscale')
-                    ? 'Tailscale não encontrado. Veja o passo a passo abaixo.'
+                    ? t('telaCelular.tailscaleNaoEncontradoVejaO')
                     : a.rotulo.startsWith('Radmin')
-                      ? 'Radmin VPN fechado ou desconectado.'
-                      : 'Rede local não encontrada.'}
+                      ? t('telaCelular.radminVpnFechadoOuDesconectado')
+                      : t('telaCelular.redeLocalNaoEncontrada')}
                 </p>
               ) : (
                 <div className="flex items-center gap-4">
@@ -201,10 +201,10 @@ export function TelaCelular(): React.JSX.Element {
                     <span className="font-mono text-[13px] break-all">{a.url}</span>
                     <span className="text-xs text-muted">
                       {!e.ativo
-                        ? 'O painel está desligado.'
+                        ? t('telaCelular.oPainelEstaDesligado')
                         : a.escutando
-                          ? 'Aponte a câmera do celular para o QR code.'
-                          : 'Não consegui abrir o painel neste endereço.'}
+                          ? t('telaCelular.aponteACameraDoCelular')
+                          : t('telaCelular.naoConseguiAbrirOPainel')}
                     </span>
                   </div>
                 </div>
@@ -212,13 +212,10 @@ export function TelaCelular(): React.JSX.Element {
             </CardPainel>
           ))}
         </div>
-        <p className="text-xs text-muted">
-          Na primeira vez, o Windows pode perguntar se o HubSquare pode usar a rede: permita em
-          redes privadas.
-        </p>
+        <p className="text-xs text-muted">{t('telaCelular.naPrimeiraVezOWindows')}</p>
       </Secao>
 
-      <Secao titulo="Aparelhos conectados">
+      <Secao titulo={t('telaCelular.aparelhosConectados')}>
         {e.aparelhos.length ? (
           <ul className="flex flex-col divide-y divide-linha border border-linha bg-panel">
             {e.aparelhos.map((a) => (
@@ -228,14 +225,16 @@ export function TelaCelular(): React.JSX.Element {
               >
                 <b>{a.aparelho}</b>
                 <span className="text-xs text-muted">
-                  entrou {dataHora(new Date(a.criada).toISOString())} · último uso{' '}
-                  {dataHora(new Date(a.usada).toISOString())}
+                  {t('telaCelular.entrouUltimoUso', {
+                    dataHora: dataHora(new Date(a.criada).toISOString()),
+                    dataHora2: dataHora(new Date(a.usada).toISOString())
+                  })}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-[13px] text-muted">Nenhum aparelho conectado.</p>
+          <p className="text-[13px] text-muted">{t('telaCelular.nenhumAparelhoConectado')}</p>
         )}
         <Botao
           variante="perigo"
@@ -243,53 +242,48 @@ export function TelaCelular(): React.JSX.Element {
           disabled={!e.aparelhos.length || ocupado}
           onClick={() => setDesconectando(true)}
         >
-          Desconectar todos os aparelhos
+          {t('telaCelular.desconectarTodosOsAparelhos')}
         </Botao>
-        <p className="text-xs text-muted">Cada login vale por 7 dias.</p>
+        <p className="text-xs text-muted">{t('telaCelular.cadaLoginValePor7')}</p>
       </Secao>
 
-      <Secao titulo="Fora de casa (Tailscale)">
+      <Secao titulo={t('telaCelular.foraDeCasaTailscale')}>
         <ol className="flex list-decimal flex-col gap-2 pl-5 text-[13px]">
           <li>
-            No PC, baixe o Tailscale em{' '}
+            {t('telaCelular.noPcBaixeOTailscale')}{' '}
             <a
               href="https://tailscale.com/download"
               target="_blank"
               rel="noreferrer"
               className="underline"
             >
-              tailscale.com/download
+              {t('telaCelular.tailscaleComDownload')}
             </a>
-            , instale e entre com uma conta (Google, Microsoft ou outra).
+            {t('telaCelular.instaleEEntreComUma')}
           </li>
-          <li>
-            No celular, instale o app Tailscale (Play Store ou App Store) e entre com a mesma conta.
-          </li>
-          <li>
-            Deixe o Tailscale ligado nos dois. O endereço &quot;Tailscale&quot; aparece aqui em
-            alguns segundos.
-          </li>
-          <li>
-            No celular, abra esse endereço. Funciona até pelos dados móveis, sem abrir nada na
-            internet.
-          </li>
+          <li>{t('telaCelular.noCelularInstaleOApp')}</li>
+          <li>{t('telaCelular.deixeOTailscaleLigadoNos')}</li>
+          <li>{t('telaCelular.noCelularAbraEsseEndereco')}</li>
         </ol>
       </Secao>
 
       <Dialogo
         aberto={desconectando}
-        titulo="Desconectar todos os aparelhos?"
+        titulo={t('telaCelular.desconectarTodosOsAparelhos2')}
         aoCancelar={() => setDesconectando(false)}
         acao={{
-          rotulo: 'Desconectar',
+          rotulo: t('telaCelular.desconectar'),
           variante: 'perigo',
           aoClicar: async () => {
             setDesconectando(false)
-            await rodar(window.api.desconectarCelulares, 'Todos os aparelhos foram desconectados.')
+            await rodar(
+              window.api.desconectarCelulares,
+              t('telaCelular.todosOsAparelhosForamDesconectados')
+            )
           }
         }}
       >
-        <p>Cada aparelho vai precisar digitar o PIN de novo.</p>
+        <p>{t('telaCelular.cadaAparelhoVaiPrecisarDigitar')}</p>
       </Dialogo>
     </PaginaAjustes>
   )

@@ -11,6 +11,8 @@ import {
 } from '../fundo/EscolherFundo'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { Esqueleto } from '../componentes/movimento'
+import { AbaIdioma } from '../estrutura/EscolherIdioma'
+import { AbaSobre } from './AbaSobre'
 import {
   Aviso,
   Botao,
@@ -23,14 +25,15 @@ import {
 import { MODOS_ANIMACAO, modoInicial, type ModoAnimacao } from '../../../shared/animacaoRegras'
 import { corDaSugestao, NOMES_SUGESTOES } from './tema'
 import { useAparencia } from './useAparencia'
+import { t } from '../../../shared/i18n'
 
 const NOMES_CORES: Record<(typeof NOMES_SUGESTOES)[number], string> = {
-  verde: 'Verde',
-  azul: 'Azul',
-  roxo: 'Roxo',
-  laranja: 'Laranja',
-  vermelho: 'Vermelho',
-  ciano: 'Ciano'
+  verde: t('telaAparencia.verde'),
+  azul: t('telaAparencia.azul'),
+  roxo: t('telaAparencia.roxo'),
+  laranja: t('telaAparencia.laranja'),
+  vermelho: t('telaAparencia.vermelho'),
+  ciano: t('telaAparencia.ciano')
 }
 
 // Tela Aparência (DESIGN.md, seções 6.7 e 7). Abas: Tema e Fundo.
@@ -45,6 +48,8 @@ export function TelaAparencia({ aba }: { aba: string }): React.JSX.Element {
       {aba === 'Tema' && <AbaTema />}
       {aba === 'Fundo' && <AbaFundo />}
       {aba === 'Animações' && <AbaAnimacoes />}
+      {aba === 'Idioma / Language' && <AbaIdioma />}
+      {aba === 'Sobre' && <AbaSobre />}
     </PaginaAjustes>
   )
 }
@@ -55,28 +60,28 @@ function AbaTema(): React.JSX.Element {
 
   return (
     <>
-      <Secao titulo="Vidro">
+      <Secao titulo={t('telaAparencia.vidro')}>
         <LinhaControle
-          rotulo="Vidro leve"
+          rotulo={t('telaAparencia.vidroLeve')}
           ligado={aparencia.vidroLeve}
           aoMudar={(v) => mudar({ vidroLeve: v })}
         >
-          Sem o desfoque atrás dos painéis, só o fundo translúcido. Use se o PC ficar lento.
+          {t('telaAparencia.semODesfoqueAtrasDos')}
         </LinhaControle>
       </Secao>
 
       <AnimacaoDoFundo />
 
-      <CorDaArea campo="destaque" titulo="Cor do ServSquare" />
-      <CorDaArea campo="destaquePlay" titulo="Cor do PlaySquare" />
+      <CorDaArea campo="destaque" titulo={t('telaAparencia.corDoServsquare')} />
+      <CorDaArea campo="destaquePlay" titulo={t('telaAparencia.corDoPlaysquare')} />
     </>
   )
 }
 
 const NOMES_ANIMACAO: Record<ModoAnimacao, string> = {
-  completa: 'Completa',
-  leve: 'Leve (metade das partículas, mais devagar)',
-  desligada: 'Desligada (fundo parado)'
+  completa: t('telaAparencia.completa'),
+  leve: t('telaAparencia.leveMetadeDasParticulasMais'),
+  desligada: t('telaAparencia.desligadaFundoParado')
 }
 
 // Animação do fundo (Fase V2). Sem escolha salva: completa, ou desligada (arte parada) com menos movimento pedido.
@@ -88,8 +93,8 @@ function AnimacaoDoFundo(): React.JSX.Element {
     windowsReduzAnimacoes || aparencia.reduzirAnimacoes
   )
   return (
-    <Secao titulo="Animação do fundo">
-      <div role="radiogroup" aria-label="Animação do fundo">
+    <Secao titulo={t('telaAparencia.animacaoDoFundo')}>
+      <div role="radiogroup" aria-label={t('telaAparencia.animacaoDoFundo')}>
         {MODOS_ANIMACAO.map((m) => (
           <OpcaoRadio
             key={m}
@@ -101,10 +106,7 @@ function AnimacaoDoFundo(): React.JSX.Element {
           </OpcaoRadio>
         ))}
       </div>
-      <p className="text-xs text-muted">
-        O fundo para sozinho com o jogo aberto, com o app minimizado ou na bandeja, sem uso por 30
-        segundos e enquanto um modpack instala.
-      </p>
+      <p className="text-xs text-muted">{t('telaAparencia.oFundoParaSozinhoCom')}</p>
     </Secao>
   )
 }
@@ -139,7 +141,7 @@ function CorDaArea({
             }`}
           >
             <span aria-hidden="true" className="h-5 w-5 rounded-[6px] bg-[var(--accent-padrao)]" />
-            Cor do bioma
+            {t('telaAparencia.corDoBioma')}
           </button>
           {sugestoes.map(({ nome, cor }) => {
             const ativa = atual?.toLowerCase() === cor.toLowerCase()
@@ -168,13 +170,13 @@ function CorDaArea({
               onChange={(e) => mudar({ [campo]: e.target.value })}
               className="h-6 w-8 cursor-pointer border-0 bg-transparent p-0"
             />
-            Personalizada
+            {t('telaAparencia.personalizada')}
           </label>
         </div>
         <p className="text-xs text-muted">
           {campo === 'destaque'
-            ? 'Muda o botão LIGAR, a aba ativa, as caixas marcadas e os avisos.'
-            : 'Vale enquanto o PlaySquare está aberto: botão JOGAR, aba ativa e caixas marcadas.'}
+            ? t('telaAparencia.mudaOBotaoLigarA')
+            : t('telaAparencia.valeEnquantoOPlaysquareEsta')}
         </p>
       </Secao>
     </>
@@ -220,17 +222,17 @@ function AbaFundo(): React.JSX.Element {
   const imagemAtual = atual.tipo === 'imagem' ? atual : null
   return (
     <>
-      <Secao titulo="Prévia">
+      <Secao titulo={t('telaAparencia.previa')}>
         <div className="relative aspect-video w-full max-w-[480px] overflow-hidden rounded-(--raio-item) border border-linha">
           <CamadaFundo escolha={fundoApp ?? atual} />
           <div className="vidro-painel absolute right-4 bottom-4 left-4 px-4 py-3 text-[13px]">
-            <b>Assim fica o vidro</b>
-            <p className="text-muted">O texto continua fácil de ler sobre qualquer fundo.</p>
+            <b>{t('telaAparencia.assimFicaOVidro')}</b>
+            <p className="text-muted">{t('telaAparencia.oTextoContinuaFacilDe')}</p>
           </div>
         </div>
         {desfazer && (
           <Aviso tipo="sucesso">
-            <span className="flex-1">Fundo do app trocado.</span>
+            <span className="flex-1">{t('telaAparencia.fundoDoAppTrocado')}</span>
             <Botao
               tamanho="pequeno"
               onClick={() => {
@@ -238,20 +240,20 @@ function AbaFundo(): React.JSX.Element {
                 setDesfazer(null)
               }}
             >
-              Desfazer
+              {t('telaAparencia.desfazer')}
             </Botao>
           </Aviso>
         )}
       </Secao>
 
-      <Secao titulo="Bioma">
+      <Secao titulo={t('telaAparencia.bioma')}>
         <GradeBiomas
           atual={atual.tipo === 'bioma' ? atual.bioma : null}
           aoEscolher={(b) => trocar({ tipo: 'bioma', bioma: b })}
         />
       </Secao>
 
-      <Secao titulo="Minha imagem">
+      <Secao titulo={t('telaAparencia.minhaImagem')}>
         <GradeImagens
           imagens={imgs.imagens}
           atual={imagemAtual?.imagem ?? null}
@@ -271,18 +273,12 @@ function AbaFundo(): React.JSX.Element {
         )}
       </Secao>
 
-      <Secao titulo="Seus prints do jogo">
+      <Secao titulo={t('telaAparencia.seusPrintsDoJogo')}>
         {screenshots.length === 0 ? (
-          <p className="text-[13px] text-muted">
-            Nenhum print encontrado. No jogo, aperte F2 para tirar um; eles ficam em
-            .minecraft\screenshots e aparecem aqui.
-          </p>
+          <p className="text-[13px] text-muted">{t('telaAparencia.nenhumPrintEncontradoNoJogo')}</p>
         ) : (
           <>
-            <p className="text-[13px] text-muted">
-              Clique num print para usar como fundo do app. Os mais recentes também aparecem nos
-              cards de backup e de mundo.
-            </p>
+            <p className="text-[13px] text-muted">{t('telaAparencia.cliqueNumPrintParaUsar')}</p>
             <ul className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
               {screenshots.map((s, i) => (
                 <li
@@ -298,12 +294,12 @@ function AbaFundo(): React.JSX.Element {
                       await imgs.recarregar()
                       trocar(escolhaDeImagem(nome, atual))
                     }}
-                    title={`Usar ${s.nome} como fundo`}
+                    title={t('telaAparencia.usarComoFundo', { nome: s.nome })}
                     className="block w-full overflow-hidden rounded-(--raio-pequeno) border border-linha transition-colors duration-(--dur-fast) hover:border-muted"
                   >
                     <img
                       src={s.miniatura}
-                      alt={`Print ${s.nome}`}
+                      alt={t('telaAparencia.print', { nome: s.nome })}
                       className="aspect-video w-full object-cover"
                     />
                   </button>
@@ -314,14 +310,13 @@ function AbaFundo(): React.JSX.Element {
         )}
       </Secao>
 
-      <Secao titulo="Minhas imagens">
+      <Secao titulo={t('telaAparencia.minhasImagens')}>
         {erro && <MensagemErro erro={erro} />}
         {imgs.imagens === null ? (
           <Esqueleto linhas={2} />
         ) : imgs.imagens.length === 0 ? (
           <p className="text-[13px] text-muted">
-            Nenhuma imagem guardada ainda. As que você escolher para o app ou para uma instalação
-            aparecem aqui.
+            {t('telaAparencia.nenhumaImagemGuardadaAindaAs')}
           </p>
         ) : (
           <ul className="flex max-w-[720px] flex-col gap-2">
@@ -332,17 +327,19 @@ function AbaFundo(): React.JSX.Element {
               >
                 <img
                   src={img.url}
-                  alt={`Imagem ${n + 1}`}
+                  alt={t('telaAparencia.imagem', { v: n + 1 })}
                   className="aspect-video w-28 shrink-0 rounded-[calc(var(--raio-pequeno)-4px)] object-cover"
                 />
                 <span className="min-w-0 flex-1 text-[13px]">
-                  <b>Imagem {n + 1}</b>
+                  <b>{t('telaAparencia.imagem', { v: n + 1 })}</b>
                   <span className="block text-muted">
-                    {img.usadaEm.length ? `Em uso: ${img.usadaEm.join(', ')}` : 'Sem uso'}
+                    {img.usadaEm.length
+                      ? t('telaAparencia.emUso', { lista: img.usadaEm.join(', ') })
+                      : t('telaAparencia.semUso')}
                   </span>
                 </span>
                 <Botao variante="perigo" tamanho="pequeno" onClick={() => setApagar(img)}>
-                  Apagar…
+                  {t('telaAparencia.apagar')}
                 </Botao>
               </li>
             ))}
@@ -352,16 +349,23 @@ function AbaFundo(): React.JSX.Element {
 
       <Dialogo
         aberto={apagar !== null}
-        titulo="Apagar esta imagem?"
+        titulo={t('telaAparencia.apagarEstaImagem')}
         aoCancelar={() => setApagar(null)}
-        acao={{ rotulo: 'Apagar', variante: 'perigo', aoClicar: () => void confirmarApagar() }}
+        acao={{
+          rotulo: t('telaAparencia.apagar2'),
+          variante: 'perigo',
+          aoClicar: () => void confirmarApagar()
+        }}
       >
         <p className="text-[13px]">
-          A cópia guardada pelo app sai da pasta de fundos (o seu arquivo original não muda).
+          {t('telaAparencia.aCopiaGuardadaPeloApp')}
           {apagar?.usadaEm.length
-            ? ` Quem usa esta imagem (${apagar.usadaEm.join(', ')}) volta para ${
-                apagar.usadaEm.includes('Fundo do app') ? 'o bioma' : '"Igual ao app"'
-              }.`
+            ? t('telaAparencia.quemUsaEstaImagemVolta', {
+                join: apagar.usadaEm.join(', '),
+                v: apagar.usadaEm.includes(t('p.instalacoes.fundoDoApp'))
+                  ? t('telaAparencia.oBioma')
+                  : t('telaAparencia.igualAoApp')
+              })
             : ''}
         </p>
       </Dialogo>
@@ -374,16 +378,16 @@ function AbaAnimacoes(): React.JSX.Element {
   const { aparencia, mudar, windowsReduzAnimacoes } = useAparencia()
   if (!aparencia) return <></>
   return (
-    <Secao titulo="Animações">
+    <Secao titulo={t('telaAparencia.animacoes')}>
       <LinhaControle
-        rotulo="Reduzir animações"
+        rotulo={t('telaAparencia.reduzirAnimacoes')}
         ligado={windowsReduzAnimacoes || aparencia.reduzirAnimacoes}
         disabled={windowsReduzAnimacoes}
         aoMudar={(v) => mudar({ reduzirAnimacoes: v })}
       >
         {windowsReduzAnimacoes
-          ? 'Ligado pelo Windows (Configurações › Acessibilidade › Efeitos visuais › Efeitos de animação).'
-          : 'Tira os movimentos da tela. As cores de status continuam, só param de piscar.'}
+          ? t('telaAparencia.ligadoPeloWindowsConfiguracoesAcessibili')
+          : t('telaAparencia.tiraOsMovimentosDaTela')}
       </LinhaControle>
     </Secao>
   )

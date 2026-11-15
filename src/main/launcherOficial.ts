@@ -13,6 +13,7 @@ import {
   type Launcher,
   type PerfilLauncher
 } from './launcherRegras'
+import { t } from '../shared/i18n'
 
 // Minecraft Launcher oficial (Fase P1). O app nunca abre o jogo sozinho nem faz login: ele só
 // grava um perfil no launcher_profiles.json (com backup antes) e abre o launcher.
@@ -78,7 +79,9 @@ export async function detectarLauncher(): Promise<Launcher | null> {
       }
     }
   } catch (e) {
-    await anotarFalha(`não consegui procurar o launcher pelo PowerShell: ${detalhar(e)}`)
+    await anotarFalha(
+      t('p.launcherOficial.naoConseguiProcurarOLauncher', { detalhar: detalhar(e) })
+    )
   }
   return escolherLauncher(
     apps,
@@ -113,7 +116,7 @@ export async function launcherAberto(): Promise<boolean> {
 export async function abrirLauncher(l: Launcher): Promise<void> {
   // Confere de novo: nada que não seja o launcher (nunca o marcador do Xbox nem a Store).
   if (!launcherSeguro(l)) {
-    throw new ErroApp('Não reconheci o Minecraft Launcher deste PC.', JSON.stringify(l))
+    throw new ErroApp(t('p.launcherOficial.naoReconheciOMinecraftLauncher'), JSON.stringify(l))
   }
   // Apps da Store abrem pelo explorer, com o id do app (PackageFamilyName!Id).
   const filho =
@@ -123,7 +126,7 @@ export async function abrirLauncher(l: Launcher): Promise<void> {
   await new Promise<void>((ok, falhou) => {
     filho.once('spawn', ok)
     filho.once('error', (e) =>
-      falhou(new ErroApp('Não consegui abrir o Minecraft Launcher. Tente de novo.', detalhar(e)))
+      falhou(new ErroApp(t('p.launcherOficial.naoConseguiAbrirOMinecraft'), detalhar(e)))
     )
   })
   filho.unref()
@@ -137,8 +140,8 @@ function arquivosDePerfis(): string[] {
 export function exigirPerfis(): void {
   if (!arquivosDePerfis().length) {
     throw new ErroApp(
-      'Abra o Minecraft Launcher uma vez e entre na sua conta. Depois clique em Jogar de novo.',
-      `Não existe ${PERFIS.join(' nem ')} em ${MINECRAFT()}.`
+      t('p.launcherOficial.abraOMinecraftLauncherUma'),
+      t('p.launcherOficial.naoExisteEm', { join: PERFIS.join(' nem '), MINECRAFT: MINECRAFT() })
     )
   }
 }
@@ -187,7 +190,7 @@ export async function gravarPerfil(chave: string, perfil: PerfilLauncher): Promi
       novo = aplicarPerfil(texto, chave, perfil)
     } catch (e) {
       throw new ErroApp(
-        'O Minecraft Launcher mudou o jeito de guardar as instalações, e o app não reconheceu. Nada foi alterado. Procure uma versão nova do HubSquare.',
+        t('p.launcherOficial.oMinecraftLauncherMudouO'),
         `${arquivo}: ${(e as Error).message}`
       )
     }

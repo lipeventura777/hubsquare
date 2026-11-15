@@ -21,13 +21,14 @@ import {
   Selecao
 } from '../componentes/ui'
 import { useEstadoServidor } from '../servidor/comandos'
+import { t } from '../../../shared/i18n'
 
 const DESCRICOES: Record<TipoId, string> = {
-  paper: 'Rápido e aceita plugins.',
-  vanilla: 'O servidor oficial, sem mudanças.',
-  fabric: 'Mods leves.',
-  forge: 'Mods grandes.',
-  neoforge: 'Mods das versões novas.'
+  paper: t('telaSoftware.rapidoEAceitaPlugins'),
+  vanilla: t('telaSoftware.oServidorOficialSemMudancas'),
+  fabric: t('telaSoftware.modsLeves'),
+  forge: t('telaSoftware.modsGrandes'),
+  neoforge: t('telaSoftware.modsDasVersoesNovas')
 }
 
 // Tela Software: mostra o tipo e a versão atuais e troca, só com o servidor desligado.
@@ -82,7 +83,12 @@ export function TelaSoftware(): React.JSX.Element {
   // Plugins do Paper não rodam em loaders de mods, e mods de um loader não rodam em outro.
   const extras = tipo !== info.tipo ? EXTRAS_TIPOS[info.tipo] : undefined
   const avisoExtras = extras
-    ? `Os ${extras} do ${NOMES_TIPOS[info.tipo]} não funcionam no ${NOMES_TIPOS[tipo]}. Eles continuam guardados na pasta "${extras}", mas não vão carregar.`
+    ? t('telaSoftware.osDoNaoFuncionamNo', {
+        extras,
+        v: NOMES_TIPOS[info.tipo],
+        v2: NOMES_TIPOS[tipo],
+        extras2: extras
+      })
     : ''
 
   async function trocar(): Promise<void> {
@@ -100,16 +106,16 @@ export function TelaSoftware(): React.JSX.Element {
 
   return (
     <PaginaAjustes grade="grade-software">
-      <Secao titulo="Atual">
-        <CardPainel titulo="Software do servidor">
+      <Secao titulo={t('telaSoftware.atual')}>
+        <CardPainel titulo={t('telaSoftware.softwareDoServidor')}>
           <p className="texto-pixel text-[22px]">
             {NOMES_TIPOS[info.tipo]} {info.versao}
           </p>
-          <p className="text-[13px] text-muted">Java {info.java}</p>
+          <p className="text-[13px] text-muted">{t('telaSoftware.java', { java: info.java })}</p>
         </CardPainel>
       </Secao>
 
-      <Secao titulo="Trocar">
+      <Secao titulo={t('telaSoftware.trocar')}>
         {/* Os cinco numa linha quando o bloco tem espaço; senão quebram juntos. */}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
           {(Object.keys(NOMES_TIPOS) as TipoId[]).map((t) => (
@@ -130,9 +136,9 @@ export function TelaSoftware(): React.JSX.Element {
 
         <div className="flex flex-wrap items-end gap-3">
           <label className="flex w-60 flex-col gap-1 text-[13px]">
-            Versão do jogo
+            {t('telaSoftware.versaoDoJogo')}
             <Selecao value={versao} disabled={!versoes} onChange={(e) => setVersao(e.target.value)}>
-              {!versoes && <option>Carregando...</option>}
+              {!versoes && <option>{t('telaSoftware.carregando')}</option>}
               {versoes?.map((v) => (
                 <option key={v} value={v}>
                   {v}
@@ -140,7 +146,7 @@ export function TelaSoftware(): React.JSX.Element {
               ))}
             </Selecao>
           </label>
-          <span title={mudou ? undefined : 'Este já é o software atual'}>
+          <span title={mudou ? undefined : t('telaSoftware.esteJaEOSoftware')}>
             <Botao
               variante="primario"
               disabled={!mudou || !desligado || !versao}
@@ -149,7 +155,7 @@ export function TelaSoftware(): React.JSX.Element {
                 setConfirmando(true)
               }}
             >
-              Trocar para {NOMES_TIPOS[tipo]} {versao}
+              {t('telaSoftware.trocarPara', { v: NOMES_TIPOS[tipo], versao })}
             </Botao>
           </span>
         </div>
@@ -157,26 +163,26 @@ export function TelaSoftware(): React.JSX.Element {
         {mudou && (
           <Aviso tipo="atencao">
             <span>
-              Antes de trocar, o app faz um backup do mundo.
-              {voltando && ' Você escolheu uma versão mais antiga: isso pode estragar o mundo.'}
-              {info.tipo === 'paper' &&
-                tipo === 'vanilla' &&
-                ' No Paper, o Nether e o End ficam em pastas separadas que o Vanilla não lê.'}
+              {t('telaSoftware.antesDeTrocarOApp')}
+              {voltando && t('telaSoftware.voceEscolheuUmaVersaoMais')}
+              {info.tipo === 'paper' && tipo === 'vanilla' && t('telaSoftware.noPaperONetherE')}
               {avisoExtras && ` ${avisoExtras}`}
             </span>
           </Aviso>
         )}
 
-        {!desligado && <p className="text-xs text-muted">Desligue o servidor para trocar.</p>}
+        {!desligado && (
+          <p className="text-xs text-muted">{t('telaSoftware.desligueOServidorParaTrocar')}</p>
+        )}
         {erro && <MensagemErro erro={erro} />}
       </Secao>
 
       <Dialogo
         aberto={confirmando}
-        titulo="Trocar o software?"
+        titulo={t('telaSoftware.trocarOSoftware')}
         aoCancelar={() => setConfirmando(false)}
         acao={{
-          rotulo: trocando ? 'Trocando...' : 'Trocar',
+          rotulo: trocando ? t('telaSoftware.trocando') : t('telaSoftware.trocar'),
           variante: voltando ? 'perigo' : 'primario',
           ocupado: trocando,
           desabilitado: voltando && !entendi,
@@ -185,20 +191,20 @@ export function TelaSoftware(): React.JSX.Element {
       >
         <div className="flex flex-col gap-3">
           <p>
-            De{' '}
+            {t('telaSoftware.de')}{' '}
             <b>
               {NOMES_TIPOS[info.tipo]} {info.versao}
             </b>{' '}
-            para{' '}
+            {t('telaSoftware.para')}{' '}
             <b>
               {NOMES_TIPOS[tipo]} {versao}
             </b>
-            . Um backup do mundo é feito antes.
+            {t('telaSoftware.umBackupDoMundoE')}
           </p>
           {avisoExtras && <p>{avisoExtras}</p>}
           {voltando && (
             <CaixaSelecao marcada={entendi} aoMudar={setEntendi} disabled={trocando}>
-              Entendi que voltar para uma versão mais antiga pode estragar o mundo
+              {t('telaSoftware.entendiQueVoltarParaUma')}
             </CaixaSelecao>
           )}
           {trocando && progresso && (

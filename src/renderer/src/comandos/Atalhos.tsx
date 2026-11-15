@@ -24,19 +24,20 @@ import { Botao, CaixaSelecao, Campo, Dialogo, Selecao } from '../componentes/ui'
 import { COR_ETIQUETA } from '../mods/etiquetas'
 import { useJogadores } from '../servidor/comandos'
 import { EscolherJogadores, Respostas } from './pecas'
+import { t } from '../../../shared/i18n'
 
 const ICONES: Record<
   IconeAtalho,
   { Icone: (p: { className?: string }) => React.JSX.Element; nome: string }
 > = {
-  mundo: { Icone: IconeMundos, nome: 'Mundo' },
-  jogadores: { Icone: IconeJogadores, nome: 'Jogadores' },
-  coracao: { Icone: IconeCoracao, nome: 'Coração' },
-  comida: { Icone: IconeComida, nome: 'Comida' },
-  console: { Icone: IconeConsole, nome: 'Console' },
-  automacao: { Icone: IconeAutomacao, nome: 'Relógio' },
-  desempenho: { Icone: IconeDesempenho, nome: 'Gráfico' },
-  mods: { Icone: IconeMods, nome: 'Bloco' }
+  mundo: { Icone: IconeMundos, nome: t('atalhos.mundo') },
+  jogadores: { Icone: IconeJogadores, nome: t('atalhos.jogadores') },
+  coracao: { Icone: IconeCoracao, nome: t('atalhos.coracao') },
+  comida: { Icone: IconeComida, nome: t('atalhos.comida') },
+  console: { Icone: IconeConsole, nome: t('atalhos.console') },
+  automacao: { Icone: IconeAutomacao, nome: t('atalhos.relogio') },
+  desempenho: { Icone: IconeDesempenho, nome: t('atalhos.grafico') },
+  mods: { Icone: IconeMods, nome: t('atalhos.bloco') }
 }
 
 const precisaJogador = (a: Atalho): boolean => a.comandos.some((c) => c.includes(VARIAVEL_JOGADOR))
@@ -85,10 +86,10 @@ function useRodarAtalho(ligado: boolean): {
   const dialogos = (
     <Dialogo
       aberto={!!pedido}
-      titulo={a ? `Usar "${a.nome}"?` : ''}
+      titulo={a ? t('atalhos.usar', { nome: a.nome }) : ''}
       aoCancelar={() => setPedido(null)}
       acao={{
-        rotulo: 'Usar',
+        rotulo: t('atalhos.usar2'),
         variante: destrutivo ? 'perigo' : 'primario',
         desabilitado: faltaJogador,
         aoClicar: () => a && executar(a, pedido?.jogador ?? null, destrutivo)
@@ -102,12 +103,10 @@ function useRodarAtalho(ligado: boolean): {
               escolhidos={pedido?.jogador ? [pedido.jogador] : []}
               aoMudar={(n) => setPedido({ a, jogador: n[0] ?? null })}
               umSo
-              rotulo="Para qual jogador ({jogador})"
+              rotulo={t('atalhos.paraQualJogador')}
             />
           )}
-          {destrutivo && (
-            <p className="text-warning">⚠ Este atalho apaga coisas ou tira jogadores do jogo.</p>
-          )}
+          {destrutivo && <p className="text-warning">{t('atalhos.esteAtalhoApagaCoisasOu')}</p>}
           <p className="font-mono text-xs break-all whitespace-pre-line text-muted">
             {comandos.map((c) => `/${c}`).join('\n')}
           </p>
@@ -142,7 +141,7 @@ function BotaoAtalho({
       <span style={{ color: COR_ETIQUETA[a.cor]?.hex }}>
         <Icone className="h-4 w-4" />
       </span>
-      {rodando ? 'Usando...' : a.nome}
+      {rodando ? t('atalhos.usando') : a.nome}
     </button>
   )
 }
@@ -157,7 +156,7 @@ export function BotoesAtalhos({ ligado }: { ligado: boolean }): React.JSX.Elemen
   const comEstrela = atalhos.filter((a) => a.estrela)
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-2" aria-label="Atalhos">
+      <div className="flex flex-wrap gap-2" aria-label={t('atalhos.atalhos')}>
         {comEstrela.map((a) => (
           <BotaoAtalho
             key={a.id}
@@ -168,9 +167,7 @@ export function BotoesAtalhos({ ligado }: { ligado: boolean }): React.JSX.Elemen
           />
         ))}
         {!comEstrela.length && (
-          <span className="text-xs text-muted">
-            Marque atalhos com estrela em Comandos › Atalhos para eles aparecerem aqui.
-          </span>
+          <span className="text-xs text-muted">{t('atalhos.marqueAtalhosComEstrelaEm')}</span>
         )}
       </div>
       <Respostas respostas={respostas} />
@@ -236,24 +233,20 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-6">
-      {!ligado && (
-        <p className="text-[13px] text-muted">
-          Com o servidor desligado dá para criar e editar; para usar, ligue o servidor.
-        </p>
-      )}
+      {!ligado && <p className="text-[13px] text-muted">{t('atalhos.comOServidorDesligadoDa')}</p>}
       <Respostas respostas={respostas} />
       {(erro || erroUso) && <MensagemErro erro={(erro ?? erroUso)!} />}
 
       <CardPainel
-        titulo="Seus atalhos"
+        titulo={t('atalhos.seusAtalhos')}
         acoes={
           <Botao tamanho="pequeno" variante="primario" onClick={() => editar(VAZIO)}>
-            Novo atalho
+            {t('atalhos.novoAtalho')}
           </Botao>
         }
       >
         {!atalhos?.length ? (
-          <p className="text-[13px] text-muted">Nenhum atalho ainda.</p>
+          <p className="text-[13px] text-muted">{t('atalhos.nenhumAtalhoAinda')}</p>
         ) : (
           <ul className="flex flex-col divide-y divide-linha">
             {atalhos.map((a) => (
@@ -261,8 +254,8 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
                 <button
                   type="button"
                   aria-pressed={a.estrela}
-                  aria-label={a.estrela ? 'Tirar do Painel' : 'Mostrar no Painel'}
-                  title={a.estrela ? 'Aparece no Painel' : 'Mostrar no Painel'}
+                  aria-label={a.estrela ? t('atalhos.tirarDoPainel') : t('atalhos.mostrarNoPainel')}
+                  title={a.estrela ? t('atalhos.apareceNoPainel') : t('atalhos.mostrarNoPainel')}
                   onClick={() => estrela(a)}
                   className={`text-lg ${a.estrela ? 'text-warning' : 'text-muted'}`}
                 >
@@ -278,10 +271,10 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
                   {a.comandos.map((c) => `/${c}`).join('  ·  ')}
                 </span>
                 <Botao tamanho="pequeno" onClick={() => editar(a)}>
-                  Editar
+                  {t('atalhos.editar')}
                 </Botao>
                 <Botao tamanho="pequeno" variante="perigo" onClick={() => setApagando(a)}>
-                  Apagar
+                  {t('atalhos.apagar')}
                 </Botao>
               </li>
             ))}
@@ -290,11 +283,15 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
       </CardPainel>
 
       {editando && (
-        <CardPainel titulo={editando.id ? `Editar "${editando.nome}"` : 'Novo atalho'}>
+        <CardPainel
+          titulo={
+            editando.id ? t('atalhos.editar2', { nome: editando.nome }) : t('atalhos.novoAtalho')
+          }
+        >
           <div className="flex flex-col gap-4">
             <div className="grid gap-3 min-[900px]:grid-cols-[1fr_200px_160px]">
               <label className="flex flex-col gap-1 text-[13px]">
-                Nome
+                {t('atalhos.nome')}
                 <Campo
                   maxLength={24}
                   value={editando.nome}
@@ -302,7 +299,7 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
                 />
               </label>
               <label className="flex flex-col gap-1 text-[13px]">
-                Ícone
+                {t('atalhos.icone')}
                 <Selecao
                   value={editando.icone}
                   onChange={(e) =>
@@ -317,7 +314,7 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
                 </Selecao>
               </label>
               <label className="flex flex-col gap-1 text-[13px]">
-                Intervalo entre comandos (s)
+                {t('atalhos.intervaloEntreComandosS')}
                 <Campo
                   inputMode="decimal"
                   value={String(editando.intervalo)}
@@ -330,7 +327,11 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
                 />
               </label>
             </div>
-            <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Cor">
+            <div
+              className="flex flex-wrap items-center gap-2"
+              role="radiogroup"
+              aria-label={t('atalhos.cor')}
+            >
               {CORES_ETIQUETA.map((c) => (
                 <button
                   key={c}
@@ -345,7 +346,7 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
               ))}
             </div>
             <label className="flex flex-col gap-1 text-[13px]">
-              Comandos, um por linha (use {VARIAVEL_JOGADOR} para o jogador escolhido na hora)
+              {t('atalhos.comandosUmPorLinhaUse', { VARIAVEL_JOGADOR })}
               <textarea
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
@@ -356,24 +357,22 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
               />
             </label>
             {linhas.some(comandoDestrutivo) && (
-              <p className="text-xs text-warning">
-                ⚠ Tem comando que apaga coisas: o app vai pedir confirmação antes de usar.
-              </p>
+              <p className="text-xs text-warning">{t('atalhos.temComandoQueApagaCoisas')}</p>
             )}
             <CaixaSelecao
               marcada={editando.estrela}
               aoMudar={(v) => setEditando({ ...editando, estrela: v })}
             >
-              Mostrar no Painel (estrela)
+              {t('atalhos.mostrarNoPainelEstrela')}
             </CaixaSelecao>
             <div className="flex justify-end gap-2">
-              <Botao onClick={() => setEditando(null)}>Cancelar</Botao>
+              <Botao onClick={() => setEditando(null)}>{t('atalhos.cancelar')}</Botao>
               <Botao
                 variante="primario"
                 disabled={!editando.nome.trim() || !linhas.length}
                 onClick={salvar}
               >
-                Salvar atalho
+                {t('atalhos.salvarAtalho')}
               </Botao>
             </div>
           </div>
@@ -383,10 +382,10 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
       {dialogos}
       <Dialogo
         aberto={!!apagando}
-        titulo={`Apagar o atalho "${apagando?.nome ?? ''}"?`}
+        titulo={t('atalhos.apagarOAtalho', { v: apagando?.nome ?? '' })}
         aoCancelar={() => setApagando(null)}
         acao={{
-          rotulo: 'Apagar',
+          rotulo: t('atalhos.apagar'),
           variante: 'perigo',
           aoClicar: async () => {
             if (!apagando) return
@@ -397,7 +396,7 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
           }
         }}
       >
-        <p>Só o botão sai; nada muda no servidor.</p>
+        <p>{t('atalhos.soOBotaoSaiNada')}</p>
       </Dialogo>
     </div>
   )

@@ -5,6 +5,7 @@ import { compararVersoes } from '../../shared/versoes'
 import type { TipoServidor } from '.'
 import { argumentosDoInstalador, rodarInstalador } from './instalador'
 import { escolherForge } from './versoesLoader'
+import { t } from '../../shared/i18n'
 
 const PROMOS = 'https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json'
 const MAVEN = 'https://maven.minecraftforge.net/net/minecraftforge/forge'
@@ -23,7 +24,7 @@ export const forge: TipoServidor = {
 
   async instalar(versao, pasta, java, aoProgredir, versaoLoader) {
     const numero = versaoLoader ?? (await versoesForge()).get(versao)
-    if (!numero) throw new ErroApp(`O Forge ainda não tem o ${versao}. Escolha outra versão.`)
+    if (!numero) throw new ErroApp(t('tipos.forge.oForgeAindaNaoTem', { versao }))
     const completa = `${versao}-${numero}`
     await rodarInstalador(
       `Forge ${numero}`,

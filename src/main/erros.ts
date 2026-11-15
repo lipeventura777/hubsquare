@@ -1,4 +1,5 @@
 import type { ErroTela, Resultado } from '../shared/tipos'
+import { t } from '../shared/i18n'
 
 // Erro com mensagem pronta para o usuário: o que aconteceu + o que fazer.
 export class ErroApp extends Error {
@@ -21,7 +22,7 @@ export class ErroApp extends Error {
 
 export function detalhar(e: unknown): string {
   if (!(e instanceof Error)) return String(e)
-  const causa = e.cause ? `\nCausa: ${detalhar(e.cause)}` : ''
+  const causa = e.cause ? t('p.erros.causa', { detalhar: detalhar(e.cause) }) : ''
   return (e.stack ?? e.message) + causa
 }
 
@@ -36,7 +37,7 @@ export function paraTela(e: unknown): ErroTela {
     }
   }
   return {
-    mensagem: 'Algo deu errado. Tente de novo. Se continuar, veja os detalhes abaixo.',
+    mensagem: t('p.erros.algoDeuErradoTenteDe'),
     detalhes: detalhar(e)
   }
 }

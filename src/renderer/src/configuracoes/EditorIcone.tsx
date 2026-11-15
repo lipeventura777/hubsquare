@@ -4,6 +4,7 @@ import { IconeDoServidor } from '../componentes/IconeDoServidor'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { Botao, Dialogo, Slider } from '../componentes/ui'
 import { avisarIconeMudou } from '../estrutura/navegar'
+import { t } from '../../../shared/i18n'
 
 const LADO = 256 // área de recorte na tela
 const SAIDA = 64 // server-icon.png
@@ -64,7 +65,7 @@ export function EditorIcone({ nome }: { nome: string }): React.JSX.Element {
     if (!f) return
     if (!f.type.startsWith('image/')) {
       return setErro({
-        mensagem: 'Esse arquivo não é uma imagem. Escolha um PNG ou JPG.',
+        mensagem: t('editorIcone.esseArquivoNaoEUma'),
         detalhes: f.name
       })
     }
@@ -73,7 +74,7 @@ export function EditorIcone({ nome }: { nome: string }): React.JSX.Element {
       const img = new Image()
       img.onload = () => setRecorte({ img, zoom: 1, x: 0, y: 0 })
       img.onerror = () =>
-        setErro({ mensagem: 'Não consegui abrir essa imagem. Tente outra.', detalhes: f.name })
+        setErro({ mensagem: t('editorIcone.naoConseguiAbrirEssaImagem'), detalhes: f.name })
       img.src = String(leitor.result)
     }
     leitor.readAsDataURL(f)
@@ -110,32 +111,34 @@ export function EditorIcone({ nome }: { nome: string }): React.JSX.Element {
       <div className="flex items-center gap-4">
         <IconeDoServidor icone={icone} nome={nome} tam={64} />
         <div className="flex flex-wrap gap-2">
-          <Botao onClick={() => arquivo.current?.click()}>Escolher imagem</Botao>
+          <Botao onClick={() => arquivo.current?.click()}>{t('editorIcone.escolherImagem')}</Botao>
           {icone && (
             <Botao variante="perigo" onClick={() => setRemovendo(true)}>
-              Remover ícone
+              {t('editorIcone.removerIcone')}
             </Botao>
           )}
         </div>
         <input ref={arquivo} type="file" accept="image/*" className="hidden" onChange={escolher} />
       </div>
-      <p className="text-xs text-muted">
-        Aparece na lista de servidores do jogo (64×64). O app recorta a imagem em quadrado.
-      </p>
+      <p className="text-xs text-muted">{t('editorIcone.apareceNaListaDeServidores')}</p>
       {erro && <MensagemErro erro={erro} />}
 
       <Dialogo
         aberto={!!recorte}
-        titulo="Recortar o ícone"
+        titulo={t('editorIcone.recortarOIcone')}
         aoCancelar={() => !ocupado && setRecorte(null)}
-        acao={{ rotulo: ocupado ? 'Salvando...' : 'Usar este ícone', ocupado, aoClicar: salvar }}
+        acao={{
+          rotulo: ocupado ? t('editorIcone.salvando') : t('editorIcone.usarEsteIcone'),
+          ocupado,
+          aoClicar: salvar
+        }}
       >
         <div className="flex flex-col items-center gap-3">
           <canvas
             ref={tela}
             width={LADO}
             height={LADO}
-            aria-label="Área de recorte: arraste para mover"
+            aria-label={t('editorIcone.areaDeRecorteArrastePara')}
             className="cursor-grab touch-none border border-linha bg-panel-2 active:cursor-grabbing"
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId)
@@ -167,7 +170,7 @@ export function EditorIcone({ nome }: { nome: string }): React.JSX.Element {
           {recorte && (
             <div className="w-full">
               <Slider
-                rotulo="Zoom"
+                rotulo={t('editorIcone.zoom')}
                 valor={recorte.zoom}
                 min={1}
                 max={4}
@@ -177,17 +180,17 @@ export function EditorIcone({ nome }: { nome: string }): React.JSX.Element {
               />
             </div>
           )}
-          <p className="text-xs text-muted">Arraste a imagem para escolher a parte que aparece.</p>
+          <p className="text-xs text-muted">{t('editorIcone.arrasteAImagemParaEscolher')}</p>
         </div>
       </Dialogo>
 
       <Dialogo
         aberto={removendo}
-        titulo="Remover o ícone?"
+        titulo={t('editorIcone.removerOIcone')}
         aoCancelar={() => setRemovendo(false)}
-        acao={{ rotulo: 'Remover', variante: 'perigo', aoClicar: remover }}
+        acao={{ rotulo: t('editorIcone.remover'), variante: 'perigo', aoClicar: remover }}
       >
-        <p>O servidor volta a aparecer sem ícone na lista do jogo.</p>
+        <p>{t('editorIcone.oServidorVoltaAAparecer')}</p>
       </Dialogo>
     </div>
   )

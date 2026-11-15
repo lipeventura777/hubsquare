@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ErroTela } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { Aviso, Botao, Campo, Dialogo, Secao } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 const COMO_PEDIR =
   'https://support.curseforge.com/en/support/solutions/articles/9000208346-about-the-curseforge-api-and-how-to-apply-for-a-key'
@@ -43,42 +44,35 @@ export function IntegracaoCurseForge(): React.JSX.Element {
   }
 
   return (
-    <Secao titulo="CurseForge">
-      <p className="text-[13px] text-muted">
-        Opcional. Com a sua chave da API do CurseForge, a aba Mods › Explorar também procura e
-        instala mods, plugins, modpacks e datapacks do CurseForge. A chave é sua: fica só neste PC,
-        criptografada pelo Windows, e nunca é mostrada de novo.
-      </p>
+    <Secao titulo={t('integracaoCurseForge.curseforge')}>
+      <p className="text-[13px] text-muted">{t('integracaoCurseForge.opcionalComASuaChave')}</p>
       {tem && (
         <Aviso tipo="sucesso">
-          <span className="flex-1">Chave do CurseForge guardada.</span>
+          <span className="flex-1">{t('integracaoCurseForge.chaveDoCurseforgeGuardada')}</span>
           <Botao variante="perigo" tamanho="pequeno" onClick={() => setApagando(true)}>
-            Remover chave
+            {t('integracaoCurseForge.removerChave')}
           </Botao>
         </Aviso>
       )}
-      {salvou && (
-        <p className="text-[13px]">Pronto! Já dá para escolher o CurseForge no Explorar.</p>
-      )}
+      {salvou && <p className="text-[13px]">{t('integracaoCurseForge.prontoJaDaParaEscolher')}</p>}
 
       <ol className="flex list-decimal flex-col gap-1 pl-5 text-[13px]">
         <li>
-          Leia{' '}
+          {t('integracaoCurseForge.leia')}{' '}
           <a href={COMO_PEDIR} target="_blank" rel="noreferrer" className="text-accent underline">
-            como pedir uma chave da API
+            {t('integracaoCurseForge.comoPedirUmaChaveDa')}
           </a>{' '}
-          e abra o formulário de pedido que está lá (precisa de uma conta no CurseForge).
+          {t('integracaoCurseForge.eAbraOFormularioDe')}
         </li>
         <li>
-          Descreva o uso, por exemplo: &quot;app pessoal que baixa mods para o meu próprio servidor
-          e respeita a permissão de distribuição de cada autor&quot;. Aceite os{' '}
+          {t('integracaoCurseForge.descrevaOUsoPorExemplo')}{' '}
           <a href={TERMOS} target="_blank" rel="noreferrer" className="text-accent underline">
-            termos da API
+            {t('integracaoCurseForge.termosDaApi')}
           </a>
           .
         </li>
-        <li>Espere o e-mail de aprovação (pode levar alguns dias) e copie a chave.</li>
-        <li>Cole aqui embaixo e clique em Salvar. O app confere a chave antes de guardar.</li>
+        <li>{t('integracaoCurseForge.espereOEMailDe')}</li>
+        <li>{t('integracaoCurseForge.coleAquiEmbaixoEClique')}</li>
       </ol>
 
       <form
@@ -90,8 +84,12 @@ export function IntegracaoCurseForge(): React.JSX.Element {
       >
         <Campo
           type="password"
-          aria-label="Chave da API do CurseForge"
-          placeholder={tem ? 'Colar uma chave nova' : 'Cole a chave da API aqui'}
+          aria-label={t('integracaoCurseForge.chaveDaApiDoCurseforge')}
+          placeholder={
+            tem
+              ? t('integracaoCurseForge.colarUmaChaveNova')
+              : t('integracaoCurseForge.coleAChaveDaApi')
+          }
           autoComplete="off"
           value={chave}
           maxLength={200}
@@ -99,21 +97,18 @@ export function IntegracaoCurseForge(): React.JSX.Element {
           className="flex-1"
         />
         <Botao variante="primario" type="submit" disabled={salvando || !chave.trim()}>
-          {salvando ? 'Conferindo...' : 'Salvar'}
+          {salvando ? t('integracaoCurseForge.conferindo') : t('integracaoCurseForge.salvar')}
         </Botao>
       </form>
       {erro && <MensagemErro erro={erro} />}
 
       <Dialogo
         aberto={apagando}
-        titulo="Remover a chave do CurseForge?"
+        titulo={t('integracaoCurseForge.removerAChaveDoCurseforge')}
         aoCancelar={() => setApagando(false)}
-        acao={{ rotulo: 'Remover', variante: 'perigo', aoClicar: apagar }}
+        acao={{ rotulo: t('integracaoCurseForge.remover'), variante: 'perigo', aoClicar: apagar }}
       >
-        <p>
-          O Explorar deixa de mostrar o CurseForge até você colar a chave de novo. O que já foi
-          instalado continua no servidor.
-        </p>
+        <p>{t('integracaoCurseForge.oExplorarDeixaDeMostrar')}</p>
       </Dialogo>
     </Secao>
   )

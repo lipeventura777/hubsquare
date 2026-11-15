@@ -6,6 +6,7 @@ import {
   totalPaginas
 } from '../../../shared/paginaRegras'
 import { classesBotao, campo } from './estilos'
+import { t } from '../../../shared/i18n'
 
 // Páginas nas listas de mods (Fase V9): o topo da lista ("Mostrando 25–48 de 1.234" e o
 // tamanho da página) e a barra embaixo (Anterior, números com reticências, Próxima e "Ir para").
@@ -27,9 +28,9 @@ export function TopoDaLista({
         {textoIntervalo(pagina, tamanho, total)}
       </p>
       <label className="flex items-center gap-2 text-xs whitespace-nowrap text-muted">
-        Por página:
+        {t('paginas.porPagina')}
         <select
-          aria-label="Itens por página"
+          aria-label={t('paginas.itensPorPagina')}
           value={tamanho}
           onChange={(e) => aoMudarTamanho(Number(e.target.value))}
           className={`${campo.replace('w-full', '')} w-20 rounded-(--raio-pequeno)`}
@@ -64,7 +65,7 @@ export function BarraDePaginas({
   const ir = (p: number): void => aoIr(Math.min(Math.max(1, p), paginas))
   return (
     <nav
-      aria-label="Páginas"
+      aria-label={t('paginas.paginas')}
       className="placa-vidro flex flex-wrap items-center justify-center gap-2 p-2"
       // Setas do teclado: página anterior e próxima, com o foco em qualquer botão da barra.
       onKeyDown={(e) => {
@@ -83,7 +84,7 @@ export function BarraDePaginas({
           onClick={() => ir(pagina - 1)}
           className={`${classesBotao('secundario')} ${BOTAO_PAGINA}`}
         >
-          Anterior
+          {t('paginas.anterior')}
         </button>
         {numerosPaginas(pagina, paginas).map((n, i) =>
           n === '…' ? (
@@ -94,7 +95,7 @@ export function BarraDePaginas({
             <button
               key={n}
               type="button"
-              aria-label={`Página ${n}`}
+              aria-label={t('paginas.pagina', { n })}
               aria-current={n === pagina ? 'page' : undefined}
               onClick={() => n !== pagina && ir(n)}
               className={`${classesBotao(n === pagina ? 'primario' : 'secundario')} ${BOTAO_PAGINA}`}
@@ -109,7 +110,7 @@ export function BarraDePaginas({
           onClick={() => ir(pagina + 1)}
           className={`${classesBotao('secundario')} ${BOTAO_PAGINA}`}
         >
-          Próxima
+          {t('paginas.proxima')}
         </button>
       </div>
       <form
@@ -122,7 +123,7 @@ export function BarraDePaginas({
         }}
       >
         <label className="flex items-center gap-2 whitespace-nowrap">
-          Ir para a página
+          {t('paginas.irParaAPagina')}
           <input
             type="number"
             min={1}
@@ -133,7 +134,7 @@ export function BarraDePaginas({
           />
         </label>
         <button type="submit" className={`${classesBotao('secundario')} ${BOTAO_PAGINA}`}>
-          Ir
+          {t('paginas.ir')}
         </button>
       </form>
     </nav>

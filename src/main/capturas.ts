@@ -4,6 +4,7 @@ import { readdir, readFile, stat } from 'fs/promises'
 import { basename, join } from 'path'
 import type { Captura } from '../shared/tipos'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // Capturas de tela do PlaySquare (Fase P5): os prints (F2) da pasta screenshots de cada
 // instalação. Só lê, copia, abre a pasta e manda para a Lixeira (sempre com confirmação na tela).
@@ -19,9 +20,9 @@ const MAX = 300
 
 function caminhoDoPrint(p: PastaDePrints, nome: unknown): string {
   const n = typeof nome === 'string' ? basename(nome) : ''
-  if (!PRINT.test(n)) throw new ErroApp('Esse print não existe mais. Atualize a galeria.')
+  if (!PRINT.test(n)) throw new ErroApp(t('p.capturas.essePrintNaoExisteMais'))
   const caminho = join(p.pasta, 'screenshots', n)
-  if (!existsSync(caminho)) throw new ErroApp('Esse print não existe mais. Atualize a galeria.')
+  if (!existsSync(caminho)) throw new ErroApp(t('p.capturas.essePrintNaoExisteMais'))
   return caminho
 }
 
@@ -55,7 +56,7 @@ export async function listarCapturas(pastas: PastaDePrints[]): Promise<Captura[]
 // Visualização grande (limitada a 1920 de largura, para não pesar na tela).
 export function capturaGrande(p: PastaDePrints, nome: unknown): string {
   const imagem = nativeImage.createFromPath(caminhoDoPrint(p, nome))
-  if (imagem.isEmpty()) throw new ErroApp('Não consegui abrir esse print.')
+  if (imagem.isEmpty()) throw new ErroApp(t('p.capturas.naoConseguiAbrirEssePrint'))
   const { width } = imagem.getSize()
   const final = width > 1920 ? imagem.resize({ width: 1920, quality: 'best' }) : imagem
   return `data:image/jpeg;base64,${final.toJPEG(90).toString('base64')}`
@@ -78,7 +79,7 @@ export async function apagarCaptura(p: PastaDePrints, nome: unknown): Promise<vo
     await shell.trashItem(caminhoDoPrint(p, nome))
   } catch (e) {
     if (e instanceof ErroApp) throw e
-    throw new ErroApp('Não consegui mandar o print para a Lixeira.', String(e))
+    throw new ErroApp(t('p.capturas.naoConseguiMandarOPrint'), String(e))
   }
 }
 

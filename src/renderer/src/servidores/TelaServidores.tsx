@@ -11,12 +11,13 @@ import { DialogoRenomear } from '../estrutura/RenomearServidor'
 import { EVENTO_ICONE } from '../estrutura/navegar'
 import { ImportarZip } from './ImportarZip'
 import { DialogoPassar, ReceberServidor } from './PassarServidor'
+import { t } from '../../../shared/i18n'
 
 const TEXTO_ESTADO = {
-  desligado: 'Desligado',
-  ligando: 'Ligando…',
-  ligado: 'Online',
-  desligando: 'Desligando…'
+  desligado: t('telaServidores.desligado'),
+  ligando: t('telaServidores.ligando'),
+  ligado: t('telaServidores.online'),
+  desligando: t('telaServidores.desligando')
 } as const
 
 // Pedido de troca quando outro servidor está ligado: "Desligar X e ligar/abrir Y?"
@@ -97,34 +98,39 @@ export function TelaServidores({
     <div className="min-h-0 flex-1 overflow-auto">
       <div className="mx-auto flex max-w-[560px] flex-col p-10">
         <div className="flex items-start justify-between gap-3">
-          <TituloPagina>Servidores</TituloPagina>
+          <TituloPagina>{t('telaServidores.servidores')}</TituloPagina>
           <div className="flex gap-2">
             <Botao
               aria-pressed={editando}
-              title="Renomear servidores"
+              title={t('telaServidores.renomearServidores')}
               onClick={() => setEditando((e) => !e)}
               className={editando ? 'outline-2 outline-accent' : ''}
             >
               ✎
             </Botao>
-            <span title={ligado ? 'Desligue o servidor para criar outro' : undefined}>
+            <span title={ligado ? t('telaServidores.desligueOServidorParaCriar') : undefined}>
               <Menu
-                rotulo="Criar servidor"
+                rotulo={t('telaServidores.criarServidor')}
                 desabilitado={!!ligado}
                 classeBotao={classesBotao('primario')}
                 itens={[
-                  { rotulo: 'Do zero (assistente)', aoClicar: () => aoCriar('zero') },
-                  { rotulo: 'A partir de um modpack', aoClicar: () => aoCriar('modpack') }
+                  { rotulo: t('telaServidores.doZeroAssistente'), aoClicar: () => aoCriar('zero') },
+                  {
+                    rotulo: t('telaServidores.aPartirDeUmModpack'),
+                    aoClicar: () => aoCriar('modpack')
+                  }
                 ]}
               >
-                + Criar
+                {t('telaServidores.criar')}
               </Menu>
             </span>
           </div>
         </div>
 
         {editando && (
-          <p className="mb-3 text-[13px] text-muted">Clique num servidor para mudar o nome dele.</p>
+          <p className="mb-3 text-[13px] text-muted">
+            {t('telaServidores.cliqueNumServidorParaMudar')}
+          </p>
         )}
         {erro && (
           <div className="mb-4">
@@ -135,9 +141,9 @@ export function TelaServidores({
         {lista === null ? (
           <Esqueleto linhas={3} />
         ) : lista.length === 0 ? (
-          <EstadoVazio icone={<IconeServidor />} titulo="Nenhum servidor ainda">
+          <EstadoVazio icone={<IconeServidor />} titulo={t('telaServidores.nenhumServidorAinda')}>
             <Botao variante="primario" onClick={() => aoCriar('zero')}>
-              + Criar servidor
+              {t('telaServidores.criarServidor2')}
             </Botao>
           </EstadoVazio>
         ) : (
@@ -166,7 +172,7 @@ export function TelaServidores({
                     </span>
                     {s.ativo && (
                       <span className="shrink-0 bg-accent px-1.5 text-xs font-bold text-accent-text">
-                        Ativo
+                        {t('telaServidores.ativo')}
                       </span>
                     )}
                   </span>
@@ -179,7 +185,11 @@ export function TelaServidores({
                   type="button"
                   onClick={() => ligarOuDesligar(s)}
                   disabled={ocupado || s.estado === 'ligando' || s.estado === 'desligando'}
-                  aria-label={s.estado === 'ligado' ? `Desligar ${s.nome}` : `Ligar ${s.nome}`}
+                  aria-label={
+                    s.estado === 'ligado'
+                      ? t('telaServidores.desligar', { nome: s.nome })
+                      : t('telaServidores.ligar', { nome: s.nome })
+                  }
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-b-2 shadow-[inset_0_1px_0_var(--relevo-brilho)] transition-colors duration-(--dur-base) enabled:active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${
                     s.estado === 'desligado'
                       ? 'border-accent-shadow bg-accent text-accent-text'
@@ -193,22 +203,27 @@ export function TelaServidores({
                   )}
                 </button>
                 <Menu
-                  rotulo={`Mais ações para ${s.nome}`}
+                  rotulo={t('telaServidores.maisAcoesPara', { nome: s.nome })}
                   classeBotao="flex h-10 w-8 items-center justify-center font-bold hover:bg-tile-active"
                   itens={[
-                    { rotulo: 'Renomear', aoClicar: () => setRenomear(s) },
-                    { rotulo: 'Recado para os amigos…', aoClicar: () => setRecado(s) },
+                    { rotulo: t('telaServidores.renomear'), aoClicar: () => setRenomear(s) },
+                    {
+                      rotulo: t('telaServidores.recadoParaOsAmigos'),
+                      aoClicar: () => setRecado(s)
+                    },
                     {
                       rotulo:
                         s.estado === 'desligado'
-                          ? 'Passar para outro amigo…'
-                          : 'Passar para outro amigo (desligue antes)',
+                          ? t('telaServidores.passarParaOutroAmigo')
+                          : t('telaServidores.passarParaOutroAmigoDesligue'),
                       desabilitado: s.estado !== 'desligado',
                       aoClicar: () => setPassar(s)
                     },
                     {
                       rotulo:
-                        s.estado === 'desligado' ? 'Apagar servidor…' : 'Apagar (desligue antes)',
+                        s.estado === 'desligado'
+                          ? t('telaServidores.apagarServidor')
+                          : t('telaServidores.apagarDesligueAntes'),
                       desabilitado: s.estado !== 'desligado' || !!ligado,
                       aoClicar: () => {
                         setConfirmacao('')
@@ -234,10 +249,18 @@ export function TelaServidores({
 
       <Dialogo
         aberto={troca !== null}
-        titulo={troca?.ligar ? `Ligar ${troca.para.nome}?` : `Abrir ${troca?.para.nome ?? ''}?`}
+        titulo={
+          troca?.ligar
+            ? t('telaServidores.ligar2', { nome: troca.para.nome })
+            : t('telaServidores.abrir', { v: troca?.para.nome ?? '' })
+        }
         aoCancelar={() => setTroca(null)}
         acao={{
-          rotulo: ocupado ? 'Trocando...' : troca?.ligar ? 'Desligar e ligar' : 'Desligar e abrir',
+          rotulo: ocupado
+            ? t('telaServidores.trocando')
+            : troca?.ligar
+              ? t('telaServidores.desligarELigar')
+              : t('telaServidores.desligarEAbrir'),
           variante: 'perigo',
           ocupado,
           aoClicar: () =>
@@ -245,17 +268,18 @@ export function TelaServidores({
             void executar(() => window.api.trocarServidor(troca.para.id, troca.ligar), true)
         }}
       >
-        Desligar <b>{troca?.de.nome}</b> e {troca?.ligar ? 'ligar' : 'abrir'}{' '}
-        <b>{troca?.para.nome}</b>? Só um servidor fica ligado por vez. Ao desligar, o backup do
-        mundo é feito como sempre.
+        {t('telaServidores.desligar2')} <b>{troca?.de.nome}</b> {t('telaServidores.e')}{' '}
+        {troca?.ligar ? t('telaServidores.ligar3') : t('telaServidores.abrir2')}{' '}
+        <b>{troca?.para.nome}</b>
+        {t('telaServidores.soUmServidorFicaLigado')}
       </Dialogo>
 
       <Dialogo
         aberto={apagar !== null}
-        titulo={`Apagar ${apagar?.nome ?? ''}?`}
+        titulo={t('telaServidores.apagar', { v: apagar?.nome ?? '' })}
         aoCancelar={() => setApagar(null)}
         acao={{
-          rotulo: ocupado ? 'Apagando...' : 'Apagar para sempre',
+          rotulo: ocupado ? t('telaServidores.apagando') : t('telaServidores.apagarParaSempre'),
           variante: 'perigo',
           ocupado,
           desabilitado: confirmacao !== apagar?.nome,
@@ -263,12 +287,9 @@ export function TelaServidores({
             apagar && void executar(() => window.api.apagarServidor(apagar.id, confirmacao), true)
         }}
       >
-        <p>
-          A pasta do servidor e tudo dentro dela serão apagados. Antes, o app faz um backup final do
-          mundo, que fica em Documentos\ServSquare\backups.
-        </p>
+        <p>{t('telaServidores.aPastaDoServidorE')}</p>
         <label className="mt-3 flex flex-col gap-1 text-[13px]">
-          Para confirmar, digite o nome do servidor: <b>{apagar?.nome}</b>
+          {t('telaServidores.paraConfirmarDigiteONome')} <b>{apagar?.nome}</b>
           <Campo value={confirmacao} onChange={(e) => setConfirmacao(e.target.value)} autoFocus />
         </label>
       </Dialogo>
@@ -310,10 +331,10 @@ function DialogoRecado({
   return (
     <Dialogo
       aberto
-      titulo={`Recado para os amigos de ${servidor.nome}`}
+      titulo={t('telaServidores.recadoParaOsAmigosDe', { nome: servidor.nome })}
       aoCancelar={aoFechar}
       acao={{
-        rotulo: 'Salvar',
+        rotulo: t('telaServidores.salvar'),
         variante: 'primario',
         desabilitado: texto === null,
         aoClicar: async () => {
@@ -323,16 +344,13 @@ function DialogoRecado({
         }
       }}
     >
-      <p className="text-[13px]">
-        Quem entrou pelo convite vê este recado na tela Jogar do PlaySquare quando o servidor está
-        desligado. Deixe vazio para não mostrar nada.
-      </p>
+      <p className="text-[13px]">{t('telaServidores.quemEntrouPeloConviteVe')}</p>
       <Campo
         className="mt-3"
         value={texto ?? ''}
         maxLength={200}
         disabled={texto === null}
-        placeholder="Ex.: Ligo hoje às 20 h"
+        placeholder={t('telaServidores.exLigoHojeAs20')}
         onChange={(e) => setTexto(e.target.value)}
         autoFocus
       />

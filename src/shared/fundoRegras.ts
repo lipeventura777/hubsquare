@@ -1,8 +1,9 @@
 import { BIOMAS, type Bioma } from './tipos'
+import { t } from './i18n'
 
 // Regras sem Electron dos fundos (Fase V4): imagens guardadas pelo app (tipo pelos bytes, nome
 // pelo hash), o protocolo hubsquare-fundo:// (só a pasta de fundos), a ordem de prioridade
-// (instalação > app > bioma padrão), os ajustes da imagem, o tom do vidro e a migração das
+// (instalação ou servidor > app > bioma padrão), os ajustes da imagem, o tom do vidro e a migração das
 // preferências antigas. Testadas em tests/fundoRegras.test.ts.
 
 export const PROTOCOLO_FUNDO = 'hubsquare-fundo'
@@ -60,8 +61,8 @@ export function tipoDaImagem(b: Uint8Array): TipoImagem | null {
 
 // Por que a imagem não serve (null: serve). Tamanho em bytes.
 export function motivoRecusa(b: Uint8Array, tamanho: number): string | null {
-  if (tamanho > LIMITE_IMAGEM) return 'Essa imagem é muito grande. Escolha uma de até 25 MB.'
-  if (!tipoDaImagem(b)) return 'Esse arquivo não é uma imagem PNG, JPG ou WEBP. Escolha outro.'
+  if (tamanho > LIMITE_IMAGEM) return t('s.fundoRegras.essaImagemEMuitoGrande')
+  if (!tipoDaImagem(b)) return t('s.fundoRegras.esseArquivoNaoEUma')
   return null
 }
 
@@ -129,13 +130,34 @@ export function validarEscolha(v: unknown): EscolhaFundo | null {
   throw new Error('Escolha um bioma ou uma imagem da lista.')
 }
 
-// Ordem: fundo da instalação > fundo do app > bioma padrão.
+// Ordem: fundo da instalação (ou do servidor, com fundoDoServidor) > fundo do app > bioma padrão.
 export function fundoEfetivo(
   instalacao: EscolhaFundo | null | undefined,
   app: EscolhaFundo | null | undefined,
   biomaPadrao: Bioma
 ): EscolhaFundo {
   return instalacao ?? app ?? { tipo: 'bioma', bioma: biomaPadrao }
+}
+
+// ---------- Fundo do servidor (Fase V10) ----------
+// Sem valor (null): igual ao app. "Igual à instalação" segue o fundo da instalação daquele servidor,
+// que tem a própria regra (null = igual ao app).
+export type FundoServidor = EscolhaFundo | { tipo: 'instalacao' }
+
+export function validarFundoServidor(v: unknown): FundoServidor | null {
+  if ((v as { tipo?: unknown } | null)?.tipo === 'instalacao') return { tipo: 'instalacao' }
+  return validarEscolha(v)
+}
+
+// O que vale nas telas do servidor, antes do fundo do app. "instalacao": o fundo da instalação
+// do servidor (null = igual ao app) ou undefined quando ela não existe (aí vale o app).
+export function fundoDoServidor(
+  servidor: FundoServidor | null | undefined,
+  instalacao: EscolhaFundo | null | undefined
+): EscolhaFundo | null {
+  if (!servidor) return null
+  if (servidor.tipo === 'instalacao') return instalacao ?? null
+  return servidor
 }
 
 export const mesmaEscolha = (a: EscolhaFundo | null, b: EscolhaFundo | null): boolean =>

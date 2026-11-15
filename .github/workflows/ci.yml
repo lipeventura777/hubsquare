@@ -1,0 +1,35 @@
+# Roda em cada push e pull request: build, lint e testes (unitários e de ponta a ponta), num
+# Windows limpo. Não usa nenhum segredo: os testes de ponta a ponta usam a internet simulada.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+      - run: npm test
+      - run: npx playwright test -c tests/e2e/playwright.config.ts --project=rapido
+      - name: Resultados das falhas
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-e2e
+          path: .teste/resultados/
+          retention-days: 7
+      - name: npm audit (informativo)
+        run: npm audit --audit-level=high

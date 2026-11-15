@@ -1,3 +1,4 @@
+import { voltouDoIdioma } from '../idioma'
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { ajustarContraste, amostrarImagem, aplicarAccent, aplicarBioma } from './tema'
 import { ARTE } from '../fundo/biomas'
@@ -18,6 +19,13 @@ interface ContextoAparencia {
   fundoUrl: string | null
   // Fase V4: o fundo do app que vale agora (a imagem que não abriu volta para o bioma).
   fundoApp: EscolhaFundo | null
+  // Fase V10: o fundo atrás das telas agora: o do servidor (nas telas dele) ou o do app.
+  fundoVigente: EscolhaFundo | null
+  // O fundo próprio da tela aberta (o do servidor ativo no ServSquare); null: vale o do app.
+  definirFundoTela: (escolha: EscolhaFundo | null) => void
+  // Fase V11: modo vitrine (Jogar e Painel sem o painel por cima do fundo), lembrado por área.
+  vitrine: boolean
+  definirVitrine: (ligada: boolean) => void
   imagemFalhou: () => void
   falhou: boolean
   // Avisos da migração dos fundos antigos (mostrados uma vez).
@@ -34,8 +42,26 @@ interface ContextoAparencia {
 
 const Contexto = createContext<ContextoAparencia | null>(null)
 
+const chaveVitrine = (a: Area): string => `hubsquare:vitrine:${a}`
+function lerVitrine(a: Area): boolean {
+  try {
+    return localStorage.getItem(chaveVitrine(a)) === '1'
+  } catch {
+    return false // sem armazenamento: começa com o painel
+  }
+}
+
 // Carrega as preferências ao abrir o app e aplica a cor de destaque (com hover e sombra calculados).
 // O tema claro/escuro o processo principal já aplicou antes de a janela abrir.
+const CHAVE_AREA = 'hubsquare:area'
+function lerAreaDaSessao(): Area {
+  try {
+    return sessionStorage.getItem(CHAVE_AREA) === 'play' ? 'play' : 'serv'
+  } catch {
+    return 'serv'
+  }
+}
+
 export function AparenciaProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const [aparencia, setAparencia] = useState<Aparencia | null>(null)
   const [fundoAntigo, setFundoAntigo] = useState<string | null>(null)
@@ -43,7 +69,28 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
   const [avisosFundo, setAvisosFundo] = useState<string[]>([])
   const [screenshots, setScreenshots] = useState<Screenshot[]>([])
   const [erro, setErro] = useState<ErroTela | null>(null)
-  const [area, setArea] = useState<Area>('serv')
+  // Fase I1: depois de trocar o idioma a tela recarrega e volta para a mesma área.
+  const [area, setArea] = useState<Area>(() => (voltouDoIdioma ? lerAreaDaSessao() : 'serv'))
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(CHAVE_AREA, area)
+    } catch {
+      // sem armazenamento: volta para o ServSquare
+    }
+  }, [area])
+  const [fundoTela, setFundoTela] = useState<EscolhaFundo | null>(null)
+  const [vitrines, setVitrines] = useState(() => ({
+    serv: lerVitrine('serv'),
+    play: lerVitrine('play')
+  }))
+  function definirVitrine(ligada: boolean): void {
+    setVitrines((v) => ({ ...v, [area]: ligada }))
+    try {
+      localStorage.setItem(chaveVitrine(area), ligada ? '1' : '0')
+    } catch {
+      // sem armazenamento: só não lembra na próxima abertura
+    }
+  }
   const salvarDepois = useRef<NodeJS.Timeout | undefined>(undefined)
 
   useEffect(() => {
@@ -54,17 +101,21 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
   }, [])
 
   // O fundo do app que vale agora: a imagem que não abriu fica de fora (vale o bioma).
-  const escolhido = aparencia?.fundoApp ?? null
-  const fundoApp = escolhido?.tipo === 'imagem' && escolhido.imagem === falhou ? null : escolhido
-  const imagemApp = fundoApp?.tipo === 'imagem' ? fundoApp : null
-  const fundoUrl = imagemApp ? urlDoFundo(imagemApp.imagem) : fundoAntigo
+  const semFalha = (e: EscolhaFundo | null): EscolhaFundo | null =>
+    e?.tipo === 'imagem' && e.imagem === falhou ? null : e
+  const fundoApp = semFalha(aparencia?.fundoApp ?? null)
+  // Fase V10: nas telas de um servidor com fundo próprio, ele vem antes do fundo do app.
+  const escolhido = fundoTela ?? aparencia?.fundoApp ?? null
+  const fundoVigente = semFalha(escolhido)
+  const imagemVigente = fundoVigente?.tipo === 'imagem' ? fundoVigente : null
+  const fundoUrl = imagemVigente ? urlDoFundo(imagemVigente.imagem) : fundoTela ? null : fundoAntigo
 
   // Bioma, cor de destaque da área e contraste (o vidro fica mais opaco se o fundo pedir).
   // Fase V4: sobre uma imagem, o tom do vidro (claro ou escuro) sai da luz da imagem.
   useEffect(() => {
     if (!aparencia) return
     let ativo = true
-    const e = aparencia.fundoApp
+    const e = fundoTela ?? aparencia.fundoApp
     const imagemApp = e?.tipo === 'imagem' && e.imagem !== falhou ? e : null
     const luz = imagemApp ? camadaDeLuz(imagemApp.ajuste.luz) : null
     const camada = luz
@@ -80,7 +131,9 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
       if (!ativo) return
       const bioma = amostra.length
         ? tomDoVidro(amostra.reduce((t, c) => t + luminancia(c), 0) / amostra.length)
-        : aparencia.bioma
+        : fundoTela?.tipo === 'bioma'
+          ? fundoTela.bioma // Fase V10: o bioma do servidor também dá o tom do vidro
+          : aparencia.bioma
       aplicarBioma(bioma, aparencia.vidroLeve)
       const accent = aplicarAccent(area === 'play' ? aparencia.destaquePlay : aparencia.destaque)
       ajustarContraste(amostra.length ? amostra : ARTE[bioma].paleta.map(hex), accent)
@@ -88,7 +141,7 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
     return () => {
       ativo = false
     }
-  }, [aparencia, area, falhou])
+  }, [aparencia, area, falhou, fundoTela])
 
   const windowsReduzAnimacoes = useWindowsReduzAnimacoes()
   const reduzir = windowsReduzAnimacoes || !!aparencia?.reduzirAnimacoes
@@ -132,7 +185,11 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
         setArea,
         fundoUrl,
         fundoApp,
-        imagemFalhou: () => imagemApp && setFalhou(imagemApp.imagem),
+        fundoVigente,
+        definirFundoTela: setFundoTela,
+        vitrine: vitrines[area],
+        definirVitrine,
+        imagemFalhou: () => imagemVigente && setFalhou(imagemVigente.imagem),
         falhou: !!falhou && escolhido?.tipo === 'imagem' && escolhido.imagem === falhou,
         avisosFundo,
         fecharAvisosFundo: () => setAvisosFundo([]),

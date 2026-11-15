@@ -1,5 +1,6 @@
 import type { ArquivoManual } from '../shared/tipos'
 import { nomeSeguro } from './modsRegras'
+import { t } from '../shared/i18n'
 
 // Fase D: como o app reconhece, na pasta Downloads, um arquivo que o usuário baixou à mão.
 // Regra: só o hash aceita. O tamanho é o filtro barato; o nome só serve para explicar
@@ -76,7 +77,10 @@ export function triar(nome: string, tamanho: number, esperados: Esperado[]): Tri
     return {
       tipo: 'diferente',
       id: parecido.id,
-      motivo: `O tamanho não bate (${mb(tamanho)} em vez de ${mb(parecido.tamanho)}). Talvez seja outra versão do mod.`
+      motivo: t('p.downloadsRegras.oTamanhoNaoBateEm', {
+        mb: mb(tamanho),
+        mb2: mb(parecido.tamanho)
+      })
     }
   }
   return { tipo: 'ignorar' }
@@ -97,8 +101,7 @@ export function conferir(
     ? {
         tipo: 'diferente',
         id: parecido.id,
-        motivo:
-          'O conteúdo não bate com o arquivo da página oficial (hash diferente). Baixe de novo pela página.'
+        motivo: t('p.downloadsRegras.oConteudoNaoBateCom')
       }
     : { tipo: 'ignorar' }
 }

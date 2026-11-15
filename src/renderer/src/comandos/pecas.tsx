@@ -10,6 +10,7 @@ import { MensagemErro } from '../componentes/MensagemErro'
 import { CabecaJogador } from '../componentes/paineis'
 import { Botao, Dialogo } from '../componentes/ui'
 import type { Variante } from '../componentes/estilos'
+import { t } from '../../../shared/i18n'
 
 // Peças da Central de comandos (Fase 26).
 
@@ -58,7 +59,10 @@ export function Previa({
 }): React.JSX.Element {
   if (erro) return <p className="text-xs text-warning">⚠ {erro}</p>
   return (
-    <p className="font-mono text-xs break-all text-muted" aria-label="Comando que será executado">
+    <p
+      className="font-mono text-xs break-all text-muted"
+      aria-label={t('pecas.comandoQueSeraExecutado')}
+    >
       {comandos.map((c) => `/${c}`).join('  ·  ')}
     </p>
   )
@@ -117,7 +121,7 @@ export function Executar({
           disabled={!central.ligado || !!invalido || rodando}
           onClick={() => (destrutiva || confirmar ? setConfirmando(true) : rodar(false))}
         >
-          {rodando ? 'Executando...' : rotulo}
+          {rodando ? t('pecas.executando') : rotulo}
         </Botao>
         <div className="min-w-0 flex-1">
           <Previa comandos={comandos} erro={invalido} />
@@ -131,7 +135,7 @@ export function Executar({
         aoCancelar={() => setConfirmando(false)}
         acao={{ rotulo, variante: destrutiva ? 'perigo' : 'primario', aoClicar: () => rodar(true) }}
       >
-        <p>{confirmar ?? 'Isso não dá para desfazer.'}</p>
+        <p>{confirmar ?? t('pecas.issoNaoDaParaDesfazer')}</p>
         <p className="mt-2 font-mono text-xs break-all text-muted">
           {comandos.map((c) => `/${c}`).join('\n')}
         </p>
@@ -146,7 +150,7 @@ export function EscolherJogadores({
   escolhidos,
   aoMudar,
   umSo = false,
-  rotulo = 'Jogadores'
+  rotulo = t('pecas.jogadores')
 }: {
   online: string[]
   escolhidos: string[]
@@ -155,7 +159,7 @@ export function EscolherJogadores({
   rotulo?: string
 }): React.JSX.Element {
   if (!online.length) {
-    return <p className="text-[13px] text-muted">Ninguém online agora.</p>
+    return <p className="text-[13px] text-muted">{t('pecas.ninguemOnlineAgora')}</p>
   }
   const todos = !umSo && online.every((n) => escolhidos.includes(n))
   return (
@@ -171,7 +175,7 @@ export function EscolherJogadores({
             onClick={() => aoMudar(todos ? [] : online)}
             className={`h-9 border-2 px-3 text-[13px] ${todos ? 'border-accent bg-panel-2' : 'border-linha'}`}
           >
-            Todos ({online.length})
+            {t('pecas.todos', { length: online.length })}
           </button>
         )}
         {online.map((n) => {

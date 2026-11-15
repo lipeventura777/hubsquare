@@ -4,6 +4,7 @@ import type { CorrecaoMod, FonteInstalado, ProblemaMod, TipoId } from '../shared
 import { compararVersoes } from '../shared/versoes'
 import { lerCampos } from './configRegras'
 import { metadadosDoJar } from './instaladosRegras'
+import { t } from '../shared/i18n'
 
 type Estilo = 'fabric' | 'maven'
 
@@ -291,8 +292,11 @@ export function verificarProblemas(
     if (meta && !aceitaLoader(meta.loaders, servidor.tipo, servidor.versao)) {
       add(m.chave, {
         tipo: 'loader',
-        texto: `Feito para ${meta.loaders.map((l) => NOME_LOADER[l]).join(' ou ')}, e este servidor usa ${NOME_LOADER[servidor.tipo] ?? servidor.tipo}.`,
-        correcao: { tipo: 'desativar', rotulo: 'Desativar', chave: m.chave }
+        texto: t('p.modsProblemas.feitoParaEEsteServidor', {
+          join: meta.loaders.map((l) => NOME_LOADER[l]).join(' ou '),
+          v: NOME_LOADER[servidor.tipo] ?? servidor.tipo
+        }),
+        correcao: { tipo: 'desativar', rotulo: t('p.modsProblemas.desativar'), chave: m.chave }
       })
       continue // o resto não importa se nem carrega
     }
@@ -301,15 +305,23 @@ export function verificarProblemas(
     if (!mcOk || !modrinthOk) {
       add(m.chave, {
         tipo: 'versao',
-        texto: `Esta versão do mod não é para o Minecraft ${servidor.versao}.`,
-        correcao: { tipo: 'versao', rotulo: 'Trocar para uma versão compatível', chave: m.chave }
+        texto: t('p.modsProblemas.estaVersaoDoModNao', { versao: servidor.versao }),
+        correcao: {
+          tipo: 'versao',
+          rotulo: t('p.modsProblemas.trocarParaUmaVersaoCompativel'),
+          chave: m.chave
+        }
       })
     }
     if (meta?.ambiente === 'cliente' || m.modrinth?.soDoJogador) {
       add(m.chave, {
         tipo: 'jogador',
-        texto: 'É só do jogador: no servidor ele não serve e pode impedir de ligar.',
-        correcao: { tipo: 'remover', rotulo: 'Remover do servidor', chave: m.chave }
+        texto: t('p.modsProblemas.eSoDoJogadorNo'),
+        correcao: {
+          tipo: 'remover',
+          rotulo: t('p.modsProblemas.removerDoServidor'),
+          chave: m.chave
+        }
       })
     }
     // O jogo/loader confere estas (as do .jar); sem elas, vale o que o Modrinth diz.
@@ -317,8 +329,13 @@ export function verificarProblemas(
     for (const d of faltam) {
       add(m.chave, {
         tipo: 'dependencia',
-        texto: `Precisa do mod "${d.id}", que não está instalado (ou está desativado).`,
-        correcao: { tipo: 'instalar', rotulo: `Instalar ${d.id}`, id: d.id, projeto: false }
+        texto: t('p.modsProblemas.precisaDoModQueNao', { id: d.id }),
+        correcao: {
+          tipo: 'instalar',
+          rotulo: t('p.modsProblemas.instalar', { id: d.id }),
+          id: d.id,
+          projeto: false
+        }
       })
     }
     if (!meta?.depende.length) {
@@ -326,8 +343,13 @@ export function verificarProblemas(
         if (!projetos.has(p))
           add(m.chave, {
             tipo: 'dependencia',
-            texto: 'Precisa de outro projeto do Modrinth que não está instalado.',
-            correcao: { tipo: 'instalar', rotulo: 'Instalar a dependência', id: p, projeto: true }
+            texto: t('p.modsProblemas.precisaDeOutroProjetoDo'),
+            correcao: {
+              tipo: 'instalar',
+              rotulo: t('p.modsProblemas.instalarADependencia'),
+              id: p,
+              projeto: true
+            }
           })
       }
     }
@@ -337,8 +359,12 @@ export function verificarProblemas(
         if (outro.meta?.versao && !atende(outro.meta.versao, c.faixa, c.estilo)) continue
         add(m.chave, {
           tipo: 'incompativel',
-          texto: `O próprio mod diz que não funciona junto com "${outro.titulo}".`,
-          correcao: { tipo: 'desativar', rotulo: `Desativar ${outro.titulo}`, chave: outro.chave }
+          texto: t('p.modsProblemas.oProprioModDizQue', { titulo: outro.titulo }),
+          correcao: {
+            tipo: 'desativar',
+            rotulo: t('p.modsProblemas.desativar2', { titulo: outro.titulo }),
+            chave: outro.chave
+          }
         })
       }
     }
@@ -347,8 +373,12 @@ export function verificarProblemas(
       if (outro)
         add(m.chave, {
           tipo: 'incompativel',
-          texto: `O autor diz que não funciona junto com "${outro.titulo}".`,
-          correcao: { tipo: 'desativar', rotulo: `Desativar ${outro.titulo}`, chave: outro.chave }
+          texto: t('p.modsProblemas.oAutorDizQueNao', { titulo: outro.titulo }),
+          correcao: {
+            tipo: 'desativar',
+            rotulo: t('p.modsProblemas.desativar2', { titulo: outro.titulo }),
+            chave: outro.chave
+          }
         })
     }
   }
@@ -365,8 +395,12 @@ export function verificarProblemas(
     for (const velho of ordem.slice(1)) {
       add(velho.chave, {
         tipo: 'duplicado',
-        texto: `Está duplicado: "${ordem[0].titulo}" é o mesmo mod, mais novo.`,
-        correcao: { tipo: 'remover', rotulo: 'Remover este (o mais velho)', chave: velho.chave }
+        texto: t('p.modsProblemas.estaDuplicadoEOMesmo', { titulo: ordem[0].titulo }),
+        correcao: {
+          tipo: 'remover',
+          rotulo: t('p.modsProblemas.removerEsteOMaisVelho'),
+          chave: velho.chave
+        }
       })
     }
   }
@@ -399,26 +433,26 @@ export function suspeitosDoTravamento(
       const e = escapar(id)
       if (new RegExp(`\\(${e}\\)`, 'i').test(suspeitosForge)) {
         pontos += 5
-        motivo ||= 'O próprio relatório aponta este mod como suspeito.'
+        motivo ||= t('p.modsProblemas.oProprioRelatorioApontaEste')
       }
       const naPilha = texto.match(new RegExp(`(TRANSFORMER|MOD|/)${e}@`, 'gi'))?.length ?? 0
       if (naPilha) {
         pontos += Math.min(naPilha, 3) * 2
-        motivo ||= 'Aparece na pilha de chamadas do travamento.'
+        motivo ||= t('p.modsProblemas.apareceNaPilhaDeChamadas')
       }
       const mixin =
         texto.match(new RegExp(`(${e}\\.mixins?\\.json|from mod ${e}\\b|mod '?${e}'?\\b)`, 'gi'))
           ?.length ?? 0
       if (mixin) {
         pontos += Math.min(mixin, 3) * 2
-        motivo ||= 'Aparece no erro (mixin ou carregamento do mod).'
+        motivo ||= t('p.modsProblemas.apareceNoErroMixinOu')
       }
     }
     for (const p of m.pacotes) {
       const n = texto.match(new RegExp(`at ${escapar(p)}\\.`, 'g'))?.length ?? 0
       if (n) {
         pontos += Math.min(n, 3)
-        motivo ||= 'O código dele aparece na pilha de chamadas.'
+        motivo ||= t('p.modsProblemas.oCodigoDeleApareceNa')
       }
     }
     if (pontos) notas.push({ chave: m.chave, pontos, motivo })

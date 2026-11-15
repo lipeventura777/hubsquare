@@ -27,6 +27,7 @@ import { Atalhos } from './Atalhos'
 import { EscolherJogadores, Executar, type Central } from './pecas'
 import { RegrasDoJogo } from './RegrasDoJogo'
 import { CORES_DO_TEXTO, corDoEfeito } from './textosComandos'
+import { t } from '../../../shared/i18n'
 
 const MB = (b: number): string => `${Math.max(1, Math.round(b / 1024 / 1024))} MB`
 
@@ -84,8 +85,8 @@ export function TelaComandos({ aba }: { aba: string }): React.JSX.Element {
       <PaginaAjustes>
         <EstadoVazio
           icone={<IconeComandos />}
-          titulo="Preparar os comandos desta versão"
-          texto={`Para saber exatamente quais comandos, itens e efeitos existem na sua versão do Minecraft, o app baixa uma vez o servidor oficial da Mojang (${MB(preparo.tamanho)}) e lê a lista dele. Leva menos de um minuto e fica guardado.`}
+          titulo={t('telaComandos.prepararOsComandosDestaVersao')}
+          texto={t('telaComandos.paraSaberExatamenteQuaisComandos', { MB: MB(preparo.tamanho) })}
         >
           <Botao
             variante="primario"
@@ -100,7 +101,7 @@ export function TelaComandos({ aba }: { aba: string }): React.JSX.Element {
               await carregar()
             }}
           >
-            {preparando ? 'Preparando...' : 'Preparar comandos'}
+            {preparando ? t('telaComandos.preparando') : t('telaComandos.prepararComandos')}
           </Botao>
         </EstadoVazio>
         {preparando && progresso && (
@@ -126,9 +127,7 @@ export function TelaComandos({ aba }: { aba: string }): React.JSX.Element {
   return (
     <PaginaAjustes largo>
       {!ligado && aba !== 'Atalhos' && (
-        <Aviso tipo="atencao">
-          Ligue o servidor para usar os comandos. Dá para olhar e montar tudo antes.
-        </Aviso>
+        <Aviso tipo="atencao">{t('telaComandos.ligueOServidorParaUsar')}</Aviso>
       )}
       {erro && <MensagemErro erro={erro} />}
       {aba === 'Mundo' && <AbaMundo central={central} />}
@@ -159,13 +158,13 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
 
   return (
     <div className="grid gap-6 min-[1100px]:grid-cols-2">
-      <CardPainel titulo="Tempo">
+      <CardPainel titulo={t('telaComandos.tempo')}>
         <div className="flex flex-col gap-4">
           {(
             [
-              ['Dia', 1000],
+              [t('telaComandos.dia'), 1000],
               ['Meio-dia', 6000],
-              ['Noite', 13000],
+              [t('telaComandos.noite'), 13000],
               ['Meia-noite', 18000]
             ] as const
           ).map(([rotulo, t]) => (
@@ -178,7 +177,7 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
             />
           ))}
           <Slider
-            rotulo="Hora exata (ticks)"
+            rotulo={t('telaComandos.horaExataTicks')}
             valor={ticks}
             min={0}
             max={24000}
@@ -188,14 +187,18 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
               `${v} · ${String(Math.floor(((v + 6000) % 24000) / 1000)).padStart(2, '0')}h`
             }
           />
-          <Executar central={central} rotulo="Mudar a hora" acao={{ tipo: 'tempo', ticks }} />
+          <Executar
+            central={central}
+            rotulo={t('telaComandos.mudarAHora')}
+            acao={{ tipo: 'tempo', ticks }}
+          />
         </div>
       </CardPainel>
 
-      <CardPainel titulo="Clima">
+      <CardPainel titulo={t('telaComandos.clima')}>
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-[13px]">
-            Duração em minutos (vazio: o jogo decide)
+            {t('telaComandos.duracaoEmMinutosVazioO')}
             <Campo
               inputMode="numeric"
               value={duracao}
@@ -204,9 +207,9 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
           </label>
           {(
             [
-              ['Tempo limpo', 'clear'],
-              ['Chuva', 'rain'],
-              ['Tempestade', 'thunder']
+              [t('telaComandos.tempoLimpo'), 'clear'],
+              [t('telaComandos.chuva'), 'rain'],
+              [t('telaComandos.tempestade'), 'thunder']
             ] as const
           ).map(([rotulo, clima]) => (
             <Executar
@@ -220,24 +223,29 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
         </div>
       </CardPainel>
 
-      <CardPainel titulo="Dificuldade">
+      <CardPainel titulo={t('telaComandos.dificuldade')}>
         <div className="flex flex-col gap-3">
           {DIFICULDADES.map((d) => (
             <Executar
               key={d}
               central={central}
               variante="secundario"
-              rotulo={{ peaceful: 'Pacífica', easy: 'Fácil', normal: 'Normal', hard: 'Difícil' }[d]}
+              rotulo={
+                {
+                  peaceful: t('telaComandos.pacifica'),
+                  easy: t('telaComandos.facil'),
+                  normal: t('telaComandos.normal'),
+                  hard: t('telaComandos.dificil')
+                }[d]
+              }
               acao={{ tipo: 'dificuldade', valor: d }}
             />
           ))}
-          <p className="text-xs text-muted">
-            Ao reiniciar, volta para a do server.properties (Opções).
-          </p>
+          <p className="text-xs text-muted">{t('telaComandos.aoReiniciarVoltaParaA')}</p>
         </div>
       </CardPainel>
 
-      <CardPainel titulo="Spawn do mundo">
+      <CardPainel titulo={t('telaComandos.spawnDoMundo')}>
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-3 gap-2">
             {(['x', 'y', 'z'] as const).map((k) => (
@@ -253,7 +261,7 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
           </div>
           <Executar
             central={central}
-            rotulo="Definir nas coordenadas"
+            rotulo={t('telaComandos.definirNasCoordenadas')}
             acao={{ tipo: 'spawn', x: num(spawn.x), y: num(spawn.y), z: num(spawn.z) }}
           />
           <EscolherJogadores
@@ -261,23 +269,23 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
             escolhidos={spawnJogador}
             aoMudar={setSpawnJogador}
             umSo
-            rotulo="Ou onde está o jogador"
+            rotulo={t('telaComandos.ouOndeEstaOJogador')}
           />
           {spawnJogador[0] && (
             <Executar
               central={central}
-              rotulo={`Definir onde ${spawnJogador[0]} está`}
+              rotulo={t('telaComandos.definirOndeEsta', { v: spawnJogador[0] })}
               acao={{ tipo: 'spawnJogador', jogador: spawnJogador[0] }}
             />
           )}
         </div>
       </CardPainel>
 
-      <CardPainel titulo="Borda do mundo">
+      <CardPainel titulo={t('telaComandos.bordaDoMundo')}>
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-2">
             <label className="flex flex-col gap-1 text-[13px]">
-              Tamanho (blocos de lado)
+              {t('telaComandos.tamanhoBlocosDeLado')}
               <Campo
                 inputMode="numeric"
                 value={borda.tamanho}
@@ -285,18 +293,18 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
               />
             </label>
             <label className="flex flex-col gap-1 text-[13px]">
-              Mudar aos poucos em (segundos)
+              {t('telaComandos.mudarAosPoucosEmSegundos')}
               <Campo
                 inputMode="numeric"
                 value={borda.segundos}
-                placeholder="na hora"
+                placeholder={t('telaComandos.naHora')}
                 onChange={(e) => setBorda({ ...borda, segundos: e.target.value })}
               />
             </label>
           </div>
           <Executar
             central={central}
-            rotulo="Mudar o tamanho"
+            rotulo={t('telaComandos.mudarOTamanho')}
             acao={{
               tipo: 'borda',
               tamanho: num(borda.tamanho),
@@ -306,7 +314,7 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
           <div className="grid grid-cols-2 gap-2">
             {(['x', 'z'] as const).map((k) => (
               <label key={k} className="flex flex-col gap-1 text-[13px]">
-                Centro {k.toUpperCase()}
+                {t('telaComandos.centro', { toUpperCase: k.toUpperCase() })}
                 <Campo
                   inputMode="numeric"
                   value={borda[k]}
@@ -317,7 +325,7 @@ function AbaMundo({ central }: { central: Central }): React.JSX.Element {
           </div>
           <Executar
             central={central}
-            rotulo="Mudar o centro"
+            rotulo={t('telaComandos.mudarOCentro')}
             acao={{ tipo: 'centroBorda', x: num(borda.x), z: num(borda.z) }}
           />
         </div>
@@ -339,20 +347,20 @@ function AbaJogadores({ central }: { central: Central }): React.JSX.Element {
   const [motivo, setMotivo] = useState('')
   const jogadores = escolhidos.filter((n) => online.includes(n))
   const NOMES_MODO = {
-    survival: 'Sobrevivência',
-    creative: 'Criativo',
-    adventure: 'Aventura',
-    spectator: 'Espectador'
+    survival: t('telaComandos.sobrevivencia'),
+    creative: t('telaComandos.criativo'),
+    adventure: t('telaComandos.aventura'),
+    spectator: t('telaComandos.espectador')
   }
 
   return (
     <div className="flex flex-col gap-6">
       <EscolherJogadores online={online} escolhidos={jogadores} aoMudar={setEscolhidos} />
       <div className="grid gap-6 min-[1100px]:grid-cols-2">
-        <CardPainel titulo="Modo de jogo">
+        <CardPainel titulo={t('telaComandos.modoDeJogo')}>
           <div className="flex flex-col gap-3">
             <Selecao
-              aria-label="Modo de jogo"
+              aria-label={t('telaComandos.modoDeJogo')}
               value={modo}
               onChange={(e) => setModo(e.target.value as typeof modo)}
             >
@@ -364,25 +372,25 @@ function AbaJogadores({ central }: { central: Central }): React.JSX.Element {
             </Selecao>
             <Executar
               central={central}
-              rotulo="Aplicar o modo"
+              rotulo={t('telaComandos.aplicarOModo')}
               acao={{ tipo: 'modo', modo, jogadores }}
             />
           </div>
         </CardPainel>
 
-        <CardPainel titulo="Teleportar">
+        <CardPainel titulo={t('telaComandos.teleportar')}>
           <div className="flex flex-col gap-3">
             <EscolherJogadores
               online={online}
               escolhidos={alvo}
               aoMudar={setAlvo}
               umSo
-              rotulo="Até o jogador"
+              rotulo={t('telaComandos.ateOJogador')}
             />
             {alvo[0] && (
               <Executar
                 central={central}
-                rotulo={`Levar até ${alvo[0]}`}
+                rotulo={t('telaComandos.levarAte', { v: alvo[0] })}
                 acao={{ tipo: 'tpJogador', alvo: alvo[0], jogadores }}
               />
             )}
@@ -400,75 +408,79 @@ function AbaJogadores({ central }: { central: Central }): React.JSX.Element {
             </div>
             <Executar
               central={central}
-              rotulo="Levar até as coordenadas"
+              rotulo={t('telaComandos.levarAteAsCoordenadas')}
               acao={{ tipo: 'tpCoord', jogadores, x: num(xyz.x), y: num(xyz.y), z: num(xyz.z) }}
             />
           </div>
         </CardPainel>
 
-        <CardPainel titulo="Vida, fome e XP">
+        <CardPainel titulo={t('telaComandos.vidaFomeEXp')}>
           <div className="flex flex-col gap-3">
-            <Executar central={central} rotulo="Curar" acao={{ tipo: 'curar', jogadores }} />
             <Executar
               central={central}
-              rotulo="Alimentar"
+              rotulo={t('telaComandos.curar')}
+              acao={{ tipo: 'curar', jogadores }}
+            />
+            <Executar
+              central={central}
+              rotulo={t('telaComandos.alimentar')}
               acao={{ tipo: 'alimentar', jogadores }}
             />
             <div className="flex gap-2">
               <Campo
-                aria-label="Quantidade de XP"
+                aria-label={t('telaComandos.quantidadeDeXp')}
                 inputMode="numeric"
                 value={xp}
                 onChange={(e) => setXp(e.target.value)}
                 className="w-28"
               />
               <Selecao
-                aria-label="Pontos ou níveis"
+                aria-label={t('telaComandos.pontosOuNiveis')}
                 value={unidade}
                 onChange={(e) => setUnidade(e.target.value as typeof unidade)}
                 className="w-40"
               >
-                <option value="levels">níveis</option>
-                <option value="points">pontos</option>
+                <option value="levels">{t('telaComandos.niveis')}</option>
+                <option value="points">{t('telaComandos.pontos')}</option>
               </Selecao>
             </div>
             <Executar
               central={central}
-              rotulo="Dar XP"
+              rotulo={t('telaComandos.darXp')}
               acao={{ tipo: 'xp', jogadores, quantidade: num(xp), unidade }}
             />
           </div>
         </CardPainel>
 
-        <CardPainel titulo="Moderação">
+        <CardPainel titulo={t('telaComandos.moderacao')}>
           <div className="flex flex-col gap-3">
             <Executar
               central={central}
-              rotulo="Dar OP"
+              rotulo={t('telaComandos.darOp')}
               acao={{ tipo: 'op', jogadores }}
-              confirmar="O jogador vira operador: pode usar todos os comandos."
+              confirmar={t('telaComandos.oJogadorViraOperadorPode')}
             />
             <Executar
               central={central}
-              rotulo="Limpar inventário"
+              rotulo={t('telaComandos.limparInventario')}
               acao={{ tipo: 'limpar', jogadores }}
-              confirmar="Todos os itens do inventário somem e não voltam."
+              confirmar={t('telaComandos.todosOsItensDoInventario')}
             />
             <label className="flex flex-col gap-1 text-[13px]">
-              Motivo (opcional)
+              {t('telaComandos.motivoOpcional')}
               <Campo value={motivo} maxLength={100} onChange={(e) => setMotivo(e.target.value)} />
             </label>
             <Executar
               central={central}
-              rotulo="Expulsar"
+              rotulo={t('telaComandos.expulsar')}
               acao={{ tipo: 'kick', jogadores, motivo }}
-              confirmar="O jogador sai do servidor (pode entrar de novo)."
+              confirmar={t('telaComandos.oJogadorSaiDoServidor')}
             />
             <Executar
               central={central}
-              rotulo="Banir"
+              rotulo={t('telaComandos.banir')}
               acao={{ tipo: 'ban', jogadores, motivo }}
-              confirmar="O jogador não consegue mais entrar, até ser desbanido em Jogadores › Banidos."
+              confirmar={t('telaComandos.oJogadorNaoConsegueMais')}
             />
           </div>
         </CardPainel>
@@ -519,10 +531,10 @@ function AbaItens({
     <div className="flex flex-col gap-6">
       {!dados.iconesBaixados && <AvisoIcones aoBaixar={aoBaixarIcones} />}
       <div className="grid gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_420px]">
-        <CardPainel titulo={`Itens (${dados.itens.length})`}>
+        <CardPainel titulo={t('telaComandos.itens', { length: dados.itens.length })}>
           <Campo
-            aria-label="Procurar item"
-            placeholder="Procurar pelo nome (ex.: diamante) ou pelo id"
+            aria-label={t('telaComandos.procurarItem')}
+            placeholder={t('telaComandos.procurarPeloNomeExDiamante')}
             value={termo}
             onChange={(e) => setTermo(e.target.value)}
           />
@@ -551,14 +563,16 @@ function AbaItens({
             ))}
           </ul>
           {!resultados.length && (
-            <p className="mt-3 text-[13px] text-muted">Nenhum item com esse nome.</p>
+            <p className="mt-3 text-[13px] text-muted">{t('telaComandos.nenhumItemComEsseNome')}</p>
           )}
         </CardPainel>
-        <CardPainel titulo="Dar">
+        <CardPainel titulo={t('telaComandos.dar')}>
           <div className="flex flex-col gap-4">
-            <p className="text-[13px]">{item ? <b>{item.nome}</b> : 'Escolha um item na lista.'}</p>
+            <p className="text-[13px]">
+              {item ? <b>{item.nome}</b> : t('telaComandos.escolhaUmItemNaLista')}
+            </p>
             <label className="flex flex-col gap-1 text-[13px]">
-              Quantidade (1 a 6400)
+              {t('telaComandos.quantidade1A6400')}
               <Campo
                 inputMode="numeric"
                 value={quantidade}
@@ -569,12 +583,12 @@ function AbaItens({
               online={online}
               escolhidos={escolhidos.filter((n) => online.includes(n))}
               aoMudar={setEscolhidos}
-              rotulo="Para quem"
+              rotulo={t('telaComandos.paraQuem')}
             />
             {item && (
               <Executar
                 central={central}
-                rotulo="Dar"
+                rotulo={t('telaComandos.dar')}
                 acao={{
                   tipo: 'dar',
                   item: item.id,
@@ -614,10 +628,10 @@ function AbaEfeitos({
     <div className="flex flex-col gap-6">
       <EscolherJogadores online={online} escolhidos={jogadores} aoMudar={setEscolhidos} />
       <div className="grid gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_420px]">
-        <CardPainel titulo={`Efeitos (${dados.efeitos.length})`}>
+        <CardPainel titulo={t('telaComandos.efeitos', { length: dados.efeitos.length })}>
           <Campo
-            aria-label="Procurar efeito"
-            placeholder="Procurar efeito"
+            aria-label={t('telaComandos.procurarEfeito')}
+            placeholder={t('telaComandos.procurarEfeito')}
             value={termo}
             onChange={(e) => setTermo(e.target.value)}
           />
@@ -645,13 +659,13 @@ function AbaEfeitos({
             ))}
           </ul>
         </CardPainel>
-        <CardPainel titulo="Aplicar">
+        <CardPainel titulo={t('telaComandos.aplicar')}>
           <div className="flex flex-col gap-4">
             <p className="text-[13px]">
-              {efeito ? <b>{efeito.nome}</b> : 'Escolha um efeito na lista.'}
+              {efeito ? <b>{efeito.nome}</b> : t('telaComandos.escolhaUmEfeitoNaLista')}
             </p>
             <Slider
-              rotulo="Nível"
+              rotulo={t('telaComandos.nivel')}
               valor={nivel}
               min={1}
               max={10}
@@ -660,7 +674,7 @@ function AbaEfeitos({
               formatar={(v) => String(v)}
             />
             <label className="flex flex-col gap-1 text-[13px]">
-              Duração (segundos)
+              {t('telaComandos.duracaoSegundos')}
               <Campo
                 inputMode="numeric"
                 value={segundos}
@@ -670,16 +684,16 @@ function AbaEfeitos({
             </label>
             {dados.capacidades.efeitoInfinito && (
               <CaixaSelecao marcada={infinito} aoMudar={setInfinito}>
-                Sem fim (infinito)
+                {t('telaComandos.semFimInfinito')}
               </CaixaSelecao>
             )}
             <CaixaSelecao marcada={ocultar} aoMudar={setOcultar}>
-              Esconder as partículas
+              {t('telaComandos.esconderAsParticulas')}
             </CaixaSelecao>
             {efeito && (
               <Executar
                 central={central}
-                rotulo="Aplicar o efeito"
+                rotulo={t('telaComandos.aplicarOEfeito')}
                 acao={{
                   tipo: 'efeito',
                   efeito: efeito.id,
@@ -692,7 +706,7 @@ function AbaEfeitos({
             )}
             <Executar
               central={central}
-              rotulo="Remover todos os efeitos"
+              rotulo={t('telaComandos.removerTodosOsEfeitos')}
               variante="secundario"
               acao={{ tipo: 'limparEfeitos', jogadores }}
             />
@@ -720,9 +734,13 @@ function AbaMensagens({ central }: { central: Central }): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-6">
-      <CardPainel titulo="Cor e destino">
+      <CardPainel titulo={t('telaComandos.corEDestino')}>
         <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Cor do texto">
+          <div
+            className="flex flex-wrap gap-1"
+            role="radiogroup"
+            aria-label={t('telaComandos.corDoTexto')}
+          >
             {CORES_TEXTO.map((c) => (
               <button
                 key={c}
@@ -738,34 +756,38 @@ function AbaMensagens({ central }: { central: Central }): React.JSX.Element {
             ))}
           </div>
           <CaixaSelecao marcada={negrito} aoMudar={setNegrito}>
-            Negrito (chat e barra de ação)
+            {t('telaComandos.negritoChatEBarraDe')}
           </CaixaSelecao>
           <EscolherJogadores
             online={online}
             escolhidos={jogadores}
             aoMudar={setEscolhidos}
-            rotulo="Para quem (ninguém marcado: todos)"
+            rotulo={t('telaComandos.paraQuemNinguemMarcadoTodos')}
           />
         </div>
       </CardPainel>
 
       <div className="grid gap-6 min-[1100px]:grid-cols-2">
-        <CardPainel titulo="Chat como o servidor">
+        <CardPainel titulo={t('telaComandos.chatComoOServidor')}>
           <div className="flex flex-col gap-3">
             <Campo
-              aria-label="Mensagem"
+              aria-label={t('telaComandos.mensagem')}
               maxLength={256}
               value={say}
               onChange={(e) => setSay(e.target.value)}
-              placeholder="Aparece como [Server] mensagem"
+              placeholder={t('telaComandos.apareceComoServerMensagem')}
             />
-            <Executar central={central} rotulo="Enviar" acao={{ tipo: 'say', texto: say }} />
+            <Executar
+              central={central}
+              rotulo={t('telaComandos.enviar')}
+              acao={{ tipo: 'say', texto: say }}
+            />
           </div>
         </CardPainel>
-        <CardPainel titulo="Chat colorido">
+        <CardPainel titulo={t('telaComandos.chatColorido')}>
           <div className="flex flex-col gap-3">
             <Campo
-              aria-label="Mensagem colorida"
+              aria-label={t('telaComandos.mensagemColorida')}
               maxLength={256}
               value={chat}
               onChange={(e) => setChat(e.target.value)}
@@ -775,55 +797,55 @@ function AbaMensagens({ central }: { central: Central }): React.JSX.Element {
             </Previa3>
             <Executar
               central={central}
-              rotulo="Enviar"
+              rotulo={t('telaComandos.enviar')}
               acao={{ tipo: 'chat', texto: chat, cor, negrito, jogadores }}
             />
           </div>
         </CardPainel>
-        <CardPainel titulo="Título na tela">
+        <CardPainel titulo={t('telaComandos.tituloNaTela')}>
           <div className="flex flex-col gap-3">
             <Campo
-              aria-label="Título"
+              aria-label={t('telaComandos.titulo')}
               maxLength={64}
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Título"
+              placeholder={t('telaComandos.titulo')}
             />
             <Campo
-              aria-label="Subtítulo"
+              aria-label={t('telaComandos.subtitulo')}
               maxLength={96}
               value={subtitulo}
               onChange={(e) => setSubtitulo(e.target.value)}
-              placeholder="Subtítulo (opcional)"
+              placeholder={t('telaComandos.subtituloOpcional')}
             />
             <div className="flex flex-col items-center gap-1 bg-console px-4 py-6 text-center">
               <span className="text-2xl font-bold" style={{ color: hex }}>
-                {titulo || 'Título'}
+                {titulo || t('telaComandos.titulo')}
               </span>
               {subtitulo && <span style={{ color: hex }}>{subtitulo}</span>}
             </div>
             <Executar
               central={central}
-              rotulo="Mostrar"
+              rotulo={t('telaComandos.mostrar')}
               acao={{ tipo: 'titulo', titulo, subtitulo, cor, jogadores }}
             />
           </div>
         </CardPainel>
-        <CardPainel titulo="Barra de ação">
+        <CardPainel titulo={t('telaComandos.barraDeAcao')}>
           <div className="flex flex-col gap-3">
             <Campo
-              aria-label="Texto da barra de ação"
+              aria-label={t('telaComandos.textoDaBarraDeAcao')}
               maxLength={128}
               value={barra}
               onChange={(e) => setBarra(e.target.value)}
-              placeholder="Texto acima da barra de itens"
+              placeholder={t('telaComandos.textoAcimaDaBarraDe')}
             />
             <Previa3 cor={hex} negrito={negrito}>
               {barra}
             </Previa3>
             <Executar
               central={central}
-              rotulo="Mostrar"
+              rotulo={t('telaComandos.mostrar')}
               acao={{ tipo: 'barra', texto: barra, cor, negrito, jogadores }}
             />
           </div>
@@ -848,7 +870,7 @@ function Previa3({
       className="bg-console px-3 py-2 text-[13px]"
       style={{ color: cor, fontWeight: negrito ? 700 : 400 }}
     >
-      {children || <span className="text-console-muted">Prévia</span>}
+      {children || <span className="text-console-muted">{t('telaComandos.previa')}</span>}
     </div>
   )
 }

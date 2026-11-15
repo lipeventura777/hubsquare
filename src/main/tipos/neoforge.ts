@@ -4,6 +4,7 @@ import { buscarJson } from '../rede'
 import type { TipoServidor } from '.'
 import { argumentosDoInstalador, rodarInstalador } from './instalador'
 import { escolherNeoForge } from './versoesLoader'
+import { t } from '../../shared/i18n'
 
 const API = 'https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge'
 const MAVEN = 'https://maven.neoforged.net/releases/net/neoforged/neoforge'
@@ -20,7 +21,7 @@ export const neoforge: TipoServidor = {
 
   async instalar(versao, pasta, java, aoProgredir, versaoLoader) {
     const numero = versaoLoader ?? (await versoesNeoForge()).get(versao)
-    if (!numero) throw new ErroApp(`O NeoForge ainda não tem o ${versao}. Escolha outra versão.`)
+    if (!numero) throw new ErroApp(t('tipos.neoforge.oNeoforgeAindaNaoTem', { versao }))
     await rodarInstalador(
       `NeoForge ${numero}`,
       `${MAVEN}/${numero}/neoforge-${numero}-installer.jar`,

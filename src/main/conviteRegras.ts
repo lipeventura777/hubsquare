@@ -7,6 +7,7 @@ import {
 } from '../shared/tipos'
 import { caminhoDoPack, downloadPermitido } from './modpackRegras'
 import { reconhecivel } from './downloadsRegras'
+import { t, t as tr } from '../shared/i18n'
 
 // Regras sem rede nem Electron dos convites (Fase P2): token, código, link, arquivo de convite,
 // manifesto (validação, versão e comparação) e o que uma atualização pode apagar.
@@ -63,9 +64,9 @@ export function arquivoDeConvite(enderecos: string[], token: string, manifesto: 
 function conviteDe(enderecos: unknown, token: unknown, manifesto: unknown): ConviteLido {
   const t = normalizarToken(token)
   const lista = Array.isArray(enderecos) ? enderecos.filter(enderecoValido).slice(0, 8) : []
-  if (!t) throw new Error('O código do convite está incompleto. Peça um convite novo.')
+  if (!t) throw new Error(tr('p.conviteRegras.codigoIncompleto'))
   if (!lista.length && !manifesto) {
-    throw new Error('O convite não tem nenhum endereço. Peça um convite novo.')
+    throw new Error(tr('p.conviteRegras.semEndereco'))
   }
   return { enderecos: lista, token: t, manifesto: manifesto ? validarManifesto(manifesto) : null }
 }
@@ -73,7 +74,7 @@ function conviteDe(enderecos: unknown, token: unknown, manifesto: unknown): Conv
 // Aceita o link, o código ou o conteúdo do arquivo de convite.
 export function lerConvite(texto: unknown): ConviteLido {
   if (typeof texto !== 'string' || !texto.trim() || texto.length > 2_000_000) {
-    throw new Error('Cole o código ou o link do convite.')
+    throw new Error(tr('p.conviteRegras.coleOCodigo'))
   }
   const s = texto.trim()
   if (s.startsWith('{')) {
@@ -81,9 +82,9 @@ export function lerConvite(texto: unknown): ConviteLido {
     try {
       d = JSON.parse(s)
     } catch {
-      throw new Error('Esse arquivo de convite está estragado. Peça um novo.')
+      throw new Error(tr('p.conviteRegras.arquivoEstragado'))
     }
-    if (d.hubsquare !== 'convite') throw new Error('Esse arquivo não é um convite do HubSquare.')
+    if (d.hubsquare !== 'convite') throw new Error(tr('p.conviteRegras.naoEConvite'))
     return conviteDe(d.enderecos, d.token, d.manifesto)
   }
   const link = s.match(/^hubsquare:\/\/convite\/([A-Za-z0-9_-]+)$/)
@@ -92,13 +93,13 @@ export function lerConvite(texto: unknown): ConviteLido {
     try {
       d = JSON.parse(Buffer.from(link[1], 'base64url').toString('utf8'))
     } catch {
-      throw new Error('Esse link de convite está cortado. Copie o link inteiro de novo.')
+      throw new Error(tr('p.conviteRegras.linkCortado'))
     }
     return conviteDe(d.e, d.t, null)
   }
   const codigo = s.match(/^([^#\s]+)#([0-9A-Za-z-]+)$/)
   if (codigo) return conviteDe([codigo[1]], codigo[2], null)
-  throw new Error('Não reconheci esse convite. Cole o código (endereço#código) ou o link inteiro.')
+  throw new Error(tr('p.conviteRegras.naoReconheci'))
 }
 
 // ---------- Manifesto ----------
@@ -110,18 +111,19 @@ const hex = (s: unknown, n: number): s is string =>
 export function validarManifesto(dado: unknown): Manifesto {
   const m = dado as Partial<Manifesto> | null
   const erro = (o: string): never => {
-    throw new Error(`O manifesto do servidor veio com problema (${o}). Peça um convite novo.`)
+    throw new Error(tr('p.conviteRegras.manifestoComProblema', { o }))
   }
   if (!m || typeof m !== 'object' || m.formato !== 1) erro('formato')
   if (typeof m!.conviteId !== 'string' || !/^[\w-]{8,64}$/.test(m!.conviteId)) erro('id')
-  if (!Number.isInteger(m!.versao) || m!.versao! < 1) erro('versão')
-  if (typeof m!.minecraft !== 'string' || !/^[\w.+-]{1,40}$/.test(m!.minecraft)) erro('Minecraft')
+  if (!Number.isInteger(m!.versao) || m!.versao! < 1) erro(t('p.conviteRegras.versao'))
+  if (typeof m!.minecraft !== 'string' || !/^[\w.+-]{1,40}$/.test(m!.minecraft))
+    erro(t('p.conviteRegras.minecraft'))
   if (!LOADERS_CLIENTE.includes(m!.loader as LoaderCliente)) erro('loader')
   if (
     m!.versaoLoader !== null &&
     !(typeof m!.versaoLoader === 'string' && /^[\w.+-]{1,40}$/.test(m!.versaoLoader))
   )
-    erro('versão do loader')
+    erro(t('p.conviteRegras.versaoDoLoader'))
   if (!Array.isArray(m!.arquivos) || m!.arquivos.length > 2000) erro('arquivos')
   const arquivos: ArquivoManifesto[] = m!.arquivos!.map((a) => {
     if (!caminhoDoPack(a?.path) || !/^(mods|resourcepacks|shaderpacks)\/[^/]+$/.test(a.path))
@@ -146,7 +148,8 @@ export function validarManifesto(dado: unknown): Manifesto {
     formato: 1,
     conviteId: m!.conviteId!,
     versao: m!.versao!,
-    servidor: typeof m!.servidor === 'string' ? m!.servidor.slice(0, 48) : 'Servidor',
+    servidor:
+      typeof m!.servidor === 'string' ? m!.servidor.slice(0, 48) : t('p.conviteRegras.servidor'),
     minecraft: m!.minecraft!,
     loader: m!.loader!,
     versaoLoader: m!.versaoLoader ?? null,

@@ -15,15 +15,14 @@ import {
   validarVersao
 } from './servidor'
 import { ehTipo } from './tipos'
+import { t } from '../shared/i18n'
 
 // Mundo que veio do Paper e agora roda em outro software: sem isso, o servidor fecha com
 // "Overworld settings missing". Roda antes de cada ligar (também conserta trocas antigas).
 aoLigar(async (info) => {
   if (info.tipo === 'paper') return
   if (await prepararMundoDoPaper(join(info.pasta, await nivelDoMundo(info.pasta)))) {
-    registrarNoConsole(
-      `[ServSquare] O mundo veio do Paper: copiei a seed e as dimensões para onde o ${NOMES_TIPOS[info.tipo]} procura.`
-    )
+    registrarNoConsole(t('p.software.servsquareOMundoVeioDo', { v: NOMES_TIPOS[info.tipo] }))
   }
 })
 
@@ -35,25 +34,20 @@ export async function trocarSoftware(
 ): Promise<InfoServidor> {
   const info = await exigirServidor()
   const { tipo, versao, confirmouVersaoAntiga } = (pedido ?? {}) as Record<string, unknown>
-  if (!ehTipo(tipo)) throw new ErroApp('Tipo de servidor desconhecido. Escolha um tipo da lista.')
+  if (!ehTipo(tipo)) throw new ErroApp(t('p.software.tipoDeServidorDesconhecidoEscolha'))
   const versaoOk = await validarVersao(tipo, versao)
   if (tipo === info.tipo && versaoOk === info.versao) return info
 
   if (compararVersoes(versaoOk, info.versao) < 0 && confirmouVersaoAntiga !== true) {
-    throw new ErroApp(
-      'Voltar para uma versão mais antiga pode estragar o mundo. Marque a confirmação na tela para continuar.'
-    )
+    throw new ErroApp(t('p.software.voltarParaUmaVersaoMais'))
   }
 
   return comServidorDesligado(async () => {
-    aoProgredir({ etapa: 'Fazendo backup do mundo', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.software.fazendoBackupDoMundo'), recebido: 0, total: 0 })
     try {
       await compactarMundo(info, undefined, 'software')
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui fazer o backup antes de trocar, então nada foi mudado. Tente de novo.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.software.naoConseguiFazerOBackup'), detalhar(e))
     }
     const { java, versaoLoader } = await instalarJarEJava(info.pasta, tipo, versaoOk, aoProgredir)
     // Trocou o software: o servidor deixa de seguir o modpack de onde veio.

@@ -41,24 +41,31 @@ import {
   PainelDeFiltros,
   usePreferencia
 } from './partesExplorar'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
-const numero = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })
+const numero = new Intl.NumberFormat(idiomaAtual(), {
+  notation: 'compact',
+  maximumFractionDigits: 1
+})
 
 // As mesmas ordenações nas três fontes; o processo principal traduz para cada API.
 function ordens(fonte: Fonte): { valor: OrdemExplorar; rotulo: string }[] {
   return [
-    { valor: 'relevance', rotulo: fonte === 'modrinth' ? 'Relevância' : 'Popularidade' },
-    { valor: 'downloads', rotulo: 'Downloads' },
+    {
+      valor: 'relevance',
+      rotulo: fonte === 'modrinth' ? t('explorar.relevancia') : t('explorar.popularidade')
+    },
+    { valor: 'downloads', rotulo: t('explorar.downloads') },
     { valor: 'follows', rotulo: SEGUIDORES[fonte].ordem },
-    { valor: 'newest', rotulo: 'Mais recentes' },
-    { valor: 'updated', rotulo: 'Atualizados recentemente' }
+    { valor: 'newest', rotulo: t('explorar.maisRecentes') },
+    { valor: 'updated', rotulo: t('explorar.atualizadosRecentemente') }
   ]
 }
 
 const SEGUIDORES: Record<Fonte, { ordem: string; card: string }> = {
-  modrinth: { ordem: 'Seguidores', card: 'seguidores' },
-  curseforge: { ordem: 'Avaliação', card: 'curtidas' },
-  hangar: { ordem: 'Estrelas', card: 'estrelas' }
+  modrinth: { ordem: t('explorar.seguidores'), card: 'seguidores' },
+  curseforge: { ordem: t('explorar.avaliacao'), card: 'curtidas' },
+  hangar: { ordem: t('explorar.estrelas'), card: 'estrelas' }
 }
 
 // Loaders que o filtro oferece em cada fonte (o Hangar é só Paper; plugins do CurseForge, Bukkit).
@@ -77,7 +84,7 @@ const ehDeMods = (info: InfoServidor): boolean =>
 // O loader "do servidor" só existe quando o tipo combina com o software do servidor.
 function loaderDoServidor(tipo: TipoConteudo, info: InfoServidor): string | null {
   if (tipo === 'mod' || tipo === 'modpack') return ehDeMods(info) ? NOMES_TIPOS[info.tipo] : null
-  if (tipo === 'plugin') return info.tipo === 'paper' ? 'Paper, Spigot e Bukkit' : null
+  if (tipo === 'plugin') return info.tipo === 'paper' ? t('explorar.paperSpigotEBukkit') : null
   return null
 }
 
@@ -88,35 +95,35 @@ function fraseDoTipo(tipo: TipoConteudo, info: InfoServidor): string {
     switch (tipo) {
       case 'mod':
         return ehDeMods(info)
-          ? `Mods vão para a pasta mods da instalação "${info.nome}", com as dependências.`
-          : 'Esta instalação é Vanilla: mods precisam de Fabric, Forge ou NeoForge. Crie outra instalação em Instalações.'
+          ? t('explorar.modsVaoParaAPasta', { nome: info.nome })
+          : t('explorar.estaInstalacaoEVanillaMods')
       case 'shader':
-        return 'Shaders vão para a pasta shaderpacks. O Iris (ou o Oculus, no Forge) é instalado junto.'
+        return t('explorar.shadersVaoParaAPasta')
       case 'resourcepack':
-        return 'Resource packs vão para a pasta resourcepacks da instalação.'
+        return t('explorar.resourcePacksVaoParaA')
       case 'modpack':
-        return 'Um modpack cria uma instalação nova; esta não muda.'
+        return t('explorar.umModpackCriaUmaInstalacao')
       default:
-        return 'Não serve para o jogo do jogador.'
+        return t('explorar.naoServeParaOJogo')
     }
   }
   switch (tipo) {
     case 'mod':
       return ehDeMods(info)
-        ? 'Mods que rodam no servidor vão para a pasta mods; os que são só do jogador vão para o Pacote pros amigos.'
-        : `O ${NOMES_TIPOS[info.tipo]} não usa mods: para instalar, troque para Fabric, Forge ou NeoForge na tela Software.`
+        ? t('explorar.modsQueRodamNoServidor')
+        : t('explorar.oNaoUsaModsPara', { v: NOMES_TIPOS[info.tipo] })
     case 'plugin':
       return info.tipo === 'paper'
-        ? 'Plugins vão para a pasta plugins do servidor.'
-        : `O ${NOMES_TIPOS[info.tipo]} não usa plugins: para instalar, troque para Paper na tela Software.`
+        ? t('explorar.pluginsVaoParaAPasta')
+        : t('explorar.oNaoUsaPluginsPara', { v: NOMES_TIPOS[info.tipo] })
     case 'modpack':
-      return 'Um modpack cria um servidor novo; o servidor atual não muda.'
+      return t('explorar.umModpackCriaUmServidor')
     case 'resourcepack':
-      return 'Um resource pack pode ser o pacote do servidor (vai para o server.properties) ou ir para o Pacote pros amigos.'
+      return t('explorar.umResourcePackPodeSer')
     case 'shader':
-      return 'O servidor não usa shaders: eles vão para o Pacote pros amigos, na pasta shaderpacks.'
+      return t('explorar.oServidorNaoUsaShaders')
     case 'datapack':
-      return 'Datapacks vão para a pasta datapacks do mundo ativo.'
+      return t('explorar.datapacksVaoParaAPasta')
   }
 }
 
@@ -325,13 +332,15 @@ export function Explorar({
   // Etiquetas dos filtros ativos, cada uma com o jeito de tirar.
   const doServidor = loaderDoServidor(filtros.tipo, info)
   const ativos: { rotulo: string; tirar: Partial<FiltrosExplorar> }[] = [
-    ...(filtros.versao ? [{ rotulo: `Minecraft ${filtros.versao}`, tirar: { versao: null } }] : []),
+    ...(filtros.versao
+      ? [{ rotulo: t('explorar.minecraft', { versao: filtros.versao }), tirar: { versao: null } }]
+      : []),
     ...(filtros.loader
       ? [
           {
             rotulo:
               filtros.loader === 'servidor'
-                ? `${doServidor} (${info.jogador ? 'da instalação' : 'do servidor'})`
+                ? `${doServidor} (${info.jogador ? t('explorar.daInstalacao') : t('explorar.doServidor')})`
                 : nomeLoader(filtros.loader),
             tirar: { loader: null }
           }
@@ -344,9 +353,11 @@ export function Explorar({
     ...(filtros.ambiente
       ? [{ rotulo: NOMES_AMBIENTE[filtros.ambiente], tirar: { ambiente: null } }]
       : []),
-    ...(filtros.codigoAberto ? [{ rotulo: 'Código aberto', tirar: { codigoAberto: false } }] : []),
+    ...(filtros.codigoAberto
+      ? [{ rotulo: t('explorar.codigoAberto'), tirar: { codigoAberto: false } }]
+      : []),
     ...(filtros.esconderInstalados
-      ? [{ rotulo: 'Sem os instalados', tirar: { esconderInstalados: false } }]
+      ? [{ rotulo: t('explorar.semOsInstalados'), tirar: { esconderInstalados: false } }]
       : [])
   ]
 
@@ -365,8 +376,10 @@ export function Explorar({
     <div className="flex flex-col gap-4">
       {/* Seletor de fonte (Fase 24), no mesmo desenho do "Grade | Lista". */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs font-bold tracking-[.02em] text-muted uppercase">Fonte</span>
-        <div role="group" aria-label="Fonte" className="flex">
+        <span className="text-xs font-bold tracking-[.02em] text-muted uppercase">
+          {t('explorar.fonte')}
+        </span>
+        <div role="group" aria-label={t('explorar.fonte')} className="flex">
           {fontes.map((f) => (
             <Botao
               key={f}
@@ -382,7 +395,7 @@ export function Explorar({
       </div>
 
       <AbasDeTipo
-        rotulo="Tipo de conteúdo"
+        rotulo={t('explorar.tipoDeConteudo')}
         abas={TIPOS_POR_FONTE[fonte]
           .filter((t) => !info.jogador || (t !== 'plugin' && t !== 'datapack'))
           .map((t) => ({ id: t, nome: NOMES_CONTEUDO[t] }))}
@@ -392,16 +405,13 @@ export function Explorar({
 
       {semChave && (
         <Aviso tipo="atencao">
-          <span className="flex-1">
-            Para procurar no CurseForge, o app precisa da sua chave da API do CurseForge (é grátis e
-            leva alguns dias para aprovar).
-          </span>
+          <span className="flex-1">{t('explorar.paraProcurarNoCurseforgeO')}</span>
           <Botao
             variante="atencao"
             tamanho="pequeno"
             onClick={() => abrirTela('Opções', 'Integrações')}
           >
-            Configurar
+            {t('explorar.configurar')}
           </Botao>
         </Aviso>
       )}
@@ -428,8 +438,7 @@ export function Explorar({
       <div className={aberto || semChave ? 'hidden' : 'flex flex-col gap-4'}>
         <p className="border-l-4 border-accent bg-panel px-4 py-2 text-[13px]">
           {fraseDoTipo(filtros.tipo, info)}
-          {fonte === 'curseforge' &&
-            ' No CurseForge, arquivos que o autor não deixa outros apps baixarem aparecem com "Baixe pelo site".'}
+          {fonte === 'curseforge' && t('explorar.noCurseforgeArquivosQueO')}
         </p>
 
         <BarraDeBusca
@@ -438,7 +447,10 @@ export function Explorar({
           termo={termo}
           aoMudarTermo={setTermo}
           aoProcurar={() => mudar({ termo })}
-          rotuloBusca={`Procurar ${NOMES_CONTEUDO[filtros.tipo].toLowerCase()} no ${NOMES_FONTES[fonte]}`}
+          rotuloBusca={t('explorar.procurarNo', {
+            toLowerCase: NOMES_CONTEUDO[filtros.tipo].toLowerCase(),
+            v: NOMES_FONTES[fonte]
+          })}
           ordens={ordens(fonte)}
           ordem={filtros.ordem}
           aoOrdenar={(o) => mudar({ ordem: o })}
@@ -463,31 +475,33 @@ export function Explorar({
         <div className="flex items-start gap-6">
           {painel && (
             <PainelDeFiltros>
-              <GrupoFiltro titulo="Versão do Minecraft">
+              <GrupoFiltro titulo={t('explorar.versaoDoMinecraft')}>
                 <Selecao
-                  aria-label="Versão do Minecraft"
+                  aria-label={t('explorar.versaoDoMinecraft')}
                   value={filtros.versao ?? ''}
                   onChange={(e) => mudar({ versao: e.target.value || null })}
                 >
-                  <option value="">Todas</option>
+                  <option value="">{t('explorar.todas')}</option>
                   {(versoes ?? [info.versao]).map((v) => (
                     <option key={v} value={v}>
                       {v}
-                      {v === info.versao ? ' (do servidor)' : ''}
+                      {v === info.versao ? t('explorar.doServidor2') : ''}
                     </option>
                   ))}
                 </Selecao>
               </GrupoFiltro>
 
               {loadersDoFiltro(fonte, filtros.tipo).length > 0 && (
-                <GrupoFiltro titulo="Loader">
+                <GrupoFiltro titulo={t('explorar.loader')}>
                   <Selecao
-                    aria-label="Loader"
+                    aria-label={t('explorar.loader')}
                     value={filtros.loader ?? ''}
                     onChange={(e) => mudar({ loader: e.target.value || null })}
                   >
-                    <option value="">Todos</option>
-                    {doServidor && <option value="servidor">Do servidor ({doServidor})</option>}
+                    <option value="">{t('explorar.todos')}</option>
+                    {doServidor && (
+                      <option value="servidor">{t('explorar.doServidor3', { doServidor })}</option>
+                    )}
                     {loadersDoFiltro(fonte, filtros.tipo).map((l) => (
                       <option key={l} value={l}>
                         {nomeLoader(l)}
@@ -498,13 +512,13 @@ export function Explorar({
               )}
 
               {fonte === 'modrinth' && temAmbiente(filtros.tipo) && (
-                <GrupoFiltro titulo="Onde roda">
+                <GrupoFiltro titulo={t('explorar.ondeRoda')}>
                   <OpcaoRadio
                     nome="ambiente"
                     marcada={!filtros.ambiente}
                     aoEscolher={() => mudar({ ambiente: null })}
                   >
-                    Qualquer lugar
+                    {t('explorar.qualquerLugar')}
                   </OpcaoRadio>
                   {(['servidor', 'jogador', 'ambos'] as const).map((a) => (
                     <OpcaoRadio
@@ -519,13 +533,13 @@ export function Explorar({
                 </GrupoFiltro>
               )}
 
-              <GrupoFiltro titulo="Outros">
+              <GrupoFiltro titulo={t('explorar.outros')}>
                 {fonte === 'modrinth' && (
                   <CaixaSelecao
                     marcada={filtros.codigoAberto}
                     aoMudar={(v) => mudar({ codigoAberto: v })}
                   >
-                    Só código aberto
+                    {t('explorar.soCodigoAberto')}
                   </CaixaSelecao>
                 )}
                 {filtros.tipo !== 'modpack' && (
@@ -533,7 +547,7 @@ export function Explorar({
                     marcada={filtros.esconderInstalados}
                     aoMudar={(v) => mudar({ esconderInstalados: v })}
                   >
-                    Esconder o que já está instalado
+                    {t('explorar.esconderOQueJaEsta')}
                   </CaixaSelecao>
                 )}
               </GrupoFiltro>
@@ -573,13 +587,13 @@ export function Explorar({
               }}
             />
             {itens && muitosResultados(fonte, total) && (
-              <Aviso tipo="atencao">Muitos resultados. Use os filtros para refinar a busca.</Aviso>
+              <Aviso tipo="atencao">{t('explorar.muitosResultadosUseOsFiltros')}</Aviso>
             )}
             {erro ? (
               // A página que falhou fica com o erro e o "Tentar de novo"; filtros e página continuam.
               <div className="flex flex-col items-start gap-3">
                 <MensagemErro erro={erro} />
-                <Botao onClick={() => void buscar(filtros)}>Tentar de novo</Botao>
+                <Botao onClick={() => void buscar(filtros)}>{t('explorar.tentarDeNovo')}</Botao>
               </div>
             ) : !itens ? (
               <EsqueletoDeCards
@@ -593,8 +607,8 @@ export function Explorar({
             ) : !itens.length ? (
               <EstadoVazio
                 icone={<IconeMods />}
-                titulo="Nada encontrado"
-                texto={`Tire alguns filtros ou procure outro nome, em inglês, como está no ${NOMES_FONTES[fonte]}.`}
+                titulo={t('explorar.nadaEncontrado')}
+                texto={t('explorar.tireAlgunsFiltrosOuProcure', { v: NOMES_FONTES[fonte] })}
               />
             ) : (
               <ListaDeCards vista={vista}>
@@ -603,7 +617,12 @@ export function Explorar({
                     key={`${p.fonte}:${p.id}`}
                     icone={p.icone}
                     titulo={p.titulo}
-                    linha={`por ${p.autor} · ${numero.format(p.downloads)} downloads · ${numero.format(p.seguidores)} ${SEGUIDORES[p.fonte].card}`}
+                    linha={t('explorar.porDownloads', {
+                      autor: p.autor,
+                      format: numero.format(p.downloads),
+                      format2: numero.format(p.seguidores),
+                      card: SEGUIDORES[p.fonte].card
+                    })}
                     descricao={p.descricao}
                     vista={vista}
                     aoAbrir={() => abrir(p)}
@@ -611,13 +630,17 @@ export function Explorar({
                       <>
                         {p.instalado && (
                           <Etiqueta tom="accent">
-                            {filtros.tipo === 'shader' ? 'No pacote' : 'Instalado'}
+                            {filtros.tipo === 'shader'
+                              ? t('explorar.noPacote')
+                              : t('explorar.instalado')}
                           </Etiqueta>
                         )}
                         {vista === 'grade' &&
                           p.ambiente === 'jogador' &&
                           filtros.tipo !== 'shader' && (
-                            <span className="text-xs text-warning">⚠ Só do jogador</span>
+                            <span className="text-xs text-warning">
+                              {t('explorar.soDoJogador')}
+                            </span>
                           )}
                         {vista === 'grade' &&
                           p.categorias

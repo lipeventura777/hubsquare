@@ -23,10 +23,12 @@ import {
   Secao,
   Selecao
 } from '../componentes/ui'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
-const data = (b: Backup): string => new Date(b.data).toLocaleString('pt-BR')
+const data = (b: Backup): string => new Date(b.data).toLocaleString(idiomaAtual())
 const tamanho = (b: Backup): string => formatarTamanho(b.tamanho)
-const nomeTipo = (b: Backup): string => (b.tipo ? NOMES_BACKUP[b.tipo] : 'Sem tipo anotado')
+const nomeTipo = (b: Backup): string =>
+  b.tipo ? NOMES_BACKUP[b.tipo] : t('backups.semTipoAnotado')
 
 type Ordem = 'data' | 'tamanho'
 
@@ -114,59 +116,61 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
   const todos = !!apagando && apagando.length === backups.length
 
   return (
-    <Secao titulo={`Backups (${backups.length})`}>
+    <Secao titulo={t('backups.backups', { length: backups.length })}>
       <p className="text-[13px] text-muted">
-        Um backup é feito sozinho toda vez que o servidor desliga; ficam os {manter} mais recentes
-        (mude em Automação). Os protegidos com o cadeado nunca são apagados sozinhos.
-        {!desligado && ' Desligue o servidor para restaurar.'}
+        {t('backups.umBackupEFeitoSozinho', { manter })}
+        {!desligado && t('backups.desligueOServidorParaRestaurar')}
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
         <p className="text-[13px]">
-          Espaço usado: <b>{formatarTamanho(usado)}</b>
+          {t('backups.espacoUsado')} <b>{formatarTamanho(usado)}</b>
         </p>
         <span className="flex-1" />
         <Selecao
-          aria-label="Tipo de backup"
+          aria-label={t('backups.tipoDeBackup')}
           value={tipo ?? ''}
           onChange={(e) => setTipo((e.target.value || null) as TipoBackup | 'sem' | null)}
           className="w-64"
         >
-          <option value="">Todos os tipos</option>
+          <option value="">{t('backups.todosOsTipos')}</option>
           {tipos.map((t) => (
             <option key={t} value={t}>
               {NOMES_BACKUP[t]}
             </option>
           ))}
-          {backups.some((b) => !b.tipo) && <option value="sem">Sem tipo anotado</option>}
+          {backups.some((b) => !b.tipo) && (
+            <option value="sem">{t('backups.semTipoAnotado')}</option>
+          )}
         </Selecao>
         <Selecao
-          aria-label="Ordenar por"
+          aria-label={t('backups.ordenarPor')}
           value={ordem}
           onChange={(e) => setOrdem(e.target.value as Ordem)}
           className="w-48"
         >
-          <option value="data">Ordenar: Data</option>
-          <option value="tamanho">Ordenar: Tamanho</option>
+          <option value="data">{t('backups.ordenarData')}</option>
+          <option value="tamanho">{t('backups.ordenarTamanho')}</option>
         </Selecao>
         {escolhidos.length > 0 && (
           <Botao variante="perigo" onClick={() => setApagando(escolhidos)}>
-            Apagar selecionados ({escolhidos.length}) · libera {liberar(escolhidos)}
+            {t('backups.apagarSelecionadosLibera', {
+              length: escolhidos.length,
+              liberar: liberar(escolhidos)
+            })}
           </Botao>
         )}
       </div>
 
       {restaurado && (
         <Aviso tipo="sucesso">
-          Backup de {data(restaurado)} restaurado. Ele abre na próxima vez que o servidor ligar.
+          {t('backups.backupDeRestauradoEleAbre', { data: data(restaurado) })}
         </Aviso>
       )}
       {erro && <MensagemErro erro={erro} />}
 
       {backups.length === 0 ? (
-        <p className="text-[13px] text-muted">
-          Nenhum backup ainda. O primeiro sai quando você desligar o servidor.
-        </p>
+        <p className="text-[13px] text-muted">{t('backups.nenhumBackupAindaOPrimeiro')}</p>
       ) : (
         <div className="flex flex-wrap gap-4">
           {visiveis.map((b, i) => (
@@ -176,14 +180,14 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
               imagem={
                 screenshots.length ? screenshots[i % screenshots.length].miniatura : undefined
               }
-              etiqueta={b.arquivo === backups[0].arquivo ? 'Mais recente' : nomeTipo(b)}
+              etiqueta={b.arquivo === backups[0].arquivo ? t('backups.maisRecente') : nomeTipo(b)}
               titulo={data(b)}
               info={tamanho(b)}
             >
               <div className="flex items-center gap-2 text-xs text-muted">
                 {b.protegido && <IconeCadeado className="h-4 w-4 text-accent" />}
                 <span>
-                  {b.protegido ? 'Protegido · ' : ''}
+                  {b.protegido ? t('backups.protegido') : ''}
                   {nomeTipo(b)}
                 </span>
               </div>
@@ -202,16 +206,22 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
                       })
                     }
                   >
-                    <span className="sr-only">Selecionar backup de {data(b)}</span>
+                    <span className="sr-only">
+                      {t('backups.selecionarBackupDe', { data: data(b) })}
+                    </span>
                   </CaixaSelecao>
                   <Botao
                     tamanho="pequeno"
                     aria-pressed={b.protegido}
                     onClick={() => proteger(b)}
-                    title={b.protegido ? 'Tirar a proteção' : 'Proteger: nunca apagar sozinho'}
+                    title={
+                      b.protegido
+                        ? t('backups.tirarAProtecao')
+                        : t('backups.protegerNuncaApagarSozinho')
+                    }
                   >
                     <IconeCadeado className="h-4 w-4" />
-                    {b.protegido ? 'Desproteger' : 'Proteger'}
+                    {b.protegido ? t('backups.desproteger') : t('backups.proteger')}
                   </Botao>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
@@ -221,7 +231,7 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
                     disabled={b.protegido || ocupado}
                     onClick={() => setApagando([b])}
                   >
-                    Apagar
+                    {t('backups.apagar')}
                   </Botao>
                   <Botao
                     variante="primario"
@@ -229,7 +239,7 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
                     disabled={!desligado || restaurando}
                     onClick={() => setConfirmando(b)}
                   >
-                    Restaurar
+                    {t('backups.restaurar')}
                   </Botao>
                 </div>
               </div>
@@ -240,23 +250,25 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
 
       <Dialogo
         aberto={confirmando !== null}
-        titulo="Restaurar backup?"
+        titulo={t('backups.restaurarBackup')}
         aoCancelar={() => setConfirmando(null)}
         acao={{
-          rotulo: restaurando ? 'Restaurando...' : 'Restaurar',
+          rotulo: restaurando ? t('backups.restaurando') : t('backups.restaurar'),
           variante: 'perigo',
           aoClicar: restaurar,
           ocupado: restaurando
         }}
       >
-        O mundo volta para {confirmando ? data(confirmando) : ''}. O mundo atual vira um backup novo
-        e também fica guardado em &quot;mundos-antigos&quot;.
+        {t('backups.oMundoVoltaPara')} {confirmando ? data(confirmando) : ''}
+        {t('backups.oMundoAtualViraUm')}
       </Dialogo>
 
       <Dialogo
         aberto={apagando !== null}
         titulo={
-          apagando?.length === 1 ? 'Apagar este backup?' : `Apagar ${apagando?.length} backups?`
+          apagando?.length === 1
+            ? t('backups.apagarEsteBackup')
+            : t('backups.apagarBackups', { length: apagando?.length })
         }
         aoCancelar={() => {
           if (ocupado) return
@@ -264,7 +276,7 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
           setNomeDigitado('')
         }}
         acao={{
-          rotulo: ocupado ? 'Apagando...' : 'Apagar',
+          rotulo: ocupado ? t('backups.apagando') : t('backups.apagar'),
           variante: 'perigo',
           ocupado,
           desabilitado: todos && nomeDigitado !== info?.nome,
@@ -273,7 +285,7 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
       >
         {apagando && (
           <div className="flex flex-col gap-3 text-[13px]">
-            <p>Isto é apagado de vez (não vai para nenhuma lixeira):</p>
+            <p>{t('backups.istoEApagadoDeVez')}</p>
             <ul className="flex max-h-48 flex-col gap-1 overflow-auto">
               {apagando.map((b) => (
                 <li key={b.arquivo} className="flex items-baseline gap-2">
@@ -284,18 +296,17 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
               ))}
             </ul>
             <p>
-              Libera <b>{liberar(apagando)}</b>.
+              {t('backups.libera')} <b>{liberar(apagando)}</b>.
             </p>
             {todos && (
               <label className="flex flex-col gap-1">
                 <span className="text-warning">
-                  ⚠ São todos os backups deste servidor. Para confirmar, digite o nome dele:{' '}
-                  <b>{info?.nome}</b>
+                  {t('backups.saoTodosOsBackupsDeste')} <b>{info?.nome}</b>
                 </span>
                 <Campo
                   value={nomeDigitado}
                   onChange={(e) => setNomeDigitado(e.target.value)}
-                  aria-label="Nome do servidor"
+                  aria-label={t('backups.nomeDoServidor')}
                 />
               </label>
             )}

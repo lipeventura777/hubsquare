@@ -7,6 +7,7 @@ import { join } from 'path'
 import { gravarComSeguranca } from './config'
 import { ErroApp } from './erros'
 import { baixar, buscarJson, type AoProgredir } from './rede'
+import { t } from '../shared/i18n'
 
 // Só usa as partes oficiais do playit.gg (agente v1.x do GitHub playit-cloud/playit-agent):
 // - "playit claim exchange <código>" troca a aprovação no site pela chave secreta;
@@ -47,8 +48,8 @@ async function baixarProgramas(aoProgredir: AoProgredir): Promise<void> {
     const sha256 = arquivo?.digest?.replace(/^sha256:/, '')
     if (!arquivo || !sha256) {
       throw new ErroApp(
-        'Não encontrei o programa do playit.gg para Windows. Tente de novo mais tarde.',
-        `${PROGRAMAS[nome]} não está na última versão de ${RELEASE}`
+        t('p.playit.naoEncontreiOProgramaDo'),
+        t('p.playit.naoEstaNaUltimaVersao', { v: PROGRAMAS[nome], RELEASE })
       )
     }
     await baixar(
@@ -70,7 +71,7 @@ export function estaVinculando(): boolean {
 }
 
 export async function vincular(aoProgredir: AoProgredir): Promise<void> {
-  if (vinculando) throw new ErroApp('O vínculo com o playit.gg já está em andamento.')
+  if (vinculando) throw new ErroApp(t('p.playit.oVinculoComOPlayit'))
   vinculando = true
   try {
     await baixarProgramas(aoProgredir)
@@ -96,7 +97,7 @@ function trocarCodigoPorChave(codigo: string): Promise<string> {
     filho.stdout.on('data', (d) => (saida += d))
     filho.stderr.on('data', (d) => (saida += d))
     filho.on('error', (e) =>
-      falhar(new ErroApp('Não consegui abrir o programa do playit.gg.', String(e)))
+      falhar(new ErroApp(t('p.playit.naoConseguiAbrirOPrograma'), String(e)))
     )
     filho.on('close', (codigoSaida) => {
       // A chave é a última linha que o comando escreve (println da chave no fim do claim_exchange).
@@ -104,11 +105,11 @@ function trocarCodigoPorChave(codigo: string): Promise<string> {
       const chave = saida.trim().split(/\r?\n/).at(-1)?.trim() ?? ''
       if (codigoSaida === 0 && /^[A-Za-z0-9_-]{16,}$/.test(chave)) return resolver(chave)
       const mensagem = /not approved|rejected/i.test(saida)
-        ? 'O vínculo não foi aprovado no site do playit.gg. Clique em "Vincular" e aprove no navegador.'
+        ? t('p.playit.oVinculoNaoFoiAprovado')
         : /timed out/i.test(saida)
-          ? 'O tempo para aprovar no navegador acabou. Clique em "Vincular" de novo.'
-          : 'Não consegui vincular o playit.gg. Tente de novo.'
-      falhar(new ErroApp(mensagem, `Código de saída: ${codigoSaida}\n${saida}`))
+          ? t('p.playit.oTempoParaAprovarNo')
+          : t('p.playit.naoConseguiVincularOPlayit')
+      falhar(new ErroApp(mensagem, t('p.playit.codigoDeSaida', { codigoSaida, saida })))
     })
   })
 }

@@ -14,16 +14,17 @@ import { MensagemErro } from './MensagemErro'
 import { Esqueleto } from './movimento'
 import { Botao, Dialogo } from './ui'
 import type { Variante } from './estilos'
+import { t } from '../../../shared/i18n'
 
 // Diagnóstico de conexão (Fase M5, DESIGN.md seção 6.22.9): um botão que confere em ordem e
 // mostra a lista, com o primeiro problema em destaque, o conserto quando existe (sempre com o
 // clique) e "Copiar resultado" (sem tokens nem IP público completo).
 
 const ICONE: Record<ResultadoChecagem, { simbolo: string; classe: string; rotulo: string }> = {
-  ok: { simbolo: '✓', classe: 'text-online', rotulo: 'certo' },
-  falhou: { simbolo: '✗', classe: 'text-danger', rotulo: 'problema' },
-  aviso: { simbolo: '!', classe: 'text-warning', rotulo: 'aviso' },
-  pulada: { simbolo: '–', classe: 'text-muted', rotulo: 'não conferido' }
+  ok: { simbolo: '✓', classe: 'text-online', rotulo: t('diagnostico.certo') },
+  falhou: { simbolo: '✗', classe: 'text-danger', rotulo: t('diagnostico.problema') },
+  aviso: { simbolo: '!', classe: 'text-warning', rotulo: t('diagnostico.aviso') },
+  pulada: { simbolo: '–', classe: 'text-muted', rotulo: t('diagnostico.naoConferido') }
 }
 
 export function BotaoDiagnostico({
@@ -85,7 +86,7 @@ export function BotaoDiagnostico({
         aberto={aberto}
         titulo={titulo}
         aoCancelar={() => setAberto(false)}
-        acao={{ rotulo: 'Conferir de novo', aoClicar: () => void conferir(), ocupado }}
+        acao={{ rotulo: t('diagnostico.conferirDeNovo'), aoClicar: () => void conferir(), ocupado }}
       >
         <div className="flex min-w-0 flex-col gap-3 text-[13px]">
           {erro && <MensagemErro erro={erro} />}
@@ -94,10 +95,13 @@ export function BotaoDiagnostico({
             <>
               <p className="font-bold">
                 {problema
-                  ? `O que impede a entrada: ${problema.nome}.`
-                  : 'Tudo certo: nada impede a entrada.'}
+                  ? t('diagnostico.oQueImpedeAEntrada', { nome: problema.nome })
+                  : t('diagnostico.tudoCertoNadaImpedeA')}
               </p>
-              <ul className="flex flex-col gap-1" aria-label="Resultado do diagnóstico">
+              <ul
+                className="flex flex-col gap-1"
+                aria-label={t('diagnostico.resultadoDoDiagnostico')}
+              >
                 {linhas.map((l) => {
                   const icone = ICONE[l.resultado]
                   return (
@@ -141,7 +145,7 @@ export function BotaoDiagnostico({
                   setTimeout(() => setCopiado(false), 2000)
                 }}
               >
-                {copiado ? 'Copiado!' : 'Copiar resultado'}
+                {copiado ? t('diagnostico.copiado') : t('diagnostico.copiarResultado')}
               </Botao>
             </>
           )}

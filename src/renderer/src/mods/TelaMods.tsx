@@ -22,6 +22,7 @@ import { NOMES_FONTES } from '../../../shared/fontes'
 import { Instalados } from './Instalados'
 import { BotaoDownloadsPendentes } from './DownloadsNecessarios'
 import { AtualizacaoDoModpack, BotaoPacoteAmigos } from './ModpackEAmigos'
+import { t } from '../../../shared/i18n'
 
 // Tela Mods (Fase 16): mods ou plugins do servidor ativo, pelo Modrinth.
 export function TelaMods({ aba }: { aba: string }): React.JSX.Element {
@@ -85,8 +86,8 @@ export function TelaMods({ aba }: { aba: string }): React.JSX.Element {
       <PaginaAjustes>
         <EstadoVazio
           icone={<IconeMods />}
-          titulo={`O ${NOMES_TIPOS[info.tipo]} não aceita mods nem plugins`}
-          texto="Para usar mods, troque o software para Fabric, Forge ou NeoForge. Para usar plugins, troque para Paper. Faça isso na tela Software (o app faz um backup antes)."
+          titulo={t('telaMods.oNaoAceitaModsNem', { v: NOMES_TIPOS[info.tipo] })}
+          texto={t('telaMods.paraUsarModsTroqueO')}
         />
       </PaginaAjustes>
     )
@@ -98,10 +99,10 @@ export function TelaMods({ aba }: { aba: string }): React.JSX.Element {
     <PaginaAjustes largo>
       {lista && lista.pendentes > 0 && (
         <Aviso tipo="atencao">
-          <span className="flex-1">Reinicie o servidor para aplicar as mudanças nos {extras}.</span>
+          <span className="flex-1">{t('telaMods.reinicieOServidorParaAplicar', { extras })}</span>
           {estado === 'ligado' && (
             <Botao variante="atencao" tamanho="pequeno" onClick={() => window.api.reiniciar()}>
-              Reiniciar
+              {t('telaMods.reiniciar')}
             </Botao>
           )}
         </Aviso>
@@ -215,15 +216,15 @@ function AbaAtualizacoes({
       {!itens.length && !erro ? (
         <EstadoVazio
           icone={<IconeMods />}
-          titulo="Tudo em dia"
-          texto={`Os ${extras} do Modrinth já estão na versão compatível mais nova. Os instalados manualmente não entram aqui.`}
+          titulo={t('telaMods.tudoEmDia')}
+          texto={t('telaMods.osDoModrinthJaEstao', { extras })}
         >
-          <Botao onClick={procurar}>Procurar de novo</Botao>
+          <Botao onClick={procurar}>{t('telaMods.procurarDeNovo')}</Botao>
         </EstadoVazio>
       ) : (
         itens.length > 0 && (
           <CardPainel
-            titulo={`${itens.length} ${itens.length === 1 ? 'atualização' : 'atualizações'}`}
+            titulo={`${itens.length} ${itens.length === 1 ? t('telaMods.atualizacao') : t('telaMods.atualizacoes')}`}
             acoes={
               <Botao
                 variante="primario"
@@ -231,13 +232,12 @@ function AbaAtualizacoes({
                 disabled={!!atualizando || itens.every((a) => a.manual)}
                 onClick={() => atualizar()}
               >
-                {atualizando === 'todos' ? 'Atualizando...' : 'Atualizar todos'}
+                {atualizando === 'todos' ? t('telaMods.atualizando') : t('telaMods.atualizarTodos')}
               </Botao>
             }
           >
             <p className="mb-3 text-xs text-muted">
-              Antes de atualizar, o app faz um backup da pasta {extras}. Cada item é conferido na
-              fonte de onde veio (Modrinth, CurseForge ou Hangar).
+              {t('telaMods.antesDeAtualizarOApp', { extras })}
             </p>
             <ul className="flex flex-col divide-y divide-linha">
               {itens.map((a) => (
@@ -260,7 +260,7 @@ function AbaAtualizacoes({
                       rel="noreferrer"
                       className={classesBotao('secundario', 'pequeno')}
                     >
-                      Baixe pelo site
+                      {t('telaMods.baixePeloSite')}
                     </a>
                   ) : (
                     <Botao
@@ -268,7 +268,9 @@ function AbaAtualizacoes({
                       disabled={!!atualizando}
                       onClick={() => atualizar(a.arquivo)}
                     >
-                      {atualizando === a.arquivo ? 'Atualizando...' : 'Atualizar'}
+                      {atualizando === a.arquivo
+                        ? t('telaMods.atualizando')
+                        : t('telaMods.atualizar')}
                     </Botao>
                   )}
                 </li>
@@ -301,10 +303,7 @@ function TestarNoJogo({ info }: { info: InfoServidor }): React.JSX.Element {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3 border border-linha bg-panel p-3">
-        <p className="flex-1 text-[13px] text-muted">
-          Quer ver como ficou no jogo? A instalação deste servidor no PlaySquare recebe os mesmos
-          mods e packs, e a tela Jogar abre com ela escolhida.
-        </p>
+        <p className="flex-1 text-[13px] text-muted">{t('telaMods.querVerComoFicouNo')}</p>
         <Botao
           variante="destaque"
           disabled={ocupado}
@@ -314,10 +313,10 @@ function TestarNoJogo({ info }: { info: InfoServidor }): React.JSX.Element {
             const r = await window.api.prepararTeste(info.id)
             setOcupado(false)
             if (!r.ok) return setErro(r.erro)
-            irPara({ area: 'play', pagina: 'Jogar', instalacaoId: r.valor })
+            irPara({ area: 'play', pagina: t('telaMods.jogar'), instalacaoId: r.valor })
           }}
         >
-          {ocupado ? 'Preparando...' : 'Testar no meu jogo'}
+          {ocupado ? t('telaMods.preparando') : t('telaMods.testarNoMeuJogo')}
         </Botao>
       </div>
       {ocupado && progresso && (

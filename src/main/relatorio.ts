@@ -25,6 +25,7 @@ import {
   type Limpeza
 } from './relatorioRegras'
 import { lerIndice, lerInfo } from './servidores'
+import { t, idiomaAtual } from '../shared/i18n'
 
 // Relatório de erro (Fase M8): um .zip na Área de Trabalho com o que é preciso para entender um
 // problema (logs, travamentos, sistema, configurações, lista de mods, versão do convite e o último
@@ -110,7 +111,7 @@ export async function opcoesRelatorio(): Promise<OpcoesRelatorio> {
     instalacoes: lista.map((i) => ({ id: i.id, nome: i.nome })),
     servidorPadrao: indice.ativo,
     instalacaoPadrao: recente?.id ?? null,
-    itens: ITENS_RELATORIO.map((i) => ({ ...i }))
+    itens: ITENS_RELATORIO().map((i) => ({ ...i }))
   }
 }
 
@@ -175,7 +176,7 @@ async function versaoDoManifesto(caminho: string): Promise<number | null> {
 const javasInstalados = async (): Promise<string[]> =>
   (await readdir(join(dados(), 'java'), { withFileTypes: true }).catch(() => []))
     .filter((d) => d.isDirectory())
-    .map((d) => `Java ${d.name}`)
+    .map((d) => t('p.relatorio.java', { name: d.name }))
 
 export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> {
   const { servidorId, instalacaoId, tirar } = (pedido ?? {}) as Record<string, unknown>
@@ -270,11 +271,13 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
     arquivos['manifesto.json'] = limpar(JSON.stringify(manifesto, null, 2))
   }
   if (itens.includes('diagnostico') && ultimoDiagnostico) {
-    arquivos['diagnostico.txt'] = limpar(`Em ${ultimoDiagnostico.em}\n${ultimoDiagnostico.texto}`)
+    arquivos['diagnostico.txt'] = limpar(
+      t('p.relatorio.em', { em: ultimoDiagnostico.em, texto: ultimoDiagnostico.texto })
+    )
   }
   arquivos['LEIA-ME.txt'] = limpar(
     leiaMe({
-      geradoEm: new Date().toLocaleString('pt-BR'),
+      geradoEm: new Date().toLocaleString(idiomaAtual()),
       versaoApp: app.getVersion(),
       windows: `${version()} (${release()})`,
       servidor: servidor?.nome ?? null,
@@ -288,10 +291,7 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
   // Conferência final: se algum segredo conhecido sobrou, nada é gravado.
   const sobrou = sobrouSegredo(arquivos, limpeza.segredos)
   if (sobrou) {
-    throw new ErroApp(
-      'O relatório não foi gerado porque um segredo não saiu da limpeza. Tire esse item da lista e tente de novo.',
-      `Arquivo: ${sobrou}`
-    )
+    throw new ErroApp(t('p.relatorio.oRelatorioNaoFoiGerado'), t('p.relatorio.arquivo', { sobrou }))
   }
 
   const pasta = app.getPath('desktop')
@@ -305,10 +305,7 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
     await mkdir(pasta, { recursive: true })
     await tar(['-a', '-c', '-f', destino, '-C', montagem, ...Object.keys(arquivos)])
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui gravar o relatório na Área de Trabalho. Confira o espaço no disco e tente de novo.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.relatorio.naoConseguiGravarORelatorio'), detalhar(e))
   } finally {
     await rm(montagem, { recursive: true, force: true }).catch(() => {})
   }
@@ -317,5 +314,5 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
 
 export async function abrirPastaDoRelatorio(): Promise<void> {
   const erro = await shell.openPath(app.getPath('desktop'))
-  if (erro) throw new ErroApp('Não consegui abrir a Área de Trabalho.', erro)
+  if (erro) throw new ErroApp(t('p.relatorio.naoConseguiAbrirAArea'), erro)
 }

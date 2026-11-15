@@ -4,6 +4,7 @@ import { MensagemErro } from '../componentes/MensagemErro'
 import { BarraProgresso } from '../componentes/movimento'
 import { Aviso, Botao } from '../componentes/ui'
 import { IconeProjeto } from './TelaMods'
+import { t } from '../../../shared/i18n'
 
 // Fase D: janela "Downloads necessários" (o fluxo do ATLauncher). Fica montada uma vez no App.
 // Abre sozinha quando uma instalação deixa algo faltando, ou pelo botão "Downloads pendentes".
@@ -42,21 +43,33 @@ export function BotaoDownloadsPendentes({ alvo }: { alvo: string }): React.JSX.E
     <Aviso tipo="atencao">
       <span className="flex-1">
         {n === 1
-          ? 'Falta 1 arquivo que precisa ser baixado pela página oficial.'
-          : `Faltam ${n} arquivos que precisam ser baixados pela página oficial.`}
+          ? t('downloadsNecessarios.falta1ArquivoQuePrecisa')
+          : t('downloadsNecessarios.faltamArquivosQuePrecisamSer', { n })}
       </span>
       <Botao variante="atencao" tamanho="pequeno" onClick={() => abrirDownloads(alvo)}>
-        Downloads pendentes ({n})
+        {t('downloadsNecessarios.downloadsPendentes', { n })}
       </Botao>
     </Aviso>
   )
 }
 
 const ESTADOS: Record<DownloadManual['estado'], { texto: string; cor: string; borda: string }> = {
-  aguardando: { texto: 'Aguardando', cor: 'text-muted', borda: 'border-linha' },
-  conferindo: { texto: 'Detectado, conferindo…', cor: 'text-warning', borda: 'border-warning' },
-  pronto: { texto: 'Pronto ✓', cor: 'text-online', borda: 'border-online' },
-  diferente: { texto: 'Arquivo diferente', cor: 'text-danger', borda: 'border-danger' }
+  aguardando: {
+    texto: t('downloadsNecessarios.aguardando'),
+    cor: 'text-muted',
+    borda: 'border-linha'
+  },
+  conferindo: {
+    texto: t('downloadsNecessarios.detectadoConferindo'),
+    cor: 'text-warning',
+    borda: 'border-warning'
+  },
+  pronto: { texto: t('downloadsNecessarios.pronto'), cor: 'text-online', borda: 'border-online' },
+  diferente: {
+    texto: t('downloadsNecessarios.arquivoDiferente'),
+    cor: 'text-danger',
+    borda: 'border-danger'
+  }
 }
 
 function Linha({
@@ -101,7 +114,9 @@ function Linha({
           <div className="truncate font-mono text-xs text-muted" title={d.arquivo}>
             {d.arquivo}
           </div>
-          <div className="text-xs text-muted">Para: {d.nomeAlvo}</div>
+          <div className="text-xs text-muted">
+            {t('downloadsNecessarios.para', { nomeAlvo: d.nomeAlvo })}
+          </div>
         </div>
         {/* key: o selo entra de novo (fade + escala) a cada troca de estado. */}
         <span key={d.estado} className={`anim-estalo shrink-0 text-[13px] font-bold ${e.cor}`}>
@@ -116,13 +131,13 @@ function Linha({
             tamanho="pequeno"
             onClick={() => void pedir(window.api.abrirPaginaDownload(d.id))}
           >
-            Abrir página de download
+            {t('downloadsNecessarios.abrirPaginaDeDownload')}
           </Botao>
           <Botao tamanho="pequeno" onClick={() => void pedir(window.api.escolherDownload(d.id))}>
-            Já baixei, escolher arquivo
+            {t('downloadsNecessarios.jaBaixeiEscolherArquivo')}
           </Botao>
           <span className="flex-1 border-2 border-dashed border-linha px-2 py-1 text-center text-xs text-muted">
-            ou arraste o arquivo aqui
+            {t('downloadsNecessarios.ouArrasteOArquivoAqui')}
           </span>
         </div>
       )}
@@ -190,20 +205,19 @@ export function DownloadsNecessarios(): React.JSX.Element {
       className="m-auto w-[680px] max-w-[calc(100vw-32px)] border-2 border-linha bg-panel p-6 text-texto backdrop:bg-[var(--overlay)]"
     >
       <h2 id="titulo-downloads" className="texto-pixel text-xl">
-        Downloads necessários
+        {t('downloadsNecessarios.downloadsNecessarios')}
       </h2>
       <p className="mt-2 text-sm text-muted">
-        Os autores destes arquivos não deixam outros apps baixarem por você. Baixe cada um pela
-        página oficial: o app encontra o arquivo na pasta Downloads, confere e instala sozinho.
+        {t('downloadsNecessarios.osAutoresDestesArquivosNao')}
       </p>
 
       <div className="mt-4 flex flex-col gap-2">
         <div className="flex items-baseline gap-3 text-[13px]">
-          <b>
-            {prontos} de {itens.length} prontos
-          </b>
+          <b>{t('downloadsNecessarios.deProntos', { prontos, length: itens.length })}</b>
           {!tudoPronto && faltam.length > 0 && (
-            <span className="text-xs text-muted">Procurando na pasta Downloads…</span>
+            <span className="text-xs text-muted">
+              {t('downloadsNecessarios.procurandoNaPastaDownloads')}
+            </span>
           )}
           {!tudoPronto && faltam.length > 0 && (
             <Botao
@@ -214,15 +228,17 @@ export function DownloadsNecessarios(): React.JSX.Element {
               onClick={() => void abrirLote()}
             >
               {lote === 0
-                ? `Abrir todas${faltam.length > LOTE ? ` (${LOTE} por vez)` : ''}`
+                ? t('downloadsNecessarios.abrirTodas', {
+                    v: faltam.length > LOTE ? t('downloadsNecessarios.porVez', { LOTE }) : ''
+                  })
                 : proximo.length
-                  ? `Abrir as próximas ${proximo.length}`
-                  : 'Todas abertas'}
+                  ? t('downloadsNecessarios.abrirAsProximas', { length: proximo.length })
+                  : t('downloadsNecessarios.todasAbertas')}
             </Botao>
           )}
         </div>
         <BarraProgresso
-          rotulo={`${prontos} de ${itens.length} prontos`}
+          rotulo={t('downloadsNecessarios.deProntos', { prontos, length: itens.length })}
           valor={prontos}
           maximo={itens.length}
         />
@@ -230,9 +246,7 @@ export function DownloadsNecessarios(): React.JSX.Element {
 
       {tudoPronto && (
         <div className="anim-estalo mt-4">
-          <Aviso tipo="sucesso">
-            Tudo pronto! Os arquivos foram para a pasta certa e a instalação continuou sozinha.
-          </Aviso>
+          <Aviso tipo="sucesso">{t('downloadsNecessarios.tudoProntoOsArquivosForam')}</Aviso>
         </div>
       )}
       {erro && (
@@ -250,11 +264,11 @@ export function DownloadsNecessarios(): React.JSX.Element {
       <div className="mt-6 flex items-center justify-end gap-2">
         {!tudoPronto && (
           <span className="mr-auto text-xs text-muted">
-            Pode fechar: o que falta fica salvo e continua depois.
+            {t('downloadsNecessarios.podeFecharOQueFalta')}
           </span>
         )}
         <Botao variante={tudoPronto ? 'primario' : 'secundario'} onClick={fechar}>
-          {tudoPronto ? 'Concluir' : 'Fechar'}
+          {tudoPronto ? t('downloadsNecessarios.concluir') : t('downloadsNecessarios.fechar')}
         </Botao>
       </div>
     </dialog>

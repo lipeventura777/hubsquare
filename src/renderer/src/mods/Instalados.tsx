@@ -54,22 +54,23 @@ import {
   PainelDeFiltros,
   usePreferencia
 } from './partesExplorar'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
 // Aba Instalados da tela Mods (Fase 23.2): tudo o que o servidor tem, com as mesmas peças do
 // Explorar. Remover vai para Removidos recentemente (7 dias), com "Desfazer".
 
 const NOMES_FONTE: Record<FonteInstalado, string> = {
-  modrinth: 'Modrinth',
+  modrinth: t('instalados.modrinth'),
   curseforge: 'CurseForge',
-  hangar: 'Hangar',
-  manual: 'Manual'
+  hangar: t('instalados.hangar'),
+  manual: t('instalados.manual')
 }
 
 type Ordem = 'nome' | 'data' | 'tamanho'
 const ORDENS: { valor: Ordem; rotulo: string }[] = [
-  { valor: 'nome', rotulo: 'Nome' },
-  { valor: 'data', rotulo: 'Data de instalação' },
-  { valor: 'tamanho', rotulo: 'Tamanho' }
+  { valor: 'nome', rotulo: t('instalados.nome') },
+  { valor: 'data', rotulo: t('instalados.dataDeInstalacao') },
+  { valor: 'tamanho', rotulo: t('instalados.tamanho') }
 ]
 
 const PASTA_NO_PACOTE: Record<string, string> = {
@@ -79,46 +80,43 @@ const PASTA_NO_PACOTE: Record<string, string> = {
 }
 
 function nomeDaAba(c: CategoriaInstalado, info: InfoServidor): string {
-  if (info.jogador && c === 'amigos') return 'Shaders e resource packs'
+  if (info.jogador && c === 'amigos') return t('instalados.shadersEResourcePacks')
   switch (c) {
     case 'extras':
-      return EXTRAS_TIPOS[info.tipo] === 'plugins' ? 'Plugins' : 'Mods'
+      return EXTRAS_TIPOS[info.tipo] === 'plugins' ? t('instalados.plugins') : t('instalados.mods')
     case 'datapack':
-      return 'Datapacks'
+      return t('instalados.datapacks')
     case 'resourcepack':
-      return 'Resource pack do servidor'
+      return t('instalados.resourcePackDoServidor')
     case 'amigos':
-      return 'Pacote pros amigos'
+      return t('instalados.pacoteProsAmigos')
     case 'modpack':
-      return 'Modpack'
+      return t('instalados.modpack')
     case 'outros':
-      return 'Outros'
+      return t('instalados.outros')
   }
 }
 
 function fraseDaAba(c: CategoriaInstalado, info: InfoServidor): string {
   // PlaySquare (Fase P3): a mesma aba, para a instalação do jogador.
   if (info.jogador) {
-    if (c === 'extras')
-      return 'Mods da pasta mods da instalação. Os marcados "Do servidor" vêm do servidor e os obrigatórios não saem por aqui; os seus a sincronização nunca tira.'
-    if (c === 'amigos')
-      return 'Shaders e resource packs da instalação: os seus e os que o servidor mandou.'
-    if (c === 'outros')
-      return 'Arquivos na pasta mods que o app não reconhece (postos à mão). São seus.'
+    if (c === 'extras') return t('instalados.modsDaPastaModsDa')
+    if (c === 'amigos') return t('instalados.shadersEResourcePacksDa')
+    if (c === 'outros') return t('instalados.arquivosNaPastaModsQue')
   }
   switch (c) {
     case 'extras':
-      return `Arquivos da pasta ${EXTRAS_TIPOS[info.tipo]} do servidor. Remover só acontece com o servidor desligado; ligado, sai quando ele desligar.`
+      return t('instalados.arquivosDaPastaDoServidor', { v: EXTRAS_TIPOS[info.tipo] })
     case 'datapack':
-      return 'Datapacks da pasta datapacks de cada mundo. Só o mundo ativo usa os dele.'
+      return t('instalados.datapacksDaPastaDatapacksDe')
     case 'resourcepack':
-      return 'O resource pack que o server.properties manda para cada jogador ao entrar.'
+      return t('instalados.oResourcePackQueO')
     case 'amigos':
-      return 'Shaders, resource packs e mods só do jogador que vão no Pacote pros amigos. O servidor não usa nenhum deles.'
+      return t('instalados.shadersResourcePacksEMods')
     case 'modpack':
-      return 'O modpack de onde este servidor veio.'
+      return t('instalados.oModpackDeOndeEste')
     case 'outros':
-      return 'Arquivos nas pastas mods, plugins e datapacks que o app não reconhece (instalados manualmente).'
+      return t('instalados.arquivosNasPastasModsPlugins')
   }
 }
 
@@ -126,17 +124,24 @@ function fraseDaAba(c: CategoriaInstalado, info: InfoServidor): string {
 function onde(i: ItemInstalado): string {
   if (i.categoria === 'resourcepack') return 'server.properties (resource-pack)'
   if (i.categoria === 'amigos' && i.caminho) return i.caminho
-  if (i.categoria === 'amigos') return `Pacote pros amigos (${PASTA_NO_PACOTE[i.tipo] ?? 'mods'})`
-  return i.caminho ?? 'espera para entrar ao desligar'
+  if (i.categoria === 'amigos')
+    return t('instalados.pacoteProsAmigos2', { v: PASTA_NO_PACOTE[i.tipo] ?? 'mods' })
+  return i.caminho ?? t('instalados.esperaParaEntrarAoDesligar')
 }
 
 function detalheDoCard(i: ItemInstalado): string | undefined {
   if (i.categoria === 'datapack' || (i.categoria === 'outros' && i.mundo)) {
-    return `Mundo "${i.mundo}"${i.mundoAtivo ? ' (ativo)' : ' (não está ativo)'}`
+    return t('instalados.mundo', {
+      mundo: i.mundo,
+      v: i.mundoAtivo ? ' (ativo)' : t('instalados.naoEstaAtivo')
+    })
   }
   if (i.categoria === 'resourcepack')
-    return i.obrigatorio ? 'Obrigatório para entrar' : 'Opcional para os jogadores'
-  if (i.categoria === 'amigos') return `Vai na pasta ${PASTA_NO_PACOTE[i.tipo] ?? 'mods'} do pacote`
+    return i.obrigatorio
+      ? t('instalados.obrigatorioParaEntrar')
+      : t('instalados.opcionalParaOsJogadores')
+  if (i.categoria === 'amigos')
+    return t('instalados.vaiNaPastaDoPacote', { v: PASTA_NO_PACOTE[i.tipo] ?? 'mods' })
   if (i.categoria === 'outros') return i.caminho ?? undefined
   return undefined
 }
@@ -263,10 +268,13 @@ export function Instalados({
     setFeito({
       lote,
       texto: [
-        n && `${n} ${n === 1 ? 'item removido' : 'itens removidos'}.`,
+        n && `${n} ${n === 1 ? 'item removido' : t('instalados.itensRemovidos')}.`,
         agendados &&
-          `${agendados} ${agendados === 1 ? 'será removido' : 'serão removidos'} ao desligar o servidor.`,
-        'Fica tudo 7 dias em Removidos recentemente.'
+          t('instalados.aoDesligarOServidor', {
+            agendados,
+            v: agendados === 1 ? t('instalados.seraRemovido') : t('instalados.seraoRemovidos')
+          }),
+        t('instalados.ficaTudo7DiasEm')
       ]
         .filter(Boolean)
         .join(' ')
@@ -310,7 +318,7 @@ export function Instalados({
     return r.ok
   }
 
-  const aoDesligar = ligado ? ' Com o servidor ligado, vale quando ele desligar.' : ''
+  const aoDesligar = ligado ? t('instalados.comOServidorLigadoVale') : ''
 
   // Correção de um problema com um clique.
   async function corrigir(c: CorrecaoMod): Promise<void> {
@@ -335,7 +343,7 @@ export function Instalados({
     }
     await rodar(
       () => api.trocarParaCompativel(arquivoDe(alvo)),
-      `${alvo.titulo} trocado para uma versão compatível. A de antes ficou guardada.${aoDesligar}`
+      t('instalados.trocadoParaUmaVersaoCompativel', { titulo: alvo.titulo, aoDesligar })
     )
   }
 
@@ -347,7 +355,7 @@ export function Instalados({
     setProgresso(null)
     setPlano(null)
     if (!r.ok) setErro(r.erro)
-    else setAviso(`Instalado.${aoDesligar}`)
+    else setAviso(t('instalados.instalado', { aoDesligar }))
     await depoisDeMudar()
   }
 
@@ -370,7 +378,7 @@ export function Instalados({
           }
           return { ok: true, valor: undefined }
         },
-        `${mudar.length} ${quer ? 'ativados' : 'desativados'}.${aoDesligar}`
+        `${mudar.length} ${quer ? t('instalados.ativados') : t('instalados.desativados')}.${aoDesligar}`
       )
     }
     setSelecionados(new Set())
@@ -385,10 +393,9 @@ export function Instalados({
     const { plano: p, notas, faltam } = r.valor
     setAviso(
       [
-        notas && `${notas} etiquetas e notas aplicadas.`,
-        faltam.length &&
-          `Sem fonte para baixar (instalados à mão no outro servidor): ${faltam.join(', ')}.`,
-        !p && 'Nada novo para instalar.'
+        notas && t('instalados.etiquetasENotasAplicadas', { notas }),
+        faltam.length && t('instalados.semFonteParaBaixarInstalados', { join: faltam.join(', ') }),
+        !p && t('instalados.nadaNovoParaInstalar')
       ]
         .filter(Boolean)
         .join(' ')
@@ -428,7 +435,7 @@ export function Instalados({
         ? (b.tamanho ?? 0) - (a.tamanho ?? 0)
         : ordem === 'data'
           ? (b.data ?? '').localeCompare(a.data ?? '')
-          : a.titulo.localeCompare(b.titulo, 'pt-BR')
+          : a.titulo.localeCompare(b.titulo, idiomaAtual())
     )
   // A busca e os filtros valem antes de dividir em páginas.
   const chaveFiltros = JSON.stringify([
@@ -462,25 +469,47 @@ export function Instalados({
   const escolhidos = todos.filter((i) => selecionados.has(i.chave) && podeSelecionar(i))
 
   const ativos = [
-    ...(fonte ? [{ rotulo: `Fonte: ${NOMES_FONTE[fonte]}`, aoTirar: () => setFonte(null) }] : []),
+    ...(fonte
+      ? [
+          {
+            rotulo: t('instalados.fonte', { v: NOMES_FONTE[fonte] }),
+            aoTirar: () => setFonte(null)
+          }
+        ]
+      : []),
     ...(temEstado && situacao
       ? [
           {
-            rotulo: situacao === 'ativos' ? 'Só ativos' : 'Só desativados',
+            rotulo:
+              situacao === 'ativos' ? t('instalados.soAtivos') : t('instalados.soDesativados'),
             aoTirar: () => setSituacao(null)
           }
         ]
       : []),
     ...(comAtualizacao
-      ? [{ rotulo: 'Com atualização', aoTirar: () => setComAtualizacao(false) }]
+      ? [{ rotulo: t('instalados.comAtualizacao'), aoTirar: () => setComAtualizacao(false) }]
       : []),
-    ...(mundo ? [{ rotulo: `Mundo: ${mundo}`, aoTirar: () => setMundo(null) }] : []),
-    ...(comProblema ? [{ rotulo: 'Com problema', aoTirar: () => setComProblema(false) }] : []),
+    ...(mundo
+      ? [{ rotulo: t('instalados.mundo2', { mundo }), aoTirar: () => setMundo(null) }]
+      : []),
+    ...(comProblema
+      ? [{ rotulo: t('instalados.comProblema'), aoTirar: () => setComProblema(false) }]
+      : []),
     ...(categoriaFiltro
-      ? [{ rotulo: `Categoria: ${categoriaFiltro}`, aoTirar: () => setCategoriaFiltro(null) }]
+      ? [
+          {
+            rotulo: t('instalados.categoria', { categoriaFiltro }),
+            aoTirar: () => setCategoriaFiltro(null)
+          }
+        ]
       : []),
     ...(corFiltro
-      ? [{ rotulo: `Etiqueta: ${COR_ETIQUETA[corFiltro].nome}`, aoTirar: () => setCorFiltro(null) }]
+      ? [
+          {
+            rotulo: t('instalados.etiqueta', { nome: COR_ETIQUETA[corFiltro].nome }),
+            aoTirar: () => setCorFiltro(null)
+          }
+        ]
       : [])
   ]
   const categorias = [
@@ -508,18 +537,22 @@ export function Instalados({
         disabled={ocupado || i.removerAoDesligar}
         onClick={() => setConfirmar([i])}
       >
-        {i.removerAoDesligar ? 'Será removido ao desligar' : 'Remover'}
+        {i.removerAoDesligar ? t('instalados.seraRemovidoAoDesligar') : t('instalados.remover')}
       </Botao>
     )
 
   const etiquetas = (i: ItemInstalado): React.ReactNode => (
     <>
       {info.jogador &&
-        (i.doServidor ? <Etiqueta tom="accent">Do servidor</Etiqueta> : <Etiqueta>Meu</Etiqueta>)}
+        (i.doServidor ? (
+          <Etiqueta tom="accent">{t('instalados.doServidor')}</Etiqueta>
+        ) : (
+          <Etiqueta>{t('instalados.meu')}</Etiqueta>
+        ))}
       {i.cor && (
         <span
           title={COR_ETIQUETA[i.cor].nome}
-          aria-label={`Etiqueta ${COR_ETIQUETA[i.cor].nome}`}
+          aria-label={t('instalados.etiqueta2', { nome: COR_ETIQUETA[i.cor].nome })}
           className="inline-block h-4 w-4 shrink-0"
           style={{ background: COR_ETIQUETA[i.cor].hex }}
         />
@@ -527,19 +560,24 @@ export function Instalados({
       {i.problemas.length > 0 && (
         <Etiqueta tom="aviso">
           <IconeAtencao className="inline-block h-3.5 w-3.5 shrink-0 align-[-2px]" />{' '}
-          {i.problemas.length} {i.problemas.length === 1 ? 'problema' : 'problemas'}
+          {i.problemas.length}{' '}
+          {i.problemas.length === 1 ? t('instalados.problema') : t('instalados.problemas')}
         </Etiqueta>
       )}
-      {i.travado && <Etiqueta>Versão travada</Etiqueta>}
-      {i.removerAoDesligar && <Etiqueta tom="aviso">Será removido ao desligar</Etiqueta>}
-      {i.pendente === 'instalar' && <Etiqueta tom="aviso">Entra ao desligar</Etiqueta>}
-      {(i.pendente === 'ativar' || i.pendente === 'desativar') && (
-        <Etiqueta tom="aviso">Muda ao desligar</Etiqueta>
+      {i.travado && <Etiqueta>{t('instalados.versaoTravada')}</Etiqueta>}
+      {i.removerAoDesligar && (
+        <Etiqueta tom="aviso">{t('instalados.seraRemovidoAoDesligar')}</Etiqueta>
       )}
-      {i.atualizacao && <Etiqueta tom="accent">Atualização disponível</Etiqueta>}
-      {i.mundoAtivo && <Etiqueta tom="accent">Mundo ativo</Etiqueta>}
-      {temEstado && !i.ativo && <Etiqueta>Desativado</Etiqueta>}
-      {i.obrigatorio && <Etiqueta>Obrigatório</Etiqueta>}
+      {i.pendente === 'instalar' && (
+        <Etiqueta tom="aviso">{t('instalados.entraAoDesligar')}</Etiqueta>
+      )}
+      {(i.pendente === 'ativar' || i.pendente === 'desativar') && (
+        <Etiqueta tom="aviso">{t('instalados.mudaAoDesligar')}</Etiqueta>
+      )}
+      {i.atualizacao && <Etiqueta tom="accent">{t('instalados.atualizacaoDisponivel')}</Etiqueta>}
+      {i.mundoAtivo && <Etiqueta tom="accent">{t('instalados.mundoAtivo')}</Etiqueta>}
+      {temEstado && !i.ativo && <Etiqueta>{t('instalados.desativado')}</Etiqueta>}
+      {i.obrigatorio && <Etiqueta>{t('instalados.obrigatorio')}</Etiqueta>}
     </>
   )
 
@@ -553,7 +591,10 @@ export function Instalados({
 
   const linha = (i: ItemInstalado): string =>
     [
-      i.versao ?? (i.categoria === 'outros' ? 'Instalado manualmente' : 'Sem versão'),
+      i.versao ??
+        (i.categoria === 'outros'
+          ? t('instalados.instaladoManualmente')
+          : t('instalados.semVersao')),
       NOMES_FONTE[i.fonte],
       i.tamanho !== null && tamanho(i.tamanho),
       i.data && dataHora(i.data)
@@ -574,21 +615,25 @@ export function Instalados({
   const dialogo = (
     <Dialogo
       aberto={!!confirmar}
-      titulo={tudo.length === 1 ? `Remover ${tudo[0].titulo}?` : `Remover ${tudo.length} itens?`}
+      titulo={
+        tudo.length === 1
+          ? t('instalados.remover2', { titulo: tudo[0].titulo })
+          : t('instalados.removerItens', { length: tudo.length })
+      }
       aoCancelar={() => !ocupado && setConfirmar(null)}
       acao={{
         rotulo: ocupado
-          ? 'Removendo...'
+          ? t('instalados.removendo')
           : quebram.length
-            ? `Remover todos (${tudo.length})`
-            : 'Remover',
+            ? t('instalados.removerTodos', { length: tudo.length })
+            : t('instalados.remover'),
         variante: 'perigo',
         ocupado,
         aoClicar: () => remover(tudo)
       }}
     >
       <div className="flex flex-col gap-3 text-[13px]">
-        <p>Isto sai:</p>
+        <p>{t('instalados.istoSai')}</p>
         <ul className="flex max-h-48 flex-col gap-1 overflow-auto">
           {alvos.map((i) => (
             <li key={i.chave}>
@@ -600,7 +645,7 @@ export function Instalados({
           <div className="flex flex-col gap-1 text-warning">
             <p>
               <IconeAtencao className="inline-block h-3.5 w-3.5 shrink-0 align-[-2px] mr-1 text-warning" />
-              Estes itens dependem do que vai sair e param de funcionar sem ele:
+              {t('instalados.estesItensDependemDoQue')}
             </p>
             <ul className="flex flex-col gap-1">
               {quebram.map((i) => (
@@ -609,19 +654,17 @@ export function Instalados({
                 </li>
               ))}
             </ul>
-            <p>Para continuar, eles saem juntos. Se não quiser, cancele.</p>
+            <p>{t('instalados.paraContinuarElesSaemJuntos')}</p>
           </div>
         )}
-        {ligado && tudo.some(ehArquivo) && (
-          <p>Com o servidor ligado, os arquivos só saem quando ele desligar.</p>
-        )}
+        {ligado && tudo.some(ehArquivo) && <p>{t('instalados.comOServidorLigadoOs')}</p>}
         {tudo.some((i) => i.categoria === 'resourcepack') && (
-          <p>O server.properties fica sem resource pack (vale depois de reiniciar o servidor).</p>
+          <p>{t('instalados.oServerPropertiesFicaSem')}</p>
         )}
         {tudo.some((i) => i.categoria === 'amigos') && (
-          <p>O Pacote pros amigos perde o item; o servidor não muda.</p>
+          <p>{t('instalados.oPacoteProsAmigosPerde')}</p>
         )}
-        <p className="text-muted">Tudo fica 7 dias em Removidos recentemente, para desfazer.</p>
+        <p className="text-muted">{t('instalados.tudoFica7DiasEm')}</p>
       </div>
     </Dialogo>
   )
@@ -632,7 +675,7 @@ export function Instalados({
         <Aviso tipo="sucesso">
           <span className="flex-1">{feito.texto}</span>
           <Botao tamanho="pequeno" onClick={desfazer}>
-            Desfazer
+            {t('instalados.desfazer')}
           </Botao>
         </Aviso>
       )}
@@ -649,22 +692,22 @@ export function Instalados({
       <>
         {botaoRemover(aberto, false)}
         {aberto.removerAoDesligar && (
-          <span className="text-xs text-warning">Será removido ao desligar o servidor.</span>
+          <span className="text-xs text-warning">{t('instalados.seraRemovidoAoDesligarO')}</span>
         )}
       </>
     )
     const arquivo = (
-      <CardPainel titulo="No servidor">
+      <CardPainel titulo={t('instalados.noServidor')}>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
-          <dt className="text-muted">Onde</dt>
+          <dt className="text-muted">{t('instalados.onde')}</dt>
           <dd className="break-all">{onde(aberto)}</dd>
-          <dt className="text-muted">Fonte</dt>
+          <dt className="text-muted">{t('instalados.fonte2')}</dt>
           <dd>{NOMES_FONTE[aberto.fonte]}</dd>
-          <dt className="text-muted">Versão</dt>
+          <dt className="text-muted">{t('instalados.versao')}</dt>
           <dd>{aberto.versao ?? '—'}</dd>
-          <dt className="text-muted">Tamanho</dt>
+          <dt className="text-muted">{t('instalados.tamanho')}</dt>
           <dd>{aberto.tamanho !== null ? tamanho(aberto.tamanho) : '—'}</dd>
-          <dt className="text-muted">Instalado em</dt>
+          <dt className="text-muted">{t('instalados.instaladoEm')}</dt>
           <dd>{aberto.data ? dataHora(aberto.data) : '—'}</dd>
         </dl>
       </CardPainel>
@@ -692,7 +735,7 @@ export function Instalados({
           // Fonte desconhecida: o mesmo layout, só com o que o app sabe do arquivo.
           <div className="flex flex-col gap-6">
             <Botao tamanho="pequeno" className="self-start" onClick={voltar}>
-              ‹ Voltar aos Instalados
+              {t('instalados.voltarAosInstalados')}
             </Botao>
             <CabecalhoDetalhes icone={aberto.icone} titulo={aberto.titulo} linha={linha(aberto)} />
             <CardAcao frase={fraseDaAba(aberto.categoria, info)}>
@@ -713,7 +756,7 @@ export function Instalados({
   return (
     <div className="flex flex-col gap-4">
       <AbasDeTipo
-        rotulo="O que está instalado"
+        rotulo={t('instalados.oQueEstaInstalado')}
         abas={abas.map((c) => ({ id: c, nome: nomeDaAba(c, info), contador: contar(c) }))}
         ativa={aba}
         aoEscolher={(c) => {
@@ -724,23 +767,20 @@ export function Instalados({
       <p className="border-l-4 border-accent bg-panel px-4 py-2 text-[13px]">
         {fraseDaAba(aba, info)}
       </p>
-      {lista.semInternet && (
-        <Aviso tipo="atencao">
-          Sem conexão com o Modrinth: alguns nomes, ícones e atualizações podem faltar.
-        </Aviso>
-      )}
+      {lista.semInternet && <Aviso tipo="atencao">{t('instalados.semConexaoComOModrinth')}</Aviso>}
       {travamento && (
         <section
-          aria-label="Travamento"
+          aria-label={t('instalados.travamento')}
           className="isolate flex flex-col gap-3 overflow-hidden rounded-(--raio-pequeno) border-l-4 border-danger bg-danger/12 px-4 py-3 text-[13px]"
         >
           <p>
-            <b>{info.jogador ? 'O jogo travou' : 'O servidor travou'}</b> em{' '}
-            {dataHora(travamento.data)}.{travamento.causa && ` ${travamento.causa}`}
+            <b>{info.jogador ? t('instalados.oJogoTravou') : t('instalados.oServidorTravou')}</b>{' '}
+            {t('instalados.em', { dataHora: dataHora(travamento.data) })}
+            {travamento.causa && ` ${travamento.causa}`}
           </p>
           {travamento.suspeitos.length ? (
             <>
-              <p>Mods que aparecem no relatório (marque os que quer desativar):</p>
+              <p>{t('instalados.modsQueAparecemNoRelatorio')}</p>
               <ul className="flex flex-col gap-1">
                 {travamento.suspeitos.map((x) => (
                   <li key={x.chave}>
@@ -762,10 +802,7 @@ export function Instalados({
               </ul>
             </>
           ) : (
-            <p>
-              Não achei nenhum mod no relatório. Veja em Registro de eventos › Relatórios de
-              travamento.
-            </p>
+            <p>{t('instalados.naoAcheiNenhumModNo')}</p>
           )}
           <div className="flex flex-wrap gap-2">
             {travamento.suspeitos.length > 0 && (
@@ -776,11 +813,11 @@ export function Instalados({
                 onClick={() =>
                   rodar(
                     () => api.desativarETentar([...suspeitos], travamento.nome),
-                    'Mods desativados. O servidor está ligando de novo.'
+                    t('instalados.modsDesativadosOServidorEsta')
                   )
                 }
               >
-                Desativar e tentar de novo
+                {t('instalados.desativarETentarDeNovo')}
               </Botao>
             )}
             <Botao
@@ -790,7 +827,7 @@ export function Instalados({
                 setTravamento(null)
               }}
             >
-              Dispensar
+              {t('instalados.dispensar')}
             </Botao>
           </div>
         </section>
@@ -798,11 +835,11 @@ export function Instalados({
       {deMods && aba === 'extras' && comProblemas > 0 && !comProblema && (
         <Aviso tipo="atencao">
           <span className="flex-1">
-            {comProblemas} {comProblemas === 1 ? 'mod tem' : 'mods têm'} problema. Clique no mod
-            para ver o que é e corrigir.
+            {comProblemas} {comProblemas === 1 ? t('instalados.modTem') : t('instalados.modsTem')}{' '}
+            {t('instalados.problemaCliqueNoModPara')}
           </span>
           <Botao variante="atencao" tamanho="pequeno" onClick={() => setComProblema(true)}>
-            Ver só esses
+            {t('instalados.verSoEsses')}
           </Botao>
         </Aviso>
       )}
@@ -814,13 +851,13 @@ export function Instalados({
             onClick={async () => {
               const r = await api.exportarListaMods()
               if (!r.ok) setErro(r.erro)
-              else if (r.valor) setAviso(`Lista salva em ${r.valor}.`)
+              else if (r.valor) setAviso(t('instalados.listaSalvaEm', { valor: r.valor }))
             }}
           >
-            Exportar lista
+            {t('instalados.exportarLista')}
           </Botao>
           <Botao tamanho="pequeno" onClick={importar}>
-            Importar lista
+            {t('instalados.importarLista')}
           </Botao>
         </div>
       )}
@@ -830,7 +867,7 @@ export function Instalados({
         aoAlternarPainel={() => setPainel(painel ? 'fechado' : 'aberto')}
         termo={termo}
         aoMudarTermo={setTermo}
-        rotuloBusca={`Procurar em ${nomeDaAba(aba, info)}`}
+        rotuloBusca={t('instalados.procurarEm', { nomeDaAba: nomeDaAba(aba, info) })}
         ordens={ORDENS}
         ordem={ordem}
         aoOrdenar={setOrdem}
@@ -853,13 +890,13 @@ export function Instalados({
       <div className="flex items-start gap-6">
         {painel && (
           <PainelDeFiltros>
-            <GrupoFiltro titulo="Fonte">
+            <GrupoFiltro titulo={t('instalados.fonte2')}>
               <Selecao
-                aria-label="Fonte"
+                aria-label={t('instalados.fonte2')}
                 value={fonte ?? ''}
                 onChange={(e) => setFonte((e.target.value || null) as FonteInstalado | null)}
               >
-                <option value="">Todas</option>
+                <option value="">{t('instalados.todas')}</option>
                 {(Object.keys(NOMES_FONTE) as FonteInstalado[]).map((f) => (
                   <option key={f} value={f}>
                     {NOMES_FONTE[f]}
@@ -868,38 +905,38 @@ export function Instalados({
               </Selecao>
             </GrupoFiltro>
             {temEstado && (
-              <GrupoFiltro titulo="Situação">
+              <GrupoFiltro titulo={t('instalados.situacao')}>
                 <OpcaoRadio
                   nome="situacao"
                   marcada={!situacao}
                   aoEscolher={() => setSituacao(null)}
                 >
-                  Todos
+                  {t('instalados.todos')}
                 </OpcaoRadio>
                 <OpcaoRadio
                   nome="situacao"
                   marcada={situacao === 'ativos'}
                   aoEscolher={() => setSituacao('ativos')}
                 >
-                  Ativos
+                  {t('instalados.ativos')}
                 </OpcaoRadio>
                 <OpcaoRadio
                   nome="situacao"
                   marcada={situacao === 'desativados'}
                   aoEscolher={() => setSituacao('desativados')}
                 >
-                  Desativados
+                  {t('instalados.desativados2')}
                 </OpcaoRadio>
               </GrupoFiltro>
             )}
             {(aba === 'datapack' || aba === 'outros') && mundos.length > 0 && (
-              <GrupoFiltro titulo="Mundo">
+              <GrupoFiltro titulo={t('instalados.mundo3')}>
                 <Selecao
-                  aria-label="Mundo"
+                  aria-label={t('instalados.mundo3')}
                   value={mundo ?? ''}
                   onChange={(e) => setMundo(e.target.value || null)}
                 >
-                  <option value="">Todos</option>
+                  <option value="">{t('instalados.todos')}</option>
                   {mundos.map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -908,24 +945,24 @@ export function Instalados({
                 </Selecao>
               </GrupoFiltro>
             )}
-            <GrupoFiltro titulo="Outros">
+            <GrupoFiltro titulo={t('instalados.outros')}>
               <CaixaSelecao marcada={comAtualizacao} aoMudar={setComAtualizacao}>
-                Só com atualização
+                {t('instalados.soComAtualizacao')}
               </CaixaSelecao>
               {temEstado && (
                 <CaixaSelecao marcada={comProblema} aoMudar={setComProblema}>
-                  Só com problema
+                  {t('instalados.soComProblema')}
                 </CaixaSelecao>
               )}
             </GrupoFiltro>
             {categorias.length > 0 && (
-              <GrupoFiltro titulo="Categoria">
+              <GrupoFiltro titulo={t('instalados.categoria2')}>
                 <Selecao
-                  aria-label="Categoria"
+                  aria-label={t('instalados.categoria2')}
                   value={categoriaFiltro ?? ''}
                   onChange={(e) => setCategoriaFiltro(e.target.value || null)}
                 >
-                  <option value="">Todas</option>
+                  <option value="">{t('instalados.todas')}</option>
                   {categorias.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -935,13 +972,13 @@ export function Instalados({
               </GrupoFiltro>
             )}
             {temEstado && (
-              <GrupoFiltro titulo="Etiqueta">
+              <GrupoFiltro titulo={t('instalados.etiqueta3')}>
                 <Selecao
-                  aria-label="Etiqueta"
+                  aria-label={t('instalados.etiqueta3')}
                   value={corFiltro ?? ''}
                   onChange={(e) => setCorFiltro((e.target.value || null) as CorEtiqueta | null)}
                 >
-                  <option value="">Todas</option>
+                  <option value="">{t('instalados.todas')}</option>
                   {CORES_ETIQUETA.map((c) => (
                     <option key={c} value={c}>
                       {COR_ETIQUETA[c].nome}
@@ -972,7 +1009,7 @@ export function Instalados({
                   )
                 }
               >
-                Selecionar todos
+                {t('instalados.selecionarTodos')}
               </CaixaSelecao>
               {modsEscolhidos.length > 0 && (
                 <>
@@ -981,14 +1018,14 @@ export function Instalados({
                     disabled={ocupado}
                     onClick={() => emLote('ativar', modsEscolhidos)}
                   >
-                    Ativar
+                    {t('instalados.ativar')}
                   </Botao>
                   <Botao
                     tamanho="pequeno"
                     disabled={ocupado}
                     onClick={() => emLote('desativar', modsEscolhidos)}
                   >
-                    Desativar
+                    {t('instalados.desativar')}
                   </Botao>
                   {modsEscolhidos.some((m) => m.atualizacao) && (
                     <Botao
@@ -997,7 +1034,8 @@ export function Instalados({
                       disabled={ocupado}
                       onClick={() => emLote('atualizar', modsEscolhidos)}
                     >
-                      Atualizar ({modsEscolhidos.filter((m) => m.atualizacao).length})
+                      {t('instalados.atualizar')}
+                      {modsEscolhidos.filter((m) => m.atualizacao).length})
                     </Botao>
                   )}
                 </>
@@ -1006,10 +1044,13 @@ export function Instalados({
                 <>
                   {/* A seleção vale entre páginas. */}
                   <span aria-live="polite" className="text-xs text-muted">
-                    {selecionados.size} {selecionados.size === 1 ? 'selecionado' : 'selecionados'}
+                    {selecionados.size}{' '}
+                    {selecionados.size === 1
+                      ? t('instalados.selecionado')
+                      : t('instalados.selecionados')}
                   </span>
                   <Botao tamanho="pequeno" onClick={() => setSelecionados(new Set())}>
-                    Limpar seleção
+                    {t('instalados.limparSelecao')}
                   </Botao>
                 </>
               )}
@@ -1020,7 +1061,7 @@ export function Instalados({
                   disabled={ocupado}
                   onClick={() => setConfirmar(escolhidos)}
                 >
-                  Remover selecionados ({escolhidos.length})
+                  {t('instalados.removerSelecionados', { length: escolhidos.length })}
                 </Botao>
               )}
             </div>
@@ -1029,11 +1070,13 @@ export function Instalados({
           {!visiveis.length ? (
             <EstadoVazio
               icone={<IconeMods />}
-              titulo={contar(aba) ? 'Nada com esses filtros' : 'Nada aqui ainda'}
+              titulo={
+                contar(aba) ? t('instalados.nadaComEssesFiltros') : t('instalados.nadaAquiAinda')
+              }
               texto={
                 contar(aba)
-                  ? 'Tire alguns filtros para ver o resto.'
-                  : 'Procure no Explorar e instale com um clique.'
+                  ? t('instalados.tireAlgunsFiltrosParaVer')
+                  : t('instalados.procureNoExplorarEInstale')
               }
             />
           ) : (
@@ -1064,7 +1107,7 @@ export function Instalados({
                       {i.chave.startsWith('extras:') && i.pendente !== 'instalar' && (
                         <Interruptor
                           ligado={i.ativo}
-                          rotulo={`${i.titulo}: ${i.ativo ? 'ativo' : 'desativado'}`}
+                          rotulo={`${i.titulo}: ${i.ativo ? t('instalados.ativo') : t('instalados.desativado2')}`}
                           disabled={
                             ocupado || i.removerAoDesligar || (i.doServidor && !i.removivel)
                           }
@@ -1088,12 +1131,8 @@ export function Instalados({
       </div>
 
       {deMods && aba === 'extras' && (
-        <CardPainel titulo="Perfis de mods">
-          <p className="mb-3 text-xs text-muted">
-            Um perfil guarda quais mods estão ativos agora (ex.: &quot;Leve&quot;,
-            &quot;Completo&quot;). Usar um perfil ativa os mods dele e desativa o resto; só com o
-            servidor desligado.
-          </p>
+        <CardPainel titulo={t('instalados.perfisDeMods')}>
+          <p className="mb-3 text-xs text-muted">{t('instalados.umPerfilGuardaQuaisMods')}</p>
           {perfis.length > 0 && (
             <ul className="mb-3 flex flex-col divide-y divide-linha">
               {perfis.map((pf) => (
@@ -1103,14 +1142,17 @@ export function Instalados({
                       {pf.nome}
                     </p>
                     <p className="text-xs text-muted">
-                      {pf.ativos} ativos · salvo em {dataHora(pf.criado)}
+                      {t('instalados.ativosSalvoEm', {
+                        ativos: pf.ativos,
+                        dataHora: dataHora(pf.criado)
+                      })}
                     </p>
                   </div>
                   <Botao
                     tamanho="pequeno"
                     variante="primario"
                     disabled={ocupado || ligado}
-                    title={ligado ? 'Desligue o servidor para trocar de perfil' : undefined}
+                    title={ligado ? t('instalados.desligueOServidorParaTrocar') : undefined}
                     onClick={async () => {
                       setOcupado(true)
                       const r = await api.aplicarPerfilMods(pf.nome)
@@ -1118,12 +1160,18 @@ export function Instalados({
                       if (!r.ok) setErro(r.erro)
                       else
                         setAviso(
-                          `Perfil "${pf.nome}" em uso: ${r.valor.mudados} mudaram.${r.valor.faltam ? ` ${r.valor.faltam} mods do perfil não estão mais instalados.` : ''}`
+                          t('instalados.perfilEmUsoMudaram', {
+                            nome: pf.nome,
+                            mudados: r.valor.mudados,
+                            v: r.valor.faltam
+                              ? t('instalados.modsDoPerfilNaoEstao', { faltam: r.valor.faltam })
+                              : ''
+                          })
                         )
                       await depoisDeMudar()
                     }}
                   >
-                    Usar
+                    {t('instalados.usar')}
                   </Botao>
                   <Botao
                     tamanho="pequeno"
@@ -1131,7 +1179,7 @@ export function Instalados({
                     disabled={ocupado}
                     onClick={() => rodar(() => api.apagarPerfilMods(pf.nome))}
                   >
-                    Apagar
+                    {t('instalados.apagar')}
                   </Botao>
                 </li>
               ))}
@@ -1144,32 +1192,30 @@ export function Instalados({
               if (
                 await rodar(
                   () => api.salvarPerfilMods(nomePerfil),
-                  `Perfil "${nomePerfil.trim()}" salvo.`
+                  t('instalados.perfilSalvo', { trim: nomePerfil.trim() })
                 )
               )
                 setNomePerfil('')
             }}
           >
             <Campo
-              aria-label="Nome do perfil"
-              placeholder="Nome do perfil (ex.: Leve)"
+              aria-label={t('instalados.nomeDoPerfil')}
+              placeholder={t('instalados.nomeDoPerfilExLeve')}
               maxLength={32}
               value={nomePerfil}
               onChange={(e) => setNomePerfil(e.target.value)}
               className="flex-1"
             />
             <Botao type="submit" disabled={ocupado || !nomePerfil.trim()}>
-              Salvar perfil atual
+              {t('instalados.salvarPerfilAtual')}
             </Botao>
           </form>
         </CardPainel>
       )}
 
       {removidos.length > 0 && (
-        <CardPainel titulo={`Removidos recentemente (${removidos.length})`}>
-          <p className="mb-3 text-xs text-muted">
-            Ficam 7 dias na pasta de backups do servidor e depois somem.
-          </p>
+        <CardPainel titulo={t('instalados.removidosRecentemente', { length: removidos.length })}>
+          <p className="mb-3 text-xs text-muted">{t('instalados.ficam7DiasNaPasta')}</p>
           <ul className="flex flex-col divide-y divide-linha">
             {removidos.map((r) => {
               const dias = Math.max(1, 7 - Math.floor((agora - Date.parse(r.quando)) / 86_400_000))
@@ -1180,12 +1226,16 @@ export function Instalados({
                       {r.titulo}
                     </p>
                     <p className="truncate text-xs text-muted">
-                      {nomeDaAba(r.categoria, info)} · removido em {dataHora(r.quando)} · some em{' '}
-                      {dias} {dias === 1 ? 'dia' : 'dias'}
+                      {t('instalados.removidoEmSomeEm', {
+                        nomeDaAba: nomeDaAba(r.categoria, info),
+                        dataHora: dataHora(r.quando),
+                        dias
+                      })}{' '}
+                      {dias === 1 ? t('instalados.dia') : t('instalados.dias')}
                     </p>
                   </div>
                   <Botao tamanho="pequeno" onClick={() => restaurar(r.id)}>
-                    Restaurar
+                    {t('instalados.restaurar')}
                   </Botao>
                 </li>
               )
@@ -1217,7 +1267,7 @@ export function Instalados({
       )}
       <DialogoPlano
         plano={plano}
-        titulo="Instalar?"
+        titulo={t('instalados.instalar')}
         extras={EXTRAS_TIPOS[info.tipo] ?? 'mods'}
         ocupado={instalando}
         progresso={progresso}

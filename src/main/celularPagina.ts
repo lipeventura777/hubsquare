@@ -1,8 +1,13 @@
+import { idiomaAtual, numero, t } from '../shared/i18n'
 // Página do painel pelo celular (Fase 20): leve, sem biblioteca, para telas de 360 a 430 px.
 // Tokens do DESIGN.md (tema escuro). Tudo o que vem do servidor entra com textContent, nunca HTML.
 
-export const HTML = `<!doctype html>
-<html lang="pt-BR">
+// Fase I1: a página sai no idioma do app, montada na hora em que é servida.
+const e = (s: string): string =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+export const html = (): string => `<!doctype html>
+<html lang="${idiomaAtual()}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -16,10 +21,10 @@ export const HTML = `<!doctype html>
 <body>
 <main id="login" hidden>
   <h1 class="pixel">HubSquare</h1>
-  <p class="muted">Digite o PIN que você criou no app, em Integrações › Celular.</p>
+  <p class="muted">${e(t('celular.digiteOPin'))}</p>
   <form id="form-login">
     <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="current-password" placeholder="PIN" aria-label="PIN">
-    <button class="botao primario" type="submit">Entrar</button>
+    <button class="botao primario" type="submit">${e(t('celular.entrar'))}</button>
   </form>
   <p id="erro-login" class="erro" role="alert"></p>
 </main>
@@ -28,43 +33,43 @@ export const HTML = `<!doctype html>
   <header class="cartao">
     <span id="faixa" class="faixa"></span>
     <div class="cresce">
-      <select id="servidores" aria-label="Servidor"></select>
+      <select id="servidores" aria-label="${e(t('celular.servidor'))}"></select>
       <p id="detalhe" class="muted pequeno"></p>
     </div>
     <span class="status"><span id="bolinha" class="bolinha"></span><span id="status-texto"></span></span>
   </header>
 
   <button id="principal" class="botao grande pixel"></button>
-  <button id="reiniciar" class="botao secundario">Reiniciar</button>
+  <button id="reiniciar" class="botao secundario">${e(t('celular.reiniciar'))}</button>
   <p id="erro" class="erro" role="alert"></p>
 
   <section class="cartao coluna">
-    <h2>Endereço</h2>
+    <h2>${e(t('celular.endereco'))}</h2>
     <div class="linha">
-      <input id="endereco" readonly aria-label="Endereço do servidor">
-      <button id="copiar" class="botao destaque">Copiar</button>
+      <input id="endereco" readonly aria-label="${e(t('celular.enderecoDoServidor'))}">
+      <button id="copiar" class="botao destaque">${e(t('celular.copiar'))}</button>
     </div>
   </section>
 
   <section class="cartao numeros">
     <div><span class="muted pequeno">CPU</span><b id="cpu">—</b></div>
     <div><span class="muted pequeno">RAM</span><b id="ram">—</b></div>
-    <div><span class="muted pequeno">Jogadores</span><b id="contagem">0</b></div>
+    <div><span class="muted pequeno">${e(t('celular.jogadores'))}</span><b id="contagem">0</b></div>
   </section>
 
   <section class="cartao coluna">
-    <h2>Jogadores online</h2>
+    <h2>${e(t('celular.jogadoresOnline'))}</h2>
     <ul id="jogadores"></ul>
   </section>
 
   <section class="cartao coluna">
-    <h2>Console (só leitura)</h2>
+    <h2>${e(t('celular.console'))}</h2>
     <pre id="console"></pre>
   </section>
 
   <footer>
     <span id="aparelho" class="muted pequeno"></span>
-    <button id="sair" class="botao secundario pequeno">Sair deste aparelho</button>
+    <button id="sair" class="botao secundario pequeno">${e(t('celular.sair'))}</button>
   </footer>
 </main>
 
@@ -73,7 +78,7 @@ export const HTML = `<!doctype html>
     <h2 id="dialogo-titulo" class="pixel"></h2>
     <p id="dialogo-texto"></p>
     <div class="linha fim">
-      <button id="dialogo-nao" class="botao secundario">Cancelar</button>
+      <button id="dialogo-nao" class="botao secundario">${e(t('celular.cancelar'))}</button>
       <button id="dialogo-sim" class="botao primario"></button>
     </div>
   </div>
@@ -133,10 +138,40 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:cen
 .dialogo p{margin:0}`
 }
 
-export const JS = `(() => {
+const CHAVES_JS = [
+  'desligado',
+  'ligando',
+  'online',
+  'desligando',
+  'semConexao',
+  'nenhumServidor',
+  'ligar',
+  'desligar',
+  'configureAConexao',
+  'ligueParaGerar',
+  'ninguemOnline',
+  'conectadoComo',
+  'naoDeuCerto',
+  'naoDeuParaEntrar',
+  'desligarOServidor',
+  'temJogadores',
+  'backupAoDesligar',
+  'reiniciarOServidor',
+  'eleDesligaELiga',
+  'reiniciar',
+  'trocarDeServidor',
+  'estaLigado',
+  'trocar',
+  'copiado',
+  'copiar'
+] as const
+
+export const js = (): string => `(() => {
 'use strict'
 const $ = (id) => document.getElementById(id)
-const TEXTO = { desligado: 'Desligado', ligando: 'Ligando…', ligado: 'Online', desligando: 'Desligando…' }
+const T = ${JSON.stringify(Object.fromEntries(CHAVES_JS.map((k) => [k, t(`celular.${k}`)]))).replace(/</g, '\\u003c')}
+const DECIMAL = ${JSON.stringify(numero(1.5).charAt(1))}
+const TEXTO = { desligado: T.desligado, ligando: T.ligando, ligado: T.online, desligando: T.desligando }
 const COR = { desligado: 'var(--offline)', ligando: 'var(--ligando)', ligado: 'var(--online)', desligando: 'var(--ligando)' }
 let csrf = ''
 let dados = null
@@ -151,7 +186,7 @@ async function api(caminho, corpo) {
     const j = await r.json().catch(() => ({}))
     return Object.assign({ status: r.status }, j)
   } catch {
-    return { status: 0, erro: 'Sem conexão com o PC. Confira se o app está aberto e se você está na mesma rede.' }
+    return { status: 0, erro: T.semConexao }
   }
 }
 
@@ -175,7 +210,7 @@ function perguntar(titulo, texto, sim) {
 function desenhar(d) {
   dados = d
   const e = d.estado
-  const nome = d.servidor ? d.servidor.nome : 'Nenhum servidor'
+  const nome = d.servidor ? d.servidor.nome : T.nenhumServidor
   $('faixa').style.background = COR[e]
   $('bolinha').style.background = COR[e]
   $('status-texto').textContent = TEXTO[e]
@@ -195,20 +230,20 @@ function desenhar(d) {
   }
 
   const p = $('principal')
-  p.textContent = e === 'desligado' ? 'Ligar' : e === 'ligado' ? 'Desligar' : e === 'ligando' ? 'Ligando…' : 'Desligando…'
+  p.textContent = e === 'desligado' ? T.ligar : e === 'ligado' ? T.desligar : e === 'ligando' ? T.ligando : T.desligando
   p.className = 'botao grande pixel ' + (e === 'desligado' ? 'ligar' : e === 'ligado' ? 'desligar' : 'espera')
   p.disabled = ocupado || !d.servidor || (e !== 'desligado' && e !== 'ligado')
   $('reiniciar').disabled = ocupado || e !== 'ligado'
 
-  $('endereco').value = d.endereco || (e === 'ligado' ? 'Configure a conexão no app' : 'Ligue o servidor para gerar o endereço')
+  $('endereco').value = d.endereco || (e === 'ligado' ? T.configureAConexao : T.ligueParaGerar)
   $('copiar').disabled = !d.endereco
   $('cpu').textContent = d.uso ? Math.round(d.uso.cpu) + '%' : '—'
-  $('ram').textContent = d.uso ? (d.uso.ram / 1073741824).toFixed(1).replace('.', ',') + ' GB' : '—'
+  $('ram').textContent = d.uso ? (d.uso.ram / 1073741824).toFixed(1).replace('.', DECIMAL) + ' GB' : '—'
   $('contagem').textContent = String(d.jogadores.length)
 
   $('jogadores').replaceChildren(...(d.jogadores.length ? d.jogadores : [null]).map((j) => {
     const li = document.createElement('li')
-    if (!j) { li.className = 'muted'; li.textContent = 'Ninguém online.'; return li }
+    if (!j) { li.className = 'muted'; li.textContent = T.ninguemOnline; return li }
     const cab = document.createElement(j.uuid ? 'img' : 'span')
     cab.className = 'cabeca'
     if (j.uuid) {
@@ -226,7 +261,7 @@ function desenhar(d) {
   const noFim = c.scrollHeight - c.scrollTop - c.clientHeight < 24
   c.textContent = d.console.join('\\n')
   if (noFim) c.scrollTop = c.scrollHeight
-  $('aparelho').textContent = 'Conectado como ' + d.aparelho
+  $('aparelho').textContent = T.conectadoComo.replace('{nome}', d.aparelho)
 }
 
 async function atualizar() {
@@ -244,7 +279,7 @@ async function agir(caminho, corpo) {
   if (dados) desenhar(dados)
   const r = await api(caminho, corpo)
   ocupado = false
-  $('erro').textContent = r.status === 200 ? '' : (r.erro || 'Não deu certo. Tente de novo.')
+  $('erro').textContent = r.status === 200 ? '' : (r.erro || T.naoDeuCerto)
   await atualizar()
 }
 
@@ -253,16 +288,16 @@ $('form-login').onsubmit = async (ev) => {
   const r = await api('/api/login', { pin: $('pin').value })
   $('pin').value = ''
   if (r.status === 200) { $('erro-login').textContent = ''; return atualizar() }
-  $('erro-login').textContent = r.erro || 'Não deu para entrar.'
+  $('erro-login').textContent = r.erro || T.naoDeuParaEntrar
 }
 
 $('principal').onclick = async () => {
   if (!dados) return
   if (dados.estado === 'desligado') return agir('/api/acao', { acao: 'ligar' })
-  if (await perguntar('Desligar o servidor?', dados.jogadores.length ? 'Tem ' + dados.jogadores.length + ' jogador(es) online. Um backup é feito ao desligar.' : 'Um backup é feito ao desligar.', 'Desligar')) agir('/api/acao', { acao: 'desligar' })
+  if (await perguntar(T.desligarOServidor, dados.jogadores.length ? T.temJogadores.replace('{n}', dados.jogadores.length) : T.backupAoDesligar, T.desligar)) agir('/api/acao', { acao: 'desligar' })
 }
 $('reiniciar').onclick = async () => {
-  if (await perguntar('Reiniciar o servidor?', 'Ele desliga (com backup) e liga de novo.', 'Reiniciar')) agir('/api/acao', { acao: 'reiniciar' })
+  if (await perguntar(T.reiniciarOServidor, T.eleDesligaELiga, T.reiniciar)) agir('/api/acao', { acao: 'reiniciar' })
 }
 $('servidores').onchange = async (ev) => {
   const id = ev.target.value
@@ -270,7 +305,7 @@ $('servidores').onchange = async (ev) => {
   if (!dados || !alvo || alvo.ativo) return
   const ligado = dados.estado !== 'desligado'
   if (ligado) {
-    const ok = await perguntar('Trocar de servidor?', 'O ' + dados.servidor.nome + ' está ligado. Desligar ele (com backup) e ligar o ' + alvo.nome + '?', 'Trocar')
+    const ok = await perguntar(T.trocarDeServidor, T.estaLigado.replace('{atual}', dados.servidor.nome).replace('{novo}', alvo.nome), T.trocar)
     if (!ok) return desenhar(dados)
   }
   agir('/api/trocar', { id, ligar: ligado })
@@ -278,7 +313,7 @@ $('servidores').onchange = async (ev) => {
 $('copiar').onclick = () => {
   const campo = $('endereco')
   const texto = campo.value
-  const pronto = () => { $('copiar').textContent = 'Copiado!'; setTimeout(() => ($('copiar').textContent = 'Copiar'), 1500) }
+  const pronto = () => { $('copiar').textContent = T.copiado; setTimeout(() => ($('copiar').textContent = T.copiar), 1500) }
   // Sem HTTPS o navegador pode bloquear a área de transferência moderna: usa o jeito antigo.
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(texto).then(pronto)
   campo.select()
@@ -290,13 +325,14 @@ atualizar()
 setInterval(() => { if (!document.hidden && $('fundo').hidden) atualizar() }, 3000)
 })()`
 
-export const MANIFESTO = JSON.stringify({
-  name: 'HubSquare',
-  short_name: 'HubSquare',
-  description: 'Painel do seu servidor de Minecraft',
-  start_url: '/',
-  display: 'standalone',
-  background_color: '#1e1e1e',
-  theme_color: '#2b2b2b',
-  icons: [{ src: '/icone.png', sizes: '256x256', type: 'image/png', purpose: 'any' }]
-})
+export const manifesto = (): string =>
+  JSON.stringify({
+    name: 'HubSquare',
+    short_name: 'HubSquare',
+    description: t('p.celularPagina.painelDoSeuServidorDe'),
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#1e1e1e',
+    theme_color: '#2b2b2b',
+    icons: [{ src: '/icone.png', sizes: '256x256', type: 'image/png', purpose: 'any' }]
+  })

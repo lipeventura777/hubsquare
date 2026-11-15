@@ -37,6 +37,7 @@ import { montarPacoteAmigos } from './modpacks'
 import { downloadPermitido } from './modpackRegras'
 import { lerIndice, lerInfo } from './servidores'
 import { idFixoDe } from './passarServidor'
+import { t } from '../shared/i18n'
 
 // Convites (Fase P2), lado do dono. Cada servidor tem um manifesto (o que o amigo precisa
 // instalar, só com links oficiais e hashes) servido por um endereço SÓ DE LEITURA:
@@ -137,7 +138,7 @@ export function decidirPedido(
 ): Promise<PedidoEntrada[]> {
   return comPedidos(info.pasta, async (p) => {
     const pedido = p.pendentes.find((x) => x.uuid === uuid)
-    if (!pedido) throw new ErroApp('Esse pedido não existe mais. Atualize a lista.')
+    if (!pedido) throw new ErroApp(t('p.convites.essePedidoNaoExisteMais'))
     if (aprovar === true) await aprovarNaWhitelist(info, { name: pedido.nick, uuid: pedido.uuid })
     const novo = decidir(p, pedido.uuid, aprovar === true)
     return [novo, novo.pendentes]
@@ -197,7 +198,7 @@ export async function manifestoDoServidor(info: InfoServidor): Promise<Manifesto
   const guardado = manifestos.get(info.pasta)
   if (guardado && Date.now() - guardado.em < CACHE_MS) return guardado.manifesto
   const convite = await lerConvite(info.pasta)
-  if (!convite) throw new ErroApp('Esse servidor ainda não tem convite. Clique em Convidar amigos.')
+  if (!convite) throw new ErroApp(t('p.convites.esseServidorAindaNaoTem'))
 
   const montagem = join(tmpdir(), `servsquare-manifesto-${randomUUID()}`)
   let arquivos: Manifesto['arquivos'] = []
@@ -425,8 +426,8 @@ export async function atualizarEscuta(): Promise<void> {
     } catch (e) {
       erroEscuta =
         (e as NodeJS.ErrnoException).code === 'EADDRINUSE'
-          ? `A porta ${porta} já está em uso por outro programa. Escolha outra porta.`
-          : `Não consegui abrir o convite em ${ip}.`
+          ? t('p.convites.aPortaJaEstaEm', { porta })
+          : t('p.convites.naoConseguiAbrirOConvite', { ip })
     }
   }
 }
@@ -505,7 +506,7 @@ export async function salvarProibidos(
   lista: unknown
 ): Promise<ConviteServidor> {
   if (!Array.isArray(lista) || lista.length > 200)
-    throw new ErroApp('Lista de mods proibidos inválida.')
+    throw new ErroApp(t('p.convites.listaDeModsProibidosInvalida'))
   const proibidos = [
     ...new Set(
       lista
@@ -527,13 +528,11 @@ export async function salvarProibidos(
 
 export async function configurarConvites(porta: unknown, enderecoPlayit: unknown): Promise<void> {
   if (!Number.isInteger(porta) || (porta as number) < 1024 || (porta as number) > 65535) {
-    throw new ErroApp('Escolha uma porta entre 1024 e 65535.')
+    throw new ErroApp(t('p.convites.escolhaUmaPortaEntre1024'))
   }
   const playit = typeof enderecoPlayit === 'string' ? enderecoPlayit.trim() : ''
   if (playit && !enderecoValido(playit)) {
-    throw new ErroApp(
-      'Endereço do túnel inválido. Copie do site do playit.gg, por exemplo "nome.at.ply.gg:12345".'
-    )
+    throw new ErroApp(t('p.convites.enderecoDoTunelInvalidoCopie'))
   }
   await gravarComSeguranca(
     arquivoConfig(),
@@ -548,12 +547,12 @@ export async function exportarConvite(
   janela: BrowserWindow | null
 ): Promise<string | null> {
   const c = await lerConvite(info.pasta)
-  if (!c?.token) throw new ErroApp('Clique em Convidar amigos antes de exportar o convite.')
+  if (!c?.token) throw new ErroApp(t('p.convites.cliqueEmConvidarAmigosAntes'))
   const manifesto = await manifestoDoServidor(info)
   const opcoes = {
-    title: 'Salvar o convite',
+    title: t('p.convites.salvarOConvite'),
     defaultPath: join(app.getPath('downloads'), `Convite - ${info.nome}.hubsquare`),
-    filters: [{ name: 'Convite do HubSquare', extensions: ['hubsquare'] }]
+    filters: [{ name: t('p.convites.conviteDoHubsquare'), extensions: ['hubsquare'] }]
   }
   const escolha = janela
     ? await dialog.showSaveDialog(janela, opcoes)
@@ -572,15 +571,15 @@ export async function exportarConvite(
 // Vale também com o servidor desligado, porque vem pelo convite (o app precisa estar aberto).
 export async function lerMensagem(servidorId: unknown): Promise<string> {
   const item = (await lerIndice()).servidores.find((s) => s.id === servidorId)
-  if (!item) throw new ErroApp('Esse servidor não está mais na lista.')
+  if (!item) throw new ErroApp(t('p.convites.esseServidorNaoEstaMais'))
   return (await lerConvite(item.pasta))?.mensagem ?? ''
 }
 
 export async function salvarMensagem(servidorId: unknown, texto: unknown): Promise<void> {
   const item = (await lerIndice()).servidores.find((s) => s.id === servidorId)
-  if (!item) throw new ErroApp('Esse servidor não está mais na lista.')
+  if (!item) throw new ErroApp(t('p.convites.esseServidorNaoEstaMais'))
   if (typeof texto !== 'string' || texto.length > 200) {
-    throw new ErroApp('Escreva um recado de até 200 letras.')
+    throw new ErroApp(t('p.convites.escrevaUmRecadoDeAte'))
   }
   // eslint-disable-next-line no-control-regex -- sem caracteres de controle
   const mensagem = texto.replace(/[\x00-\x1f]+/g, ' ').trim()

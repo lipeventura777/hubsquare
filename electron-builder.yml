@@ -1,6 +1,9 @@
 # appId fica o do ServSquare: assim o HubSquare instala por cima e substitui a versão antiga.
 appId: com.servsquare.app
 productName: HubSquare
+# Detalhes do .exe no Windows (Propriedades › Detalhes): nome, versão (do package.json), autor e
+# copyright.
+copyright: Copyright © 2026 lipeventura777
 directories:
   buildResources: build
   output: release
@@ -19,6 +22,8 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,CHANGELOG.md,README.md,PROJETO.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!{README.pt-BR.md,PRIVACY.md,PRIVACY.pt-BR.md,SECURITY.md,CONTRIBUTING.md,THIRD_PARTY_NOTICES.md,CODE_SIGNING_POLICY.md}'
+  - '!.github/**'
   # Arquivos soltos desta máquina (logs com caminhos do PC, sessões de navegador): nunca no app.
   - '!**/*.log'
   - '!.playwright-mcp/**'
@@ -38,12 +43,22 @@ nsis:
   perMachine: false
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
+  # A licença aparece numa tela do instalador.
+  license: LICENSE
   artifactName: HubSquare-Setup-${version}.${ext}
   shortcutName: HubSquare
   uninstallDisplayName: HubSquare
   createDesktopShortcut: always
   createStartMenuShortcut: true
   runAfterFinish: true
+  # Fase I1: instalador em português e inglês, com a escolha no começo; build/installer.nsh passa
+  # a escolha para o app.
+  multiLanguageInstaller: true
+  displayLanguageSelector: true
+  installerLanguages:
+    - pt_BR
+    - en_US
+  language: '1033'
 # Fase M6: abrir um convite (link hubsquare://convite/... ou arquivo .hubsquare) abre o HubSquare.
 protocols:
   - name: Convite do HubSquare

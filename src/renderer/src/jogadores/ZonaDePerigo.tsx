@@ -4,14 +4,15 @@ import { MensagemErro } from '../componentes/MensagemErro'
 import { CardPainel } from '../componentes/paineis'
 import { useEstadoServidor } from '../servidor/comandos'
 import { Aviso, Botao, CaixaSelecao, Dialogo } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 const NOMES: Record<OpcaoExclusao, string> = {
-  xp: 'Experiência',
-  inventario: 'Inventário e armadura',
-  ender: 'Baú do Ender',
-  dados: 'Arquivo do jogador (posição, vida, itens e o resto)',
-  estatisticas: 'Estatísticas',
-  avancos: 'Conquistas (avanços)'
+  xp: t('zonaDePerigo.experiencia'),
+  inventario: t('zonaDePerigo.inventarioEArmadura'),
+  ender: t('zonaDePerigo.bauDoEnder'),
+  dados: t('zonaDePerigo.arquivoDoJogadorPosicaoVida'),
+  estatisticas: t('zonaDePerigo.estatisticas'),
+  avancos: t('zonaDePerigo.conquistasAvancos')
 }
 
 // Zona de perigo (DESIGN.md, 6.20): apaga dados do jogador com o servidor desligado,
@@ -49,7 +50,7 @@ export function ZonaDePerigo({
   }
 
   return (
-    <CardPainel titulo="Zona de perigo" className="border-t-2 border-t-danger">
+    <CardPainel titulo={t('zonaDePerigo.zonaDePerigo')} className="border-t-2 border-t-danger">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2">
           <Pilula>
@@ -57,7 +58,7 @@ export function ZonaDePerigo({
               marcada={todas}
               aoMudar={(sim) => setMarcadas(sim ? [...OPCOES_EXCLUSAO] : [])}
             >
-              Selecionar todos
+              {t('zonaDePerigo.selecionarTodos')}
             </CaixaSelecao>
           </Pilula>
           {OPCOES_EXCLUSAO.map((o) => (
@@ -70,35 +71,40 @@ export function ZonaDePerigo({
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
           {!desligado && (
-            <span className="text-xs text-muted">Desligue o servidor para apagar dados.</span>
+            <span className="text-xs text-muted">
+              {t('zonaDePerigo.desligueOServidorParaApagar')}
+            </span>
           )}
           <Botao
             variante="perigo"
             disabled={!marcadas.length || !desligado}
             onClick={() => setConfirmando(true)}
           >
-            Apagar dados
+            {t('zonaDePerigo.apagarDados')}
           </Botao>
         </div>
-        {pronto && (
-          <Aviso tipo="sucesso">Dados apagados. O backup está em Cópias de segurança.</Aviso>
-        )}
+        {pronto && <Aviso tipo="sucesso">{t('zonaDePerigo.dadosApagadosOBackupEsta')}</Aviso>}
         {erro && <MensagemErro erro={erro} />}
       </div>
 
       <Dialogo
         aberto={confirmando}
-        titulo={`Apagar dados de ${nome}?`}
+        titulo={t('zonaDePerigo.apagarDadosDe', { nome })}
         aoCancelar={() => setConfirmando(false)}
-        acao={{ rotulo: 'Apagar', variante: 'perigo', aoClicar: apagar, ocupado: apagando }}
+        acao={{
+          rotulo: t('zonaDePerigo.apagar'),
+          variante: 'perigo',
+          aoClicar: apagar,
+          ocupado: apagando
+        }}
       >
-        <p>Vai ser apagado:</p>
+        <p>{t('zonaDePerigo.vaiSerApagado')}</p>
         <ul className="my-2 list-disc pl-5">
           {OPCOES_EXCLUSAO.filter((o) => marcadas.includes(o)).map((o) => (
             <li key={o}>{NOMES[o]}</li>
           ))}
         </ul>
-        <p>Antes, o app faz um backup do mundo inteiro, que fica em Cópias de segurança.</p>
+        <p>{t('zonaDePerigo.antesOAppFazUm')}</p>
       </Dialogo>
     </CardPainel>
   )

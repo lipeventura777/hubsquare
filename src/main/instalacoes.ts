@@ -10,6 +10,7 @@ import {
   type EdicaoInstalacao,
   type MemoriaJogo,
   type StatusServidorJogo,
+  type FundoDoServidor,
   type InfoServidor,
   type EstadoConviteInstalacao,
   type Manifesto,
@@ -79,7 +80,7 @@ import { lerGuardados, registrarPendencias } from './downloadsManuais'
 import { javaDaVersao } from './mojang'
 import { faltandoDo } from './modsQueFaltam'
 import { baixar, buscarJsonOpcional, type AoProgredir } from './rede'
-import { lerEstado, ligar } from './servidor'
+import { atualizarInfo, lerEstado, ligar } from './servidor'
 import { lerJogadores } from './jogadores'
 import { ativarServidor } from './listaServidores'
 import { pingar, vigiarJogo } from './jogo'
@@ -96,14 +97,17 @@ import { proibidosDoServidor } from './convites'
 import { ativarPacks } from './compatRegras'
 import {
   AJUSTE_PADRAO,
+  fundoDoServidor,
   fundoInstalacaoAntigo,
   validarEscolha,
+  validarFundoServidor,
   type EscolhaFundo
 } from '../shared/fundoRegras'
 import { apagarArquivoDeImagem, avisarFundo, guardarImagem } from './fundos'
 import { lerAparencia, salvarAparencia } from './aparencia'
 import { lerIndice as lerIndiceServidores, lerInfo } from './servidores'
 import { tiposDeServidor } from './tipos'
+import { t } from '../shared/i18n'
 
 // Instalações do PlaySquare (Fase P1). O índice fica em instalacoes.json, na pasta de dados do
 // app; cada instalação tem a própria pasta de jogo em Documentos/ServSquare/jogo/<instalação>.
@@ -167,7 +171,7 @@ async function gravar(indice: IndiceInstalacoes): Promise<void> {
 async function mudar(id: string, mudancas: Partial<Salva>): Promise<Salva> {
   const indice = await lerIndice()
   const atual = indice.instalacoes.find((i) => i.id === id)
-  if (!atual) throw new ErroApp('Essa instalação não existe mais. Atualize a lista.')
+  if (!atual) throw new ErroApp(t('p.instalacoes.essaInstalacaoNaoExisteMais'))
   const nova = { ...atual, ...mudancas }
   await gravar({
     ...indice,
@@ -178,7 +182,7 @@ async function mudar(id: string, mudancas: Partial<Salva>): Promise<Salva> {
 
 async function exigir(id: unknown): Promise<Salva> {
   const i = (await lerIndice()).instalacoes.find((x) => x.id === id)
-  if (!i) throw new ErroApp('Essa instalação não existe mais. Atualize a lista.')
+  if (!i) throw new ErroApp(t('p.instalacoes.essaInstalacaoNaoExisteMais'))
   return i
 }
 
@@ -196,28 +200,28 @@ async function pastaNova(nome: string): Promise<string> {
 }
 
 function validarNome(nome: unknown): string {
-  if (typeof nome !== 'string' || !nome.trim()) throw new ErroApp('Dê um nome para a instalação.')
-  if (nome.trim().length > 48) throw new ErroApp('Use um nome de até 48 letras.')
+  if (typeof nome !== 'string' || !nome.trim()) throw new ErroApp(t('p.instalacoes.deUmNomeParaA'))
+  if (nome.trim().length > 48) throw new ErroApp(t('p.instalacoes.useUmNomeDeAte'))
   return nome.trim()
 }
 
 function validarRam(ram: unknown): number {
   const { min, max } = limitesRam()
   if (typeof ram !== 'number' || !Number.isInteger(ram) || ram < min || ram > max) {
-    throw new ErroApp(`A RAM precisa ficar entre ${min} e ${max} GB.`)
+    throw new ErroApp(t('p.instalacoes.aRamPrecisaFicarEntre', { min, max }))
   }
   return ram
 }
 
 function validarLoader(loader: unknown): LoaderCliente {
   if (!LOADERS_CLIENTE.includes(loader as LoaderCliente))
-    throw new ErroApp('Escolha um loader da lista.')
+    throw new ErroApp(t('p.instalacoes.escolhaUmLoaderDaLista'))
   return loader as LoaderCliente
 }
 
 async function validarVersao(versao: unknown, loader: LoaderCliente): Promise<string> {
   if (typeof versao !== 'string' || !(await versoesDoLoader(loader)).includes(versao)) {
-    throw new ErroApp('Escolha uma versão do Minecraft da lista.')
+    throw new ErroApp(t('p.instalacoes.escolhaUmaVersaoDoMinecraft'))
   }
   return versao
 }
@@ -333,7 +337,7 @@ export async function criarDoZero(pedido: unknown): Promise<void> {
 // Modpack do Modrinth (busca do Explorar): baixa o .mrpack e põe na pasta o que o jogador usa.
 export async function criarDeModpack(projetoId: unknown, aoProgredir: AoProgredir): Promise<void> {
   if (typeof projetoId !== 'string' || !/^[\w-]{1,64}$/.test(projetoId)) {
-    throw new ErroApp('Modpack inválido. Escolha um da lista.')
+    throw new ErroApp(t('p.instalacoes.modpackInvalidoEscolhaUmDa'))
   }
   await comCancelar(async (sinal) => {
     const {
@@ -472,9 +476,13 @@ export async function editarInstalacao(id: unknown, edicao: unknown): Promise<vo
 // A cópia é independente: vira uma instalação comum, com a pasta copiada (mundos inclusive).
 export async function duplicarInstalacao(id: unknown, aoProgredir: AoProgredir): Promise<void> {
   const i = await exigir(id)
-  const nome = `${i.nome} (cópia)`.slice(0, 48)
+  const nome = t('p.instalacoes.copia', { nome: i.nome }).slice(0, 48)
   const pasta = await pastaNova(nome)
-  aoProgredir({ etapa: `Copiando a pasta de ${i.nome}`, recebido: 0, total: 0 })
+  aoProgredir({
+    etapa: t('p.instalacoes.copiandoAPastaDe', { nome: i.nome }),
+    recebido: 0,
+    total: 0
+  })
   await cp(i.pasta, pasta, { recursive: true, force: false, errorOnExist: false })
   await adicionar({
     ...i,
@@ -493,24 +501,21 @@ export async function abrirPastaInstalacao(id: unknown): Promise<void> {
   const i = await exigir(id)
   await mkdir(i.pasta, { recursive: true })
   const erro = await shell.openPath(i.pasta)
-  if (erro) throw new ErroApp('Não consegui abrir a pasta da instalação.', erro)
+  if (erro) throw new ErroApp(t('p.instalacoes.naoConseguiAbrirAPasta'), erro)
 }
 
 // Apagar: o perfil sai do launcher e a pasta vai para a Lixeira (mundos e prints dá para recuperar).
 export async function apagarInstalacao(id: unknown): Promise<void> {
   const i = await exigir(id)
   if (await launcherAberto()) {
-    throw new ErroApp('Feche o Minecraft Launcher antes de apagar uma instalação.')
+    throw new ErroApp(t('p.instalacoes.fecheOMinecraftLauncherAntes'))
   }
   await removerPerfil(chaveDoPerfil(i.id))
   if (existsSync(i.pasta)) {
     try {
       await shell.trashItem(i.pasta)
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui mandar a pasta da instalação para a Lixeira. Feche o jogo e tente de novo.',
-        String(e)
-      )
+      throw new ErroApp(t('p.instalacoes.naoConseguiMandarAPasta'), String(e))
     }
   }
   const indice = await lerIndice()
@@ -529,9 +534,9 @@ export async function escolherImagemInstalacao(
 ): Promise<void> {
   const i = await exigir(id)
   const opcoes = {
-    title: 'Escolha a imagem da instalação',
+    title: t('p.instalacoes.escolhaAImagemDaInstalacao'),
     properties: ['openFile' as const],
-    filters: [{ name: 'Imagens', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+    filters: [{ name: t('p.instalacoes.imagens'), extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
   }
   const escolha = janela
     ? await dialog.showOpenDialog(janela, opcoes)
@@ -539,9 +544,9 @@ export async function escolherImagemInstalacao(
   const origem = escolha.filePaths[0]
   if (escolha.canceled || !origem) return
   const ext = extname(origem).toLowerCase()
-  if (!TIPOS_IMAGEM[ext]) throw new ErroApp('Escolha uma imagem PNG, JPG ou WEBP.')
+  if (!TIPOS_IMAGEM[ext]) throw new ErroApp(t('p.instalacoes.escolhaUmaImagemPngJpg'))
   if ((await stat(origem)).size > 15 * 1024 * 1024)
-    throw new ErroApp('Essa imagem é muito grande. Escolha uma de até 15 MB.')
+    throw new ErroApp(t('p.instalacoes.essaImagemEMuitoGrande'))
   await mkdir(i.pasta, { recursive: true })
   const nome = `${IMAGEM}${ext}`
   await copyFile(origem, join(i.pasta, nome))
@@ -602,7 +607,10 @@ async function aplicarConteudo(
     for (const item of itens) {
       if (sinal?.aborted) throw new Cancelado()
       avisar({
-        etapa: `Copiando as configurações: ${++feitos} de ${itens.length} arquivos`,
+        etapa: t('p.instalacoes.copiandoAsConfiguracoesDeArquivos', {
+          v: ++feitos,
+          length: itens.length
+        }),
         recebido: feitos,
         total: itens.length
       })
@@ -645,7 +653,7 @@ async function exigirNaPasta(pasta: string, esperados: string[]): Promise<void> 
   const faltam = faltandoNaPasta(esperados, await presentesNaPasta(pasta))
   if (faltam.length) {
     throw new ErroApp(
-      `${faltam.length} arquivos da instalação não chegaram na pasta, então o jogo não foi aberto (abriria sem eles). Clique em INSTALAR de novo.`,
+      t('p.instalacoes.arquivosDaInstalacaoNaoChegaram', { length: faltam.length }),
       faltam.join('\n')
     )
   }
@@ -675,11 +683,9 @@ async function sincronizarDoServidor(i: Salva, aoProgredir: AoProgredir): Promis
   const info = item ? await lerInfo(item) : null
   // Correção M1: sem o servidor não há de onde tirar os mods; abrir assim seria o jogo vazio.
   if (!info) {
-    throw new ErroApp(
-      `O servidor da instalação ${i.nome} não existe mais neste PC, então não sei quais mods ela precisa. Apague essa instalação em Instalações e use a do servidor que está em ServSquare › Servidores.`
-    )
+    throw new ErroApp(t('p.instalacoes.oServidorDaInstalacaoNao', { nome: i.nome }))
   }
-  aoProgredir({ etapa: 'Conferindo os mods do servidor', recebido: 0, total: 0 })
+  aoProgredir({ etapa: t('p.instalacoes.conferindoOsModsDoServidor'), recebido: 0, total: 0 })
   const montagem = join(tmpdir(), `hubsquare-sincronia-${randomUUID()}`)
   try {
     const { arquivos } = await montarPacoteAmigos(info, montagem, true)
@@ -707,9 +713,7 @@ async function sincronizarDoServidor(i: Salva, aoProgredir: AoProgredir): Promis
   const antigo = await readFile(dat).catch(() => null)
   await writeFile(dat, servidorNoTopo(antigo, info.nome, `localhost:${porta}`))
   const ligado = (await lerIndiceServidores()).ativo === servidorId && lerEstado() === 'ligado'
-  return ligado
-    ? null
-    : `O servidor ${info.nome} está desligado. Ligue no ServSquare antes de entrar.`
+  return ligado ? null : t('p.instalacoes.oServidorEstaDesligadoLigue', { nome: info.nome })
 }
 
 // ---------- Convites (Fase P2), lado do amigo ----------
@@ -821,16 +825,14 @@ async function lerPedidoAmigo(pasta: string): Promise<PedidoAmigo | null> {
 async function perfilDoNick(nick: unknown): Promise<{ nick: string; uuid: string }> {
   const nome = typeof nick === 'string' ? nick.trim() : ''
   if (!nickValido(nome)) {
-    throw new ErroApp('Nick inválido. Nicks do Minecraft têm de 3 a 16 letras, números ou "_".')
+    throw new ErroApp(t('p.instalacoes.nickInvalidoNicksDoMinecraft'))
   }
   const perfil = await buscarJsonOpcional<{ id: string; name: string }>(
     `https://api.mojang.com/users/profiles/minecraft/${nome}`
   )
   const uuid = normalizarUuid(perfil?.id)
   if (!perfil || !uuid || !nickValido(perfil.name)) {
-    throw new ErroApp(
-      `Não existe conta do Minecraft com o nick "${nome}". Confira se digitou certo.`
-    )
+    throw new ErroApp(t('p.instalacoes.naoExisteContaDoMinecraft', { nome }))
   }
   return { nick: perfil.name, uuid }
 }
@@ -877,7 +879,7 @@ export async function entrarComConvite(texto: unknown, pedido?: unknown): Promis
   const { nick, recado } = (pedido ?? {}) as { nick?: unknown; recado?: unknown }
   const recadoLimpo = typeof recado === 'string' ? recado.trim() : ''
   if ([...recadoLimpo].length > MAX_RECADO || /\p{C}/u.test(recadoLimpo)) {
-    throw new ErroApp(`O recado pode ter até ${MAX_RECADO} caracteres, numa linha só.`)
+    throw new ErroApp(t('p.instalacoes.oRecadoPodeTerAte', { MAX_RECADO }))
   }
   // Antes de tudo: nick inexistente não cria nada nem envia nada.
   const perfil = await perfilDoNick(nick)
@@ -897,8 +899,8 @@ export async function entrarComConvite(texto: unknown, pedido?: unknown): Promis
       : convite.manifesto
   if (!manifesto) {
     throw new ErroApp(
-      'Não consegui falar com o servidor do convite. Peça ao dono para abrir o HubSquare (e o Radmin ou o túnel do playit, se for o caso) ou para mandar o arquivo de convite.',
-      `Endereços tentados: ${convite.enderecos.join(', ')}`
+      t('p.instalacoes.naoConseguiFalarComO'),
+      t('p.instalacoes.enderecosTentados', { enderecos: convite.enderecos.join(', ') })
     )
   }
   const origem = {
@@ -973,16 +975,17 @@ export async function entrarComArquivoDeConvite(
   pedido?: unknown
 ): Promise<boolean> {
   const opcoes = {
-    title: 'Abrir o convite',
+    title: t('p.instalacoes.abrirOConvite'),
     properties: ['openFile' as const],
-    filters: [{ name: 'Convite do HubSquare', extensions: ['hubsquare', 'json'] }]
+    filters: [{ name: t('p.instalacoes.conviteDoHubsquare'), extensions: ['hubsquare', 'json'] }]
   }
   const escolha = janela
     ? await dialog.showOpenDialog(janela, opcoes)
     : await dialog.showOpenDialog(opcoes)
   const arquivo = escolha.filePaths[0]
   if (escolha.canceled || !arquivo) return false
-  if ((await stat(arquivo)).size > 5_000_000) throw new ErroApp('Esse arquivo não é um convite.')
+  if ((await stat(arquivo)).size > 5_000_000)
+    throw new ErroApp(t('p.instalacoes.esseArquivoNaoEUm'))
   await entrarComConvite(await readFile(arquivo, 'utf8'), pedido)
   return true
 }
@@ -995,16 +998,22 @@ async function prepararConvite(
   aoProgredir: AoProgredir
 ): Promise<{ avisos: string[]; parar?: ResultadoJogar; manifesto?: Manifesto }> {
   if (i.origem.tipo !== 'convite') return { avisos: [] }
-  aoProgredir({ etapa: `Conferindo o servidor ${i.origem.servidor}`, recebido: 0, total: 0 })
+  aoProgredir({
+    etapa: t('p.instalacoes.conferindoOServidor', { servidor: i.origem.servidor }),
+    recebido: 0,
+    total: 0
+  })
   const respondeu = await verificarUm(i)
   const aplicado = await lerManifesto(i.pasta, APLICADO)
   const disponivel = (await lerManifesto(i.pasta, DISPONIVEL)) ?? aplicado
-  if (!disponivel)
-    throw new ErroApp('Essa instalação perdeu o convite. Entre com o convite de novo.')
+  if (!disponivel) throw new ErroApp(t('p.instalacoes.essaInstalacaoPerdeuOConvite'))
   const avisos: string[] = []
   if (!respondeu) {
     avisos.push(
-      `Não consegui falar com o servidor ${i.origem.servidor} agora (ele pode estar desligado). Usei a última lista de mods baixada, versão ${disponivel.versao}.`
+      t('p.instalacoes.naoConseguiFalarComO2', {
+        servidor: i.origem.servidor,
+        versao: disponivel.versao
+      })
     )
   }
   if (precisaAtualizar(versaoAplicadaDe(aplicado, disponivel), disponivel.versao)) {
@@ -1033,9 +1042,7 @@ async function prepararConvite(
     await registrarPendencias(await infoDaInstalacao(i.id), disponivel.manuais).catch(() => {})
   }
   if (disponivel.semLink.length) {
-    avisos.push(
-      `O servidor usa mods que o app não pode baixar por você: ${disponivel.semLink.join(', ')}. Peça ao dono o link de cada um.`
-    )
+    avisos.push(t('p.instalacoes.oServidorUsaModsQue', { join: disponivel.semLink.join(', ') }))
   }
   const endereco = disponivel.enderecos[0]
   if (endereco) {
@@ -1063,7 +1070,7 @@ export async function definirRecomendados(
   aoProgredir: AoProgredir
 ): Promise<void> {
   const i = await exigir(id)
-  if (i.origem.tipo !== 'convite') throw new ErroApp('Só instalações de convite têm recomendados.')
+  if (i.origem.tipo !== 'convite') throw new ErroApp(t('p.instalacoes.soInstalacoesDeConviteTem'))
   const lista = Array.isArray(recusados)
     ? recusados.filter((r): r is string => typeof r === 'string').slice(0, 500)
     : []
@@ -1184,7 +1191,7 @@ export async function instalar(
   opcoes: unknown,
   aoProgredir: AoProgredir
 ): Promise<ResultadoJogar> {
-  if (jogando) throw new ErroApp('Já estou preparando uma instalação. Espere terminar.')
+  if (jogando) throw new ErroApp(t('p.instalacoes.jaEstouPreparandoUmaInstalacao'))
   jogando = true
   try {
     let i = await exigir(id)
@@ -1199,7 +1206,7 @@ export async function instalar(
     })
     return {
       situacao: 'pronto',
-      frase: `A instalação "${r.i.nome}" está pronta na pasta ${r.i.pasta}.`,
+      frase: t('p.instalacoes.aInstalacaoEstaProntaNa', { nome: r.i.nome, pasta: r.i.pasta }),
       avisos: r.avisos
     }
   } finally {
@@ -1247,8 +1254,8 @@ export async function jogar(
   opcoes: unknown,
   aoProgredir: AoProgredir
 ): Promise<ResultadoJogar> {
-  if (!ABRIR_LAUNCHER_LIGADO) throw new ErroApp('Em breve: abrir o jogo direto pelo HubSquare.')
-  if (jogando) throw new ErroApp('Já estou preparando uma instalação. Espere terminar.')
+  if (!ABRIR_LAUNCHER_LIGADO) throw new ErroApp(t('p.instalacoes.emBreveAbrirOJogo'))
+  if (jogando) throw new ErroApp(t('p.instalacoes.jaEstouPreparandoUmaInstalacao'))
   jogando = true
   try {
     let i = await exigir(id)
@@ -1257,7 +1264,7 @@ export async function jogar(
     if (recusados) i = await mudar(i.id, { recusados })
     const launcher = await detectarLauncher()
     if (!launcher) {
-      await anotarFalha('nenhum Minecraft Launcher encontrado (nem o da Store nem o clássico).')
+      await anotarFalha(t('p.instalacoes.nenhumMinecraftLauncherEncontradoNem'))
       return { situacao: 'semLauncher' }
     }
     // O launcher regrava o arquivo de perfis enquanto está aberto: a mudança se perderia.
@@ -1274,7 +1281,7 @@ export async function jogar(
         : i.versaoLoader
     const versaoId = await garantirVersaoCliente(i.loader, i.versao, versaoLoader, aoProgredir)
 
-    aoProgredir({ etapa: 'Criando a instalação no Minecraft Launcher', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.instalacoes.criandoAInstalacaoNoMinecraft'), recebido: 0, total: 0 })
     const imagem = await imagemDe(i)
     const agora = new Date().toISOString()
     const ajustes = await lerAjustesJogo()
@@ -1291,13 +1298,13 @@ export async function jogar(
       })
     )
     await mudar(i.id, { ultimoUso: agora })
-    aoProgredir({ etapa: 'Abrindo o Minecraft Launcher', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.instalacoes.abrindoOMinecraftLauncher'), recebido: 0, total: 0 })
     await abrirLauncher(launcher)
     vigiarJogo(i.id, i.pasta)
     const frase =
       i.origem.tipo === 'servidor' || i.origem.tipo === 'convite'
-        ? `Clique em JOGAR no launcher: a instalação ${i.nome} já está selecionada. No jogo, vá em Multijogador: o servidor ${i.nome} é o primeiro da lista.`
-        : `Clique em JOGAR no launcher: a instalação ${i.nome} já está selecionada.`
+        ? t('p.instalacoes.cliqueEmJogarNoLauncher', { nome: i.nome, nome2: i.nome })
+        : t('p.instalacoes.cliqueEmJogarNoLauncher2', { nome: i.nome })
     return { situacao: 'pronto', frase, avisos }
   } catch (e) {
     await anotarFalha(detalhar(e))
@@ -1324,11 +1331,11 @@ export async function exportarMrpack(
   janela: BrowserWindow | null
 ): Promise<string | null> {
   const i = await exigir(id)
-  if (!i.instaladaEm) throw new ErroApp('Clique em Instalar antes de exportar.')
+  if (!i.instaladaEm) throw new ErroApp(t('p.instalacoes.cliqueEmInstalarAntesDe'))
   const opcoesDialogo = {
-    title: 'Salvar para o Modrinth App ou o Prism Launcher',
+    title: t('p.instalacoes.salvarParaOModrinthApp'),
     defaultPath: join(app.getPath('downloads'), `${pastaDoNome(i.nome)}.mrpack`),
-    filters: [{ name: 'Modpack do Modrinth', extensions: ['mrpack'] }]
+    filters: [{ name: t('p.instalacoes.modpackDoModrinth'), extensions: ['mrpack'] }]
   }
   const escolha = janela
     ? await dialog.showSaveDialog(janela, opcoesDialogo)
@@ -1385,7 +1392,7 @@ export async function exportarMrpack(
       game: 'minecraft',
       versionId: `hubsquare-${new Date().toISOString().slice(0, 10)}`,
       name: i.nome,
-      summary: `Instalação ${i.nome} exportada pelo HubSquare.`,
+      summary: t('p.instalacoes.instalacaoExportadaPeloHubsquare', { nome: i.nome }),
       files: arquivos,
       dependencies:
         chave && versaoLoader
@@ -1428,6 +1435,39 @@ export async function definirFundoInstalacao(id: unknown, escolha: unknown): Pro
   await mudar(i.id, { fundo })
 }
 
+// ---------- Fundo do servidor (Fase V10) ----------
+// Guardado no servsquare.json do servidor. "Igual à instalação" segue o fundo da instalação dele.
+
+export async function fundoDoServidorAtual(info: InfoServidor): Promise<FundoDoServidor> {
+  await sincronizarComServidores() // a instalação de cada servidor nasce aqui, se faltar
+  const inst = (await lerIndice()).instalacoes.find(
+    (i) => i.origem.tipo === 'servidor' && i.origem.servidorId === info.id
+  )
+  const instalacao = inst ? (inst.fundo ?? null) : undefined
+  return {
+    escolha: info.fundo ?? null,
+    temInstalacao: !!inst,
+    instalacao: instalacao ?? null,
+    efetivo: fundoDoServidor(info.fundo, instalacao)
+  }
+}
+
+export async function definirFundoServidor(info: InfoServidor, escolha: unknown): Promise<void> {
+  let fundo
+  try {
+    fundo = validarFundoServidor(escolha)
+  } catch (e) {
+    throw new ErroApp((e as Error).message)
+  }
+  await atualizarInfo(info, { fundo: fundo ?? undefined })
+}
+
+// Os servidores do ServSquare com o seu fundo (para "Minhas imagens" e para apagar uma imagem).
+async function servidoresComFundo(): Promise<InfoServidor[]> {
+  const lidos = await Promise.all((await lerIndiceServidores()).servidores.map(lerInfo))
+  return lidos.filter((s): s is InfoServidor => !!s?.fundo)
+}
+
 // "Usar este fundo em todas as instalações".
 export async function usarFundoEmTodas(escolha: unknown): Promise<void> {
   let fundo: EscolhaFundo | null
@@ -1440,19 +1480,22 @@ export async function usarFundoEmTodas(escolha: unknown): Promise<void> {
   await gravar({ ...indice, instalacoes: indice.instalacoes.map((i) => ({ ...i, fundo })) })
 }
 
-// Onde cada imagem guardada está em uso (o app e as instalações).
+// Onde cada imagem guardada está em uso (o app, as instalações e os servidores).
 export async function usosDosFundos(): Promise<Map<string, string[]>> {
   const usos = new Map<string, string[]>()
   const anotar = (nome: string, onde: string): void =>
     void usos.set(nome, [...(usos.get(nome) ?? []), onde])
   const app = (await lerAparencia()).fundoApp
-  if (app?.tipo === 'imagem') anotar(app.imagem, 'Fundo do app')
+  if (app?.tipo === 'imagem') anotar(app.imagem, t('p.instalacoes.fundoDoApp'))
   for (const i of (await lerIndice()).instalacoes)
     if (i.fundo?.tipo === 'imagem') anotar(i.fundo.imagem, i.nome)
+  for (const s of await servidoresComFundo())
+    if (s.fundo?.tipo === 'imagem')
+      anotar(s.fundo.imagem, t('p.instalacoes.servidorNome', { nome: s.nome }))
   return usos
 }
 
-// Apaga a imagem; quem usava volta para "Igual ao app" (o app volta para o bioma).
+// Apaga a imagem; quem usava (instalação ou servidor) volta para "Igual ao app" (o app, para o bioma).
 export async function apagarImagemFundo(valor: unknown): Promise<void> {
   const nome = await apagarArquivoDeImagem(valor)
   const indice = await lerIndice()
@@ -1464,6 +1507,10 @@ export async function apagarImagemFundo(valor: unknown): Promise<void> {
       )
     })
   }
+  // Fase V10: servidores que usavam a imagem voltam para "Igual ao app".
+  for (const s of await servidoresComFundo())
+    if (s.fundo?.tipo === 'imagem' && s.fundo.imagem === nome)
+      await atualizarInfo(s, { fundo: undefined })
   const aparencia = await lerAparencia()
   if (aparencia.fundoApp?.tipo === 'imagem' && aparencia.fundoApp.imagem === nome) {
     await salvarAparencia({ ...aparencia, fundoApp: { tipo: 'bioma', bioma: aparencia.bioma } })
@@ -1512,9 +1559,7 @@ export async function migrarFundosDasInstalacoes(): Promise<void> {
   }
   await gravar({ ...indice, instalacoes })
   if (sumiram.length) {
-    avisarFundo(
-      `A imagem de fundo de ${sumiram.join(', ')} não existe mais (ou não abre). Ficou igual ao fundo do app.`
-    )
+    avisarFundo(t('p.instalacoes.aImagemDeFundoDe', { join: sumiram.join(', ') }))
   }
 }
 
@@ -1654,38 +1699,41 @@ export async function ligarServidorEJogar(
   opcoes: unknown,
   aoProgredir: AoProgredir
 ): Promise<ResultadoJogar> {
-  if (!ABRIR_LAUNCHER_LIGADO) throw new ErroApp('Em breve: abrir o jogo direto pelo HubSquare.')
+  if (!ABRIR_LAUNCHER_LIGADO) throw new ErroApp(t('p.instalacoes.emBreveAbrirOJogo'))
   const i = await exigir(id)
   const info = await servidorDa(i)
-  if (!info) throw new ErroApp('Essa instalação não é de um servidor deste PC.')
+  if (!info) throw new ErroApp(t('p.instalacoes.essaInstalacaoNaoEDe'))
   if (lerEstado() !== 'ligado') {
     if (lerEstado() !== 'desligado') {
-      throw new ErroApp('O servidor está ligando ou desligando. Espere um pouco e tente de novo.')
+      throw new ErroApp(t('p.instalacoes.oServidorEstaLigandoOu'))
     }
     await ativarServidor(info.id) // recusa se outro servidor estiver ligado
-    aoProgredir({ etapa: `Ligando o servidor ${info.nome}`, recebido: 0, total: 0 })
+    aoProgredir({
+      etapa: t('p.instalacoes.ligandoOServidor', { nome: info.nome }),
+      recebido: 0,
+      total: 0
+    })
     await ligar()
     const inicio = Date.now()
     while (lerEstado() !== 'ligado') {
       if (lerEstado() === 'desligado') {
-        throw new ErroApp(
-          `O servidor ${info.nome} não ligou. Veja o que aconteceu no Console do ServSquare.`
-        )
+        throw new ErroApp(t('p.instalacoes.oServidorNaoLigouVeja', { nome: info.nome }))
       }
       if (Date.now() - inicio > 10 * 60_000) {
-        throw new ErroApp(
-          'O servidor está demorando demais para ligar. Veja o Console do ServSquare.'
-        )
+        throw new ErroApp(t('p.instalacoes.oServidorEstaDemorandoDemais'))
       }
       aoProgredir({
-        etapa: `Esperando o servidor ${info.nome} ficar pronto (${Math.round((Date.now() - inicio) / 1000)} s)`,
+        etapa: t('p.instalacoes.esperandoOServidorFicarPronto', {
+          nome: info.nome,
+          round: Math.round((Date.now() - inicio) / 1000)
+        }),
         recebido: 0,
         total: 0
       })
       await new Promise((r) => setTimeout(r, 1000))
     }
   } else if ((await lerIndiceServidores()).ativo !== info.id) {
-    throw new ErroApp('Outro servidor está ligado. Desligue ele no ServSquare antes.')
+    throw new ErroApp(t('p.instalacoes.outroServidorEstaLigadoDesligue'))
   }
   return jogar(id, opcoes, aoProgredir)
 }
@@ -1696,7 +1744,7 @@ export async function ligarServidorEJogar(
 export async function pastasDePrints(id: unknown): Promise<PastaDePrints[]> {
   const { instalacoes } = await lerIndice()
   const lista = id ? instalacoes.filter((i) => i.id === id) : instalacoes
-  if (id && !lista.length) throw new ErroApp('Essa instalação não existe mais. Atualize a lista.')
+  if (id && !lista.length) throw new ErroApp(t('p.instalacoes.essaInstalacaoNaoExisteMais'))
   return lista.map((i) => ({ instalacaoId: i.id, nome: i.nome, pasta: i.pasta }))
 }
 
@@ -1724,11 +1772,11 @@ export async function criarAtalho(id: unknown): Promise<string> {
   const ok = shell.writeShortcutLink(destino, existsSync(destino) ? 'replace' : 'create', {
     target: process.execPath,
     args,
-    description: `Abre o HubSquare no Jogar de ${i.nome}`,
+    description: t('p.instalacoes.abreOHubsquareNoJogar', { nome: i.nome }),
     icon: process.execPath,
     iconIndex: 0
   })
-  if (!ok) throw new ErroApp('Não consegui criar o atalho na área de trabalho.')
+  if (!ok) throw new ErroApp(t('p.instalacoes.naoConseguiCriarOAtalho'))
   return nome
 }
 
@@ -1745,7 +1793,7 @@ export async function prepararTeste(
   servidorId: unknown,
   aoProgredir: AoProgredir
 ): Promise<string> {
-  if (typeof servidorId !== 'string') throw new ErroApp('Servidor inválido.')
+  if (typeof servidorId !== 'string') throw new ErroApp(t('p.instalacoes.servidorInvalido'))
   const indice = await lerIndice()
   if (indice.ignorados.includes(servidorId)) {
     await gravar({ ...indice, ignorados: indice.ignorados.filter((x) => x !== servidorId) })
@@ -1754,7 +1802,7 @@ export async function prepararTeste(
   const i = (await lerIndice()).instalacoes.find(
     (x) => x.origem.tipo === 'servidor' && x.origem.servidorId === servidorId
   )
-  if (!i) throw new ErroApp('Não encontrei esse servidor. Atualize a lista de servidores.')
+  if (!i) throw new ErroApp(t('p.instalacoes.naoEncontreiEsseServidorAtualize'))
   await sincronizarDoServidor(i, aoProgredir)
   return i.id
 }
@@ -1766,9 +1814,7 @@ export async function prepararTeste(
 export async function diagnosticarInstalacao(id: unknown): Promise<LinhaDiagnostico[]> {
   const i = await exigir(id)
   if (i.origem.tipo !== 'convite') {
-    throw new ErroApp(
-      'Essa instalação não é de um convite. Para o seu servidor, use Conexão › Testar tudo.'
-    )
+    throw new ErroApp(t('p.instalacoes.essaInstalacaoNaoEDe2'))
   }
   const origem = i.origem
   const manifesto =
@@ -1778,98 +1824,103 @@ export async function diagnosticarInstalacao(id: unknown): Promise<LinhaDiagnost
   const checagens: Checagem[] = [
     {
       id: 'internet',
-      nome: 'Internet',
+      nome: t('p.instalacoes.internet'),
       essencial: true,
       async rodar() {
         try {
           await buscarJsonOpcional(
             'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json'
           )
-          return { resultado: 'ok', frase: 'Este PC está na internet.' }
+          return { resultado: 'ok', frase: t('p.instalacoes.estePcEstaNaInternet') }
         } catch {
           return {
             resultado: 'falhou',
-            frase: 'Este PC está sem internet. Confira o Wi-Fi ou o cabo.'
+            frase: t('p.instalacoes.estePcEstaSemInternet')
           }
         }
       }
     },
     {
       id: 'radmin',
-      nome: 'Radmin VPN',
+      nome: t('p.instalacoes.radminVpn'),
       essencial: true,
       async rodar() {
         if (!/^26\./.test(host)) {
           return {
             resultado: 'ok',
-            frase: 'Não precisa: o endereço do servidor não é do Radmin VPN.'
+            frase: t('p.instalacoes.naoPrecisaOEnderecoDo')
           }
         }
         return ipRadmin()
-          ? { resultado: 'ok', frase: `Radmin VPN conectado (${ipRadmin()}).` }
+          ? {
+              resultado: 'ok',
+              frase: t('p.instalacoes.radminVpnConectado', { ipRadmin: ipRadmin() })
+            }
           : {
               resultado: 'falhou',
-              frase:
-                'O endereço do servidor é do Radmin VPN, mas o Radmin está fechado ou desconectado neste PC. Abra o Radmin VPN e entre na rede do dono.'
+              frase: t('p.instalacoes.oEnderecoDoServidorE')
             }
       }
     },
     {
       id: 'endereco',
-      nome: 'Endereço do servidor',
+      nome: t('p.instalacoes.enderecoDoServidor'),
       essencial: true,
       async rodar() {
         if (!endereco) {
           return {
             resultado: 'falhou',
-            frase: 'O convite não trouxe o endereço do servidor. Peça um convite novo ao dono.'
+            frase: t('p.instalacoes.oConviteNaoTrouxeO')
           }
         }
         try {
           if (!isIP(host)) await lookup((await resolverEndereco(endereco)).host)
-          return { resultado: 'ok', frase: `O endereço ${endereco} existe.` }
+          return { resultado: 'ok', frase: t('p.instalacoes.oEnderecoExiste', { endereco }) }
         } catch {
           return {
             resultado: 'falhou',
-            frase: `O endereço ${endereco} não foi encontrado. Se o dono usa o túnel do playit.gg, o túnel pode estar desligado: peça para ele conferir em Conexão.`
+            frase: t('p.instalacoes.oEnderecoNaoFoiEncontrado', { endereco })
           }
         }
       }
     },
     {
       id: 'ping',
-      nome: 'Servidor respondendo',
+      nome: t('p.instalacoes.servidorRespondendo'),
       essencial: true,
       async rodar() {
         const r = await pingar(endereco!)
         return r
           ? {
               resultado: 'ok',
-              frase: `O servidor ${origem.servidor} está ligado (${r.online}/${r.max} online).`
+              frase: t('p.instalacoes.oServidorEstaLigadoOnline', {
+                servidor: origem.servidor,
+                online: r.online,
+                max: r.max
+              })
             }
           : {
               resultado: 'falhou',
-              frase: `O servidor ${origem.servidor} não respondeu. Peça ao dono para ligar o servidor (e o túnel ou o Radmin, se for o caso).`
+              frase: t('p.instalacoes.oServidorNaoRespondeuPeca', { servidor: origem.servidor })
             }
       }
     },
     {
       id: 'manifesto',
-      nome: 'Convite respondendo',
+      nome: t('p.instalacoes.conviteRespondendo'),
       essencial: false,
       async rodar() {
         return (await verificarUm(i))
-          ? { resultado: 'ok', frase: 'O convite do dono respondeu com a lista de mods.' }
+          ? { resultado: 'ok', frase: t('p.instalacoes.oConviteDoDonoRespondeu') }
           : {
               resultado: 'aviso',
-              frase:
-                'O convite do dono não respondeu. Dá para jogar com a última lista de mods baixada, mas ela pode estar velha.'
+              frase: t('p.instalacoes.oConviteDoDonoNao')
             }
       }
     },
     {
       id: 'versao',
-      nome: 'Instalação atualizada',
+      nome: t('p.instalacoes.instalacaoAtualizada'),
       essencial: true,
       async rodar() {
         const c = await estadoDoConvite(i)
@@ -1878,20 +1929,23 @@ export async function diagnosticarInstalacao(id: unknown): Promise<LinhaDiagnost
           return {
             resultado: 'falhou',
             frase: !instalada
-              ? 'A instalação ainda não foi montada com os mods do servidor.'
-              : `A instalação está na versão ${c?.versaoAplicada} da lista de mods, e o servidor já está na ${c?.versaoDisponivel}.`,
+              ? t('p.instalacoes.aInstalacaoAindaNaoFoi')
+              : t('p.instalacoes.aInstalacaoEstaNaVersao', {
+                  versaoAplicada: c?.versaoAplicada,
+                  versaoDisponivel: c?.versaoDisponivel
+                }),
             conserto: 'atualizarInstalacao'
           }
         }
         return {
           resultado: 'ok',
-          frase: `Na versão ${c.versaoAplicada} da lista de mods, igual ao servidor.`
+          frase: t('p.instalacoes.naVersaoDaListaDe', { versaoAplicada: c.versaoAplicada })
         }
       }
     },
     {
       id: 'hashes',
-      nome: 'Mods iguais aos do servidor',
+      nome: t('p.instalacoes.modsIguaisAosDoServidor'),
       essencial: true,
       async rodar() {
         const aplicado = await lerManifesto(i.pasta, APLICADO)
@@ -1906,39 +1960,44 @@ export async function diagnosticarInstalacao(id: unknown): Promise<LinhaDiagnost
         return diferentes.length
           ? {
               resultado: 'falhou',
-              frase: `Arquivos faltando ou diferentes dos do servidor: ${diferentes.slice(0, 5).join(', ')}${diferentes.length > 5 ? '…' : ''}.`,
+              frase: t('p.instalacoes.arquivosFaltandoOuDiferentesDos', {
+                join: diferentes.slice(0, 5).join(', '),
+                v: diferentes.length > 5 ? '…' : ''
+              }),
               conserto: 'atualizarInstalacao'
             }
-          : { resultado: 'ok', frase: 'Todos os mods e packs batem com os do servidor.' }
+          : { resultado: 'ok', frase: t('p.instalacoes.todosOsModsEPacks') }
       }
     },
     {
       id: 'nick',
-      nome: 'Nick aprovado',
+      nome: t('p.instalacoes.nickAprovado'),
       essencial: true,
       async rodar() {
         const p = await atualizarPedido(i)
         if (!p) {
           return {
             resultado: 'aviso',
-            frase:
-              'Você não pediu para entrar por este convite. Se o servidor barrar, peça ao dono para pôr seu nick na whitelist.'
+            frase: t('p.instalacoes.voceNaoPediuParaEntrar')
           }
         }
         if (!p.enviado) {
           return {
             resultado: 'falhou',
-            frase: `O pedido do nick ${p.nick} ainda não chegou ao dono: ele vai quando o dono abrir o HubSquare.`
+            frase: t('p.instalacoes.oPedidoDoNickAinda', { nick: p.nick })
           }
         }
         if (p.situacao === 'aprovado')
-          return { resultado: 'ok', frase: `O nick ${p.nick} está aprovado na whitelist.` }
+          return {
+            resultado: 'ok',
+            frase: t('p.instalacoes.oNickEstaAprovadoNa', { nick: p.nick })
+          }
         return {
           resultado: 'falhou',
           frase:
             p.situacao === 'recusado'
-              ? `O dono recusou o nick ${p.nick}. Fale com ele.`
-              : `O dono ainda não aprovou o nick ${p.nick}. Mande para ele o resultado (botão Copiar resultado).`
+              ? t('p.instalacoes.oDonoRecusouONick', { nick: p.nick })
+              : t('p.instalacoes.oDonoAindaNaoAprovou', { nick: p.nick })
         }
       }
     }

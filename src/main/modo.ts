@@ -12,6 +12,7 @@ import type { EstadoModo } from '../shared/tipos'
 import { gravarComSeguranca, lerTexto } from './config'
 import { ErroApp } from './erros'
 import { lerIndice } from './servidores'
+import { t } from '../shared/i18n'
 
 // Modo do app (Fase M6): completo (ServSquare + PlaySquare) ou amigo (só o PlaySquare, sem os
 // serviços do ServSquare). Guardado em modo-app.json, na pasta de dados; trocar de modo nunca
@@ -76,9 +77,9 @@ export function guardarConvite(texto: string): void {
 }
 
 export async function escolherModo(valor: unknown, estadoServidor: string): Promise<ModoApp> {
-  if (!MODOS_APP.includes(valor as ModoApp)) throw new ErroApp('Escolha um modo da lista.')
+  if (!MODOS_APP.includes(valor as ModoApp)) throw new ErroApp(t('p.modo.escolhaUmModoDaLista'))
   if (valor === 'amigo' && !podeUsarModoAmigo(estadoServidor)) {
-    throw new ErroApp('Desligue o servidor antes de usar só o PlaySquare.')
+    throw new ErroApp(t('p.modo.desligueOServidorAntesDe'))
   }
   modo = valor as ModoApp
   sugerirAmigo = false

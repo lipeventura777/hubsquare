@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { EstadoServidor } from '../../../shared/tipos'
+import { t } from '../../../shared/i18n'
 
 // Peças animadas do catálogo da seção 8 do DESIGN.md. As classes (anim-*) ficam no main.css
 // e todas param sozinhas com "Reduzir animações".
@@ -112,7 +113,7 @@ export function BarraProgresso({
 // Esqueleto de carregamento (seção 6.23): blocos --bg-panel-2 com brilho passando.
 export function Esqueleto({ linhas = 3 }: { linhas?: number }): React.JSX.Element {
   return (
-    <div role="status" aria-label="Carregando" className="flex flex-col gap-3">
+    <div role="status" aria-label={t('movimento.carregando')} className="flex flex-col gap-3">
       {Array.from({ length: linhas }, (_, i) => (
         <div
           key={i}

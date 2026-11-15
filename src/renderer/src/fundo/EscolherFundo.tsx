@@ -10,11 +10,17 @@ import {
   AJUSTE_PADRAO,
   BIOMAS_CLAROS,
   BIOMAS_ESCUROS,
+  urlDoFundo,
   type AjusteImagem,
-  type EscolhaFundo
+  type EscolhaFundo,
+  type FundoServidor
 } from '../../../shared/fundoRegras'
 import { Botao, OpcaoRadio, Selecao, Slider } from '../componentes/ui'
+import { MensagemErro } from '../componentes/MensagemErro'
+import { useAparencia } from '../aparencia/useAparencia'
 import { ArteDoBioma } from './Fundo'
+import { CamadaFundo } from './CamadaFundo'
+import { t } from '../../../shared/i18n'
 
 // Peças da escolha de fundo (Fase V4), usadas na Aparência (fundo do app) e no painel Fundo da
 // tela Jogar (fundo da instalação): biomas claros e escuros, minhas imagens e os ajustes.
@@ -107,14 +113,18 @@ export function GradeBiomas({
     <div className="flex flex-col gap-3">
       {(
         [
-          ['Claros', BIOMAS_CLAROS],
-          ['Escuros', BIOMAS_ESCUROS]
+          [t('escolherFundo.claros'), BIOMAS_CLAROS],
+          [t('escolherFundo.escuros'), BIOMAS_ESCUROS]
         ] as const
       ).map(([titulo, lista]) =>
         pequeno ? null : (
           <div key={titulo} className="flex flex-col gap-2">
             <p className="text-xs font-bold tracking-[.02em] text-muted uppercase">{titulo}</p>
-            <div role="radiogroup" aria-label={`Biomas ${titulo.toLowerCase()}`} className={grade}>
+            <div
+              role="radiogroup"
+              aria-label={t('escolherFundo.biomas', { toLowerCase: titulo.toLowerCase() })}
+              className={grade}
+            >
               {lista.map((b) => (
                 <CartaoFundo
                   key={b}
@@ -130,7 +140,7 @@ export function GradeBiomas({
         )
       )}
       {pequeno && (
-        <div role="radiogroup" aria-label="Bioma" className={grade}>
+        <div role="radiogroup" aria-label={t('escolherFundo.bioma')} className={grade}>
           {BIOMAS.map((b) => (
             <CartaoFundo
               key={b}
@@ -167,7 +177,7 @@ export function GradeImagens({
       {imagens && imagens.length > 0 && (
         <div
           role="radiogroup"
-          aria-label="Minhas imagens"
+          aria-label={t('escolherFundo.minhasImagens')}
           className={
             pequeno
               ? 'grid grid-cols-4 gap-2'
@@ -177,7 +187,12 @@ export function GradeImagens({
           {imagens.map((img, n) => (
             <CartaoFundo
               key={img.nome}
-              rotulo={`Imagem ${n + 1}${img.usadaEm.length ? ` (em uso: ${img.usadaEm.join(', ')})` : ''}`}
+              rotulo={t('escolherFundo.imagem', {
+                v: n + 1,
+                v2: img.usadaEm.length
+                  ? t('escolherFundo.emUso', { join: img.usadaEm.join(', ') })
+                  : ''
+              })}
               marcado={atual === img.nome}
               aoEscolher={() => aoEscolher(img.nome)}
               pequeno
@@ -189,12 +204,12 @@ export function GradeImagens({
       )}
       <div>
         <Botao tamanho="pequeno" onClick={aoEscolherOutra}>
-          {imagens?.length ? 'Escolher outra imagem…' : 'Escolher uma imagem…'}
+          {imagens?.length
+            ? t('escolherFundo.escolherOutraImagem')
+            : t('escolherFundo.escolherUmaImagem')}
         </Botao>
       </div>
-      <p className="text-xs text-muted">
-        PNG, JPG ou WEBP até 25 MB. O app guarda uma cópia: pode apagar ou mover o arquivo original.
-      </p>
+      <p className="text-xs text-muted">{t('escolherFundo.pngJpgOuWebpAte')}</p>
     </div>
   )
 }
@@ -234,33 +249,44 @@ export function AjustesImagem({
     aoMudar({ ...ajuste, focoX: lim(ajuste.focoX + m[0]), focoY: lim(ajuste.focoY + m[1]) })
   }
   const luzTexto = (v: number): string =>
-    v === 0 ? 'Normal' : v < 0 ? `Escurecer ${-v}%` : `Clarear ${v}%`
+    v === 0
+      ? t('escolherFundo.normal')
+      : v < 0
+        ? t('escolherFundo.escurecer', { v: -v })
+        : t('escolherFundo.clarear', { v })
   return (
     <div className="flex flex-col gap-3 text-[13px]">
-      <div role="radiogroup" aria-label="Enquadramento" className="flex flex-wrap gap-x-4">
+      <div
+        role="radiogroup"
+        aria-label={t('escolherFundo.enquadramento')}
+        className="flex flex-wrap gap-x-4"
+      >
         <OpcaoRadio
           nome="enquadrar"
           marcada={ajuste.enquadrar === 'preencher'}
           aoEscolher={() => aoMudar({ ...ajuste, enquadrar: 'preencher' })}
         >
-          Preencher a tela
+          {t('escolherFundo.preencherATela')}
         </OpcaoRadio>
         <OpcaoRadio
           nome="enquadrar"
           marcada={ajuste.enquadrar === 'inteira'}
           aoEscolher={() => aoMudar({ ...ajuste, enquadrar: 'inteira' })}
         >
-          Mostrar a imagem inteira
+          {t('escolherFundo.mostrarAImagemInteira')}
         </OpcaoRadio>
       </div>
       <div className="flex flex-col gap-1">
-        <span id="rotulo-foco">Ponto de foco: arraste na imagem para escolher o centro</span>
+        <span id="rotulo-foco">{t('escolherFundo.pontoDeFocoArrasteNa')}</span>
         <div
           ref={area}
           role="slider"
           tabIndex={0}
           aria-labelledby="rotulo-foco"
-          aria-valuetext={`${Math.round(ajuste.focoX * 100)}% da esquerda, ${Math.round(ajuste.focoY * 100)}% do topo`}
+          aria-valuetext={t('escolherFundo.daEsquerdaDoTopo', {
+            round: Math.round(ajuste.focoX * 100),
+            round2: Math.round(ajuste.focoY * 100)
+          })}
           onKeyDown={teclasFoco}
           onPointerDown={(e) => {
             arrastando.current = true
@@ -285,7 +311,7 @@ export function AjustesImagem({
         </div>
       </div>
       <Slider
-        rotulo="Desfoque"
+        rotulo={t('escolherFundo.desfoque')}
         valor={ajuste.desfoque}
         min={0}
         max={20}
@@ -293,7 +319,7 @@ export function AjustesImagem({
         formatar={(v) => `${v}px`}
       />
       <Slider
-        rotulo="Escurecer ou clarear"
+        rotulo={t('escolherFundo.escurecerOuClarear')}
         valor={ajuste.luz}
         min={-60}
         max={60}
@@ -302,17 +328,17 @@ export function AjustesImagem({
         formatar={luzTexto}
       />
       <label className="flex flex-col gap-1">
-        Partículas por cima
+        {t('escolherFundo.particulasPorCima')}
         <Selecao
           value={ajuste.particulas ?? ''}
           onChange={(e) =>
             aoMudar({ ...ajuste, particulas: (e.target.value || null) as Bioma | null })
           }
         >
-          <option value="">Desligadas</option>
+          <option value="">{t('escolherFundo.desligadas')}</option>
           {BIOMAS.map((b) => (
             <option key={b} value={b}>
-              Partículas do bioma {NOMES_BIOMAS[b]}
+              {t('escolherFundo.particulasDoBioma', { v: NOMES_BIOMAS[b] })}
             </option>
           ))}
         </Selecao>
@@ -328,3 +354,181 @@ export const escolhaDeImagem = (nome: string, anterior: EscolhaFundo | null): Es
   imagem: nome,
   ajuste: anterior?.tipo === 'imagem' ? anterior.ajuste : AJUSTE_PADRAO
 })
+
+// Painel "Fundo" (Fase V4, seção 7.2), o MESMO nas duas áreas: na tela Jogar (instalação) e no
+// Painel do servidor (Fase V10). Igual ao app, Igual à instalação (só no servidor, quando ela
+// existe), Bioma ou Imagem, com a prévia de cada um; embaixo, usar em todas as instalações (só no
+// PlaySquare, com confirmação) e voltar ao fundo do app.
+export function PainelFundo({
+  titulo,
+  rotulo,
+  atual,
+  instalacao,
+  definir,
+  imgs,
+  emTodas
+}: {
+  titulo: string
+  rotulo: string // nome do grupo de escolhas (leitores de tela)
+  atual: FundoServidor | null
+  // "Igual à instalação deste servidor": o fundo dela (null = igual ao app). Sem valor: não aparece.
+  instalacao?: EscolhaFundo | null
+  definir: (escolha: FundoServidor | null, imediato?: boolean) => void
+  imgs: ReturnType<typeof useImagensFundo>
+  emTodas?: (escolha: EscolhaFundo | null) => Promise<void>
+}): React.JSX.Element {
+  const { aparencia, fundoApp } = useAparencia()
+  const daInstalacao = atual?.tipo === 'instalacao' ? null : atual // a escolha própria
+  const [modo, setModo] = useState<'app' | 'instalacao' | 'bioma' | 'imagem'>(atual?.tipo ?? 'app')
+  const [confirmar, setConfirmar] = useState(false)
+  const biomaApp = aparencia?.bioma ?? 'dia'
+  const doApp = fundoApp ?? { tipo: 'bioma' as const, bioma: biomaApp }
+  const imagem = daInstalacao?.tipo === 'imagem' ? daInstalacao : null
+
+  const opcoes = [
+    {
+      modo: 'app' as const,
+      rotulo: t('escolherFundo.igualAoApp'),
+      previa: <CamadaFundo escolha={doApp} parado />,
+      escolher: () => definir(null)
+    },
+    ...(instalacao !== undefined
+      ? [
+          {
+            modo: 'instalacao' as const,
+            rotulo: t('escolherFundo.igualAInstalacaoDesteServidor'),
+            previa: <CamadaFundo escolha={instalacao ?? doApp} parado />,
+            escolher: () => definir({ tipo: 'instalacao' })
+          }
+        ]
+      : []),
+    {
+      modo: 'bioma' as const,
+      rotulo: t('escolherFundo.bioma'),
+      previa: (
+        <ArteDoBioma
+          bioma={daInstalacao?.tipo === 'bioma' ? daInstalacao.bioma : biomaApp}
+          className="absolute inset-0 h-full w-full"
+        />
+      ),
+      escolher: () => daInstalacao?.tipo !== 'bioma' && definir({ tipo: 'bioma', bioma: biomaApp })
+    },
+    {
+      modo: 'imagem' as const,
+      rotulo: t('escolherFundo.imagem2'),
+      previa: imagem ? (
+        <CamadaFundo escolha={imagem} parado />
+      ) : (
+        <span className="absolute inset-0 grid place-items-center bg-panel-2 px-2 text-center text-xs text-muted">
+          {t('escolherFundo.umaImagemSua')}
+        </span>
+      ),
+      // Escolher "Imagem" sem imagem ainda só abre a lista (nada muda até escolher uma).
+      escolher: () => {
+        const primeira = imgs.imagens?.[0]
+        if (!imagem && primeira) definir(escolhaDeImagem(primeira.nome, daInstalacao))
+      }
+    }
+  ]
+
+  return (
+    <div className="flex w-[380px] max-w-[calc(100vw-48px)] flex-col gap-3">
+      <p className="font-bold">{titulo}</p>
+      <div
+        role="radiogroup"
+        aria-label={rotulo}
+        className={`grid gap-2 ${opcoes.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}
+      >
+        {opcoes.map((o) => (
+          <CartaoFundo
+            key={o.modo}
+            rotulo={o.rotulo}
+            marcado={modo === o.modo}
+            aoEscolher={() => {
+              setModo(o.modo)
+              o.escolher()
+            }}
+          >
+            {o.previa}
+          </CartaoFundo>
+        ))}
+      </div>
+      {modo === 'app' && <p className="text-xs text-muted">{t('escolherFundo.usaOFundoDoApp')}</p>}
+      {modo === 'instalacao' && (
+        <p className="text-xs text-muted">{t('escolherFundo.usaOFundoDaInstalacao')}</p>
+      )}
+      {modo === 'bioma' && (
+        <GradeBiomas
+          atual={daInstalacao?.tipo === 'bioma' ? daInstalacao.bioma : null}
+          aoEscolher={(b) => definir({ tipo: 'bioma', bioma: b })}
+          pequeno
+        />
+      )}
+      {modo === 'imagem' && (
+        <>
+          <GradeImagens
+            imagens={imgs.imagens}
+            atual={imagem?.imagem ?? null}
+            aoEscolher={(nome) => definir(escolhaDeImagem(nome, daInstalacao))}
+            aoEscolherOutra={async () => {
+              const nome = await imgs.escolher()
+              if (nome) definir(escolhaDeImagem(nome, daInstalacao))
+            }}
+            pequeno
+          />
+          {imgs.erro && <MensagemErro erro={imgs.erro} />}
+          {imagem && (
+            <AjustesImagem
+              url={urlDoFundo(imagem.imagem)}
+              ajuste={imagem.ajuste}
+              aoMudar={(ajuste) => definir({ ...imagem, ajuste }, false)}
+            />
+          )}
+        </>
+      )}
+      <div className="flex flex-col items-start gap-1 border-t border-linha pt-3">
+        {!emTodas ? null : confirmar ? (
+          <div className="flex flex-col gap-2">
+            <p>
+              {t('escolherFundo.trocarOFundoDeTodas')}{' '}
+              {daInstalacao ? t('escolherFundo.este') : t('escolherFundo.igualAoApp2')}
+              {t('escolherFundo.cadaUmaPodeSerMudada')}
+            </p>
+            <div className="flex gap-2">
+              <Botao
+                tamanho="pequeno"
+                variante="primario"
+                onClick={() => void emTodas(daInstalacao).then(() => setConfirmar(false))}
+              >
+                {t('escolherFundo.usarEmTodas')}
+              </Botao>
+              <Botao tamanho="pequeno" onClick={() => setConfirmar(false)}>
+                {t('escolherFundo.cancelar')}
+              </Botao>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmar(true)}
+            className="text-[13px] underline hover:text-accent"
+          >
+            {t('escolherFundo.usarEsteFundoEmTodas')}
+          </button>
+        )}
+        {atual && (
+          <button
+            type="button"
+            onClick={() => {
+              setModo('app')
+              definir(null)
+            }}
+            className="text-[13px] underline hover:text-accent"
+          >
+            {t('escolherFundo.voltarAoFundoDoApp')}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}

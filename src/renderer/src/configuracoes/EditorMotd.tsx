@@ -9,13 +9,14 @@ import {
 import { IconeDoServidor } from '../componentes/IconeDoServidor'
 import { MotdFormatado } from '../componentes/MotdFormatado'
 import { Campo } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 const ROTULO_ESTILO: Record<string, React.ReactNode> = {
-  l: <b>N</b>,
-  o: <i>I</i>,
-  n: <u>S</u>,
-  m: <s>R</s>,
-  r: 'Limpar'
+  l: <b>{t('editorMotd.n')}</b>,
+  o: <i>{t('editorMotd.i')}</i>,
+  n: <u>{t('editorMotd.s')}</u>,
+  m: <s>{t('editorMotd.r')}</s>,
+  r: t('editorMotd.limpar')
 }
 
 // Editor do MOTD (Fase 21): duas linhas, botões que inserem os códigos § e prévia da lista.
@@ -57,14 +58,14 @@ export function EditorMotd({
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-[13px]">Mensagem do servidor (MOTD)</span>
-      <div className="flex flex-wrap items-center gap-1" aria-label="Cores">
+      <span className="text-[13px]">{t('editorMotd.mensagemDoServidorMotd')}</span>
+      <div className="flex flex-wrap items-center gap-1" aria-label={t('editorMotd.cores')}>
         {CORES_MOTD.map((c) => (
           <button
             key={c.codigo}
             type="button"
             title={`${c.nome} (§${c.codigo})`}
-            aria-label={`Cor ${c.nome}`}
+            aria-label={t('editorMotd.cor', { nome: c.nome })}
             onMouseDown={(e) => e.preventDefault()} // não tira o foco do campo
             onClick={() => inserir(c.codigo)}
             style={{ background: c.cor }}
@@ -72,7 +73,7 @@ export function EditorMotd({
           />
         ))}
       </div>
-      <div className="flex flex-wrap gap-1" aria-label="Estilos">
+      <div className="flex flex-wrap gap-1" aria-label={t('editorMotd.estilos')}>
         {ESTILOS_MOTD.map((e) => (
           <button
             key={e.codigo}
@@ -93,7 +94,7 @@ export function EditorMotd({
         return (
           <label key={i} className="flex flex-col gap-1 text-[13px]">
             <span className="flex justify-between text-xs text-muted">
-              <span>Linha {i + 1}</span>
+              <span>{t('editorMotd.linha', { v: i + 1 })}</span>
               <span className={visiveis > CARACTERES_POR_LINHA ? 'text-warning' : ''}>
                 {visiveis}/{CARACTERES_POR_LINHA}
               </span>
@@ -110,9 +111,11 @@ export function EditorMotd({
         )
       })}
       <span className="text-xs text-muted">
-        Clique numa linha e depois numa cor ou estilo: o código entra onde está o cursor. Passando
-        de {CARACTERES_POR_LINHA} letras, a linha pode ser cortada no jogo. Total: {valor.length}/
-        {MAX_MOTD}.
+        {t('editorMotd.cliqueNumaLinhaEDepois', {
+          CARACTERES_POR_LINHA,
+          length: valor.length,
+          MAX_MOTD
+        })}
       </span>
 
       <PreviaLista nome={nome} icone={icone} motd={valor} maxJogadores={maxJogadores} />
@@ -134,7 +137,7 @@ function PreviaLista({
 }): React.JSX.Element {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs text-muted">Prévia na lista de servidores</span>
+      <span className="text-xs text-muted">{t('editorMotd.previaNaListaDeServidores')}</span>
       <div className="flex max-w-[620px] gap-3 border border-linha bg-console p-2">
         <IconeDoServidor icone={icone} nome={nome} tam={64} />
         <div className="flex min-w-0 flex-1 flex-col">

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ReleaseApp } from '../../../shared/tipos'
 import { Markdown } from '../mods/Markdown'
 import { Botao } from './ui'
+import { t } from '../../../shared/i18n'
 
 // Versão nova do HubSquare (Fase M2): aviso discreto no canto, no padrão dos avisos (DESIGN.md
 // 6.9 e 8). Só avisa: "Baixar" abre a página do release no navegador; nada é instalado sozinho.
@@ -23,7 +24,9 @@ export function AvisoVersaoApp(): React.JSX.Element | null {
       role="status"
       className="anim-aviso fixed right-4 bottom-4 z-(--z-avisos) flex w-[380px] max-w-[calc(100vw-32px)] flex-col gap-2 border-2 border-linha bg-panel p-4 shadow-lg"
     >
-      <div className="text-sm font-bold">HubSquare {release.versao} disponível</div>
+      <div className="text-sm font-bold">
+        {t('avisoVersaoApp.hubsquareDisponivel', { versao: release.versao })}
+      </div>
       {release.notas.trim() && (
         <div className="max-h-48 overflow-y-auto pr-1">
           <Markdown texto={release.notas} />
@@ -31,17 +34,17 @@ export function AvisoVersaoApp(): React.JSX.Element | null {
       )}
       <div className="flex flex-wrap justify-end gap-2 pt-1">
         <Botao tamanho="pequeno" onClick={() => fechar(window.api.pularVersaoApp)}>
-          Pular esta versão
+          {t('avisoVersaoApp.pularEstaVersao')}
         </Botao>
         <Botao tamanho="pequeno" onClick={() => fechar(window.api.lembrarVersaoDepois)}>
-          Lembrar depois
+          {t('avisoVersaoApp.lembrarDepois')}
         </Botao>
         <Botao
           tamanho="pequeno"
           variante="primario"
           onClick={() => void window.api.baixarVersaoApp()}
         >
-          Baixar
+          {t('avisoVersaoApp.baixar')}
         </Botao>
       </div>
     </div>

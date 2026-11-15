@@ -13,6 +13,7 @@ import {
   type EscolhaFundo
 } from '../shared/fundoRegras'
 import { avisarFundo, guardarImagem, pastaFundos } from './fundos'
+import { t } from '../shared/i18n'
 
 // Preferências de aparência do app (bioma, cores, vidro, imagem de fundo), na pasta de dados.
 const TIPOS: Record<string, string> = {
@@ -54,27 +55,27 @@ export function aplicarTema(bioma: Bioma): void {
 
 export async function salvarAparencia(valor: unknown): Promise<Aparencia> {
   const v = (valor ?? {}) as Record<string, unknown>
-  if (!BIOMAS.includes(v.bioma as Bioma)) throw new ErroApp('Escolha um bioma da lista.')
+  if (!BIOMAS.includes(v.bioma as Bioma)) throw new ErroApp(t('p.aparencia.escolhaUmBiomaDaLista'))
   for (const cor of [v.destaque, v.destaquePlay]) {
     if (cor !== null && (typeof cor !== 'string' || !/^#[0-9a-f]{6}$/i.test(cor))) {
-      throw new ErroApp('Cor de destaque inválida.')
+      throw new ErroApp(t('p.aparencia.corDeDestaqueInvalida'))
     }
   }
-  if (typeof v.vidroLeve !== 'boolean') throw new ErroApp('Escolha se o vidro fica leve ou não.')
+  if (typeof v.vidroLeve !== 'boolean') throw new ErroApp(t('p.aparencia.escolhaSeOVidroFica'))
   if (v.animacaoFundo !== undefined && !MODOS_ANIMACAO.includes(v.animacaoFundo as ModoAnimacao)) {
-    throw new ErroApp('Escolha uma opção de animação do fundo.')
+    throw new ErroApp(t('p.aparencia.escolhaUmaOpcaoDeAnimacao'))
   }
   if (typeof v.particulasSobreImagem !== 'boolean') {
-    throw new ErroApp('Escolha se as partículas aparecem sobre a sua imagem.')
+    throw new ErroApp(t('p.aparencia.escolhaSeAsParticulasAparecem'))
   }
   if (typeof v.escurecimento !== 'number' || !(v.escurecimento >= 0 && v.escurecimento <= 0.9)) {
-    throw new ErroApp('O escurecimento precisa ficar entre 0% e 90%.')
+    throw new ErroApp(t('p.aparencia.oEscurecimentoPrecisaFicarEntre'))
   }
   if (typeof v.reduzirAnimacoes !== 'boolean') {
-    throw new ErroApp('Escolha se as animações ficam reduzidas ou não.')
+    throw new ErroApp(t('p.aparencia.escolhaSeAsAnimacoesFicam'))
   }
   if (typeof v.fundoEmTodoApp !== 'boolean') {
-    throw new ErroApp('Escolha se a imagem fica em todo o app ou só no banner.')
+    throw new ErroApp(t('p.aparencia.escolhaSeAImagemFica'))
   }
   const bioma = v.bioma as Bioma
   let fundoApp: EscolhaFundo
@@ -129,7 +130,7 @@ async function migrarFundoApp(a: Aparencia): Promise<Aparencia> {
         ajuste
       }
     } catch {
-      avisarFundo('A imagem de fundo do app não existe mais. O app voltou para o bioma.')
+      avisarFundo(t('p.aparencia.aImagemDeFundoDo'))
     }
   }
   return { ...a, fundoApp }
@@ -172,7 +173,7 @@ export async function listarScreenshots(): Promise<Screenshot[]> {
 export async function usarScreenshotComoFundo(valor: unknown): Promise<string> {
   const nome = typeof valor === 'string' ? basename(valor) : ''
   if (!nome || !(await nomesDosScreenshots()).includes(nome)) {
-    throw new ErroApp('Esse print não existe mais. Atualize a lista e escolha outro.')
+    throw new ErroApp(t('p.aparencia.essePrintNaoExisteMais'))
   }
   return guardarImagem(join(pastaScreenshots(), nome))
 }

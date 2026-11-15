@@ -1,4 +1,5 @@
 import type { ArquivoManual } from '../../../shared/tipos'
+import { t } from '../../../shared/i18n'
 
 // Fase D: com nome e hash, o assistente Downloads necessários reconhece o arquivo baixado;
 // sem eles (ex.: link externo do Hangar), fica só o link.
@@ -28,7 +29,7 @@ export function ListaManuais({
         {itens.map((i) => (
           <li key={i.url + i.titulo}>
             <a href={i.url} target="_blank" rel="noreferrer" className="underline">
-              {i.titulo} — baixe pelo site
+              {t('listaManuais.baixePeloSite', { titulo: i.titulo })}
             </a>
           </li>
         ))}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ErroTela } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { Campo, Dialogo } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Diálogo de renomear um servidor da lista (✎ da tela Servidores). Só muda o nome mostrado;
 // a pasta do servidor não sai do lugar.
@@ -38,17 +39,17 @@ export function DialogoRenomear({
   return (
     <Dialogo
       aberto={servidor !== null}
-      titulo="Renomear servidor"
+      titulo={t('renomearServidor.renomearServidor')}
       aoCancelar={aoFechar}
       acao={{
-        rotulo: salvando ? 'Salvando...' : 'Renomear',
+        rotulo: salvando ? t('renomearServidor.salvando') : t('renomearServidor.renomear'),
         aoClicar: renomear,
         ocupado: salvando,
         desabilitado: !nome.trim()
       }}
     >
       <label className="flex flex-col gap-1 text-[13px]">
-        Novo nome (a pasta do servidor continua a mesma)
+        {t('renomearServidor.novoNomeAPastaDo')}
         <Campo
           value={nome}
           maxLength={32}

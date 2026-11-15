@@ -73,6 +73,7 @@ import { ARQUIVO_INFO, registrar } from './servidores'
 import { maisNovaEstavel } from './tipos/fabric'
 import { argsDoRunBat } from './tipos/versoesLoader'
 import { pedidosDaPagina, tamanhoValido } from '../shared/paginaRegras'
+import { t } from '../shared/i18n'
 
 // Modpacks no formato do Modrinth (.mrpack): criar servidor, atualizar o pack e gerar o
 // "Pacote pros amigos". O pack original fica guardado na pasta do servidor para as Fases 17 e 18.
@@ -113,7 +114,7 @@ export async function comCancelar<T>(fn: (sinal: AbortSignal) => Promise<T>): Pr
     return await fn(c.signal)
   } catch (e) {
     if (c.signal.aborted || e instanceof Cancelado) {
-      throw new ErroApp('Instalação cancelada. Nada ficou pela metade.', '', { cancelado: true })
+      throw new ErroApp(t('p.modpacks.instalacaoCanceladaNadaFicouPela'), '', { cancelado: true })
     }
     throw e
   } finally {
@@ -132,22 +133,14 @@ async function listarPack(arquivo: string, indiceEsperado: string): Promise<stri
   try {
     entradas = (await tar(['-tf', arquivo])).split(/\r?\n/).filter(Boolean)
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui abrir esse modpack. Confira se o arquivo não está corrompido.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.modpacks.naoConseguiAbrirEsseModpack'), detalhar(e))
   }
   const perigosas = entradas.filter((e) => !caminhoDoPack(e.replace(/\/$/, '')))
   if (perigosas.length) {
-    throw new ErroApp(
-      'Esse modpack tem arquivos que tentam sair da pasta, então ele não foi aberto. Use um pack de fonte confiável.',
-      perigosas.slice(0, 20).join('\n')
-    )
+    throw new ErroApp(t('p.modpacks.esseModpackTemArquivosQue'), perigosas.slice(0, 20).join('\n'))
   }
   if (!entradas.includes(indiceEsperado)) {
-    throw new ErroApp(
-      `Esse arquivo não é um modpack que o app conhece (falta o ${indiceEsperado}).`
-    )
+    throw new ErroApp(t('p.modpacks.esseArquivoNaoEUm', { indiceEsperado }))
   }
   return entradas.filter((e) => !e.endsWith('/'))
 }
@@ -169,7 +162,10 @@ function lerDoPack(arquivo: string, membro: string): Promise<string> {
       c === 0
         ? resolver(Buffer.concat(partes).toString('utf8'))
         : falhar(
-            new ErroApp(`Não consegui ler o ${membro} do modpack.`, `tar saiu com código ${c}`)
+            new ErroApp(
+              t('p.modpacks.naoConseguiLerODo', { membro }),
+              t('p.modpacks.tarSaiuComCodigo', { c })
+            )
           )
     )
   })
@@ -200,7 +196,7 @@ async function extrair(
         else erros = (erros + l + '\n').slice(-4000)
       }
       aoProgredir({
-        etapa: `Extraindo o modpack: ${feitos} de ${total} arquivos`,
+        etapa: t('p.modpacks.extraindoOModpackDeArquivos', { feitos, total }),
         recebido: feitos,
         total
       })
@@ -213,8 +209,8 @@ async function extrair(
           ? resolver()
           : falhar(
               new ErroApp(
-                'Não consegui extrair esse modpack.',
-                `tar saiu com código ${c}\n${erros}`
+                t('p.modpacks.naoConseguiExtrairEsseModpack'),
+                t('p.modpacks.tarSaiuComCodigo2', { c, erros })
               )
             )
     )
@@ -236,7 +232,7 @@ export async function abrirPack(
     await apagarEmTrabalhador(pasta)
     if (e instanceof ErroApp || e instanceof Cancelado) throw e
     throw new ErroApp(
-      e instanceof Error ? e.message : 'Não consegui ler esse modpack.',
+      e instanceof Error ? e.message : t('p.modpacks.naoConseguiLerEsseModpack'),
       detalhar(e)
     )
   }
@@ -253,9 +249,7 @@ async function extrairSeguro(
   try {
     await extrair(arquivo, pasta, total, aoProgredir, sinal)
     if (await temAtalho(pasta)) {
-      throw new ErroApp(
-        'Esse modpack tem atalhos (links) dentro, e por segurança o app não aceita.'
-      )
+      throw new ErroApp(t('p.modpacks.esseModpackTemAtalhosLinks'))
     }
   } catch (e) {
     await apagarEmTrabalhador(pasta)
@@ -295,7 +289,10 @@ async function copiarOverrides(
     await copyFile(origem, join(destino, caminho))
     geridos[caminho] = await hashEmTrabalhador(origem)
     aoProgredir({
-      etapa: `Copiando as configurações do modpack: ${++feitos} de ${overrides.size} arquivos`,
+      etapa: t('p.modpacks.copiandoAsConfiguracoesDoModpack', {
+        v: ++feitos,
+        size: overrides.size
+      }),
       recebido: feitos,
       total: overrides.size
     })
@@ -370,14 +367,22 @@ export async function baixarArquivos(
   const total = arquivos.reduce((s, f) => s + (f.fileSize || 0), 0)
   let feitos = 0
   let bytes = 0
-  avisar({ etapa: `Baixando 0 de ${arquivos.length} arquivos`, recebido: 0, total })
+  avisar({
+    etapa: t('p.modpacks.baixando0DeArquivos', { length: arquivos.length }),
+    recebido: 0,
+    total
+  })
   const falhas = await rodarFila(
     arquivos,
     async (f, s) => {
       await baixarUm(f, join(destino, f.path), fonte, s)
       bytes += f.fileSize || 0
       avisar({
-        etapa: `Baixando ${++feitos} de ${arquivos.length} arquivos: ${basename(f.path)}`,
+        etapa: t('p.modpacks.baixandoDeArquivos', {
+          v: ++feitos,
+          length: arquivos.length,
+          basename: basename(f.path)
+        }),
         recebido: bytes,
         total
       })
@@ -386,7 +391,10 @@ export async function baixarArquivos(
   )
   if (falhas.length) {
     throw new ErroApp(
-      `${falhas.length} de ${arquivos.length} arquivos não baixaram, mesmo tentando 3 vezes. Confira sua internet e clique em "Tentar de novo só os que falharam": o que já baixou não é baixado de novo.`,
+      t('p.modpacks.deArquivosNaoBaixaramMesmo', {
+        length: falhas.length,
+        length2: arquivos.length
+      }),
       falhas.map((x) => `${x.item.path}\n${detalhar(x.erro)}`).join('\n\n'),
       { falhas: falhas.map((x) => x.item.path) }
     )
@@ -404,9 +412,7 @@ async function baixarUm(
     fonte === 'curseforge' ? downloadDaFonte(u, 'curseforge') : downloadPermitido(u)
   )
   if (!urls.length) {
-    throw new ErroApp(
-      `O arquivo ${f.path} do modpack não vem de um site aceito (Modrinth, GitHub ou GitLab).`
-    )
+    throw new ErroApp(t('p.modpacks.oArquivoDoModpackNao', { path: f.path }))
   }
   const { algoritmo, valor } = hashDe(f)
   const confere = async (c: string): Promise<boolean> =>
@@ -425,7 +431,7 @@ async function baixarUm(
         }
         await rm(cache, { force: true })
         erro = new ErroApp(
-          'O arquivo baixado veio corrompido. Tente de novo.',
+          t('p.modpacks.oArquivoBaixadoVeioCorrompido'),
           `${url}\n${algoritmo} esperado: ${valor}`
         )
       } catch (e) {
@@ -577,7 +583,7 @@ async function analisarPack(
       arquivos: doServidor.length,
       tamanho: doServidor.reduce((s, f) => s + (f.fileSize || 0), 0),
       ram,
-      nomeSugerido: nomeLimpo(indice.name) || 'Servidor do modpack'
+      nomeSugerido: nomeLimpo(indice.name) || t('p.modpacks.servidorDoModpack')
     }
   }
 }
@@ -590,10 +596,10 @@ export async function baixarPack(
   sinal?: AbortSignal
 ): Promise<{ arquivo: string; temporario: string; versao: modrinth.Versao }> {
   const v = versao ?? escolherVersao(await modrinth.versoes(projetoId, LOADERS_MODRINTH))
-  if (!v) throw new ErroApp('Esse modpack não tem versão para Fabric, Forge ou NeoForge.')
+  if (!v) throw new ErroApp(t('p.modpacks.esseModpackNaoTemVersao'))
   const f = v.files.find((x) => x.primary) ?? v.files[0]
   if (!f || !urlDoModrinth(f.url) || !f.filename.endsWith('.mrpack')) {
-    throw new ErroApp('Esse modpack não tem um arquivo .mrpack que o app aceite.')
+    throw new ErroApp(t('p.modpacks.esseModpackNaoTemUm'))
   }
   const temporario = join(tmpdir(), `servsquare-baixando-${randomUUID()}`)
   await mkdir(temporario, { recursive: true })
@@ -619,7 +625,7 @@ export async function analisarDoModrinth(
   aoProgredir: AoProgredir
 ): Promise<AnaliseModpack> {
   if (typeof projetoId !== 'string' || !/^[\w-]{1,64}$/.test(projetoId)) {
-    throw new ErroApp('Modpack inválido. Escolha um da lista.')
+    throw new ErroApp(t('p.modpacks.modpackInvalidoEscolhaUmDa'))
   }
   return comCancelar(async (sinal) => {
     const { arquivo, temporario, versao } = await baixarPack(
@@ -652,16 +658,16 @@ export async function analisarDoCurseForge(
   aoProgredir: AoProgredir
 ): Promise<AnaliseModpack> {
   if (typeof projetoId !== 'string' || !/^\d{1,12}$/.test(projetoId)) {
-    throw new ErroApp('Modpack inválido. Escolha um da lista.')
+    throw new ErroApp(t('p.modpacks.modpackInvalidoEscolhaUmDa'))
   }
   const id = Number(projetoId)
   const [m, arquivos] = await Promise.all([cf.mod(id), cf.arquivos(id, null, null)])
   const pack = escolherArquivoCF(arquivos, null, null)
-  if (!pack) throw new ErroApp('Esse modpack não tem arquivo para baixar.')
+  if (!pack) throw new ErroApp(t('p.modpacks.esseModpackNaoTemArquivo'))
   const sha1Pack = cf.sha1Do(pack)
   if (!cf.podeBaixar(m, pack) || !downloadDaFonte(pack.downloadUrl, 'curseforge') || !sha1Pack) {
     throw new ErroApp(
-      'O autor desse modpack não deixa outros apps baixarem. Na página dele, baixe o "Server Pack" e use "Importar de arquivo .zip".',
+      t('p.modpacks.oAutorDesseModpackNao'),
       cf.paginaDoArquivo(m, pack.id) ?? undefined
     )
   }
@@ -685,14 +691,14 @@ export async function analisarDoCurseForge(
       try {
         manifest = JSON.parse(await lerDoPack(arquivo, 'manifest.json'))
       } catch (e) {
-        throw new ErroApp('O manifest.json desse modpack está estragado.', detalhar(e))
+        throw new ErroApp(t('p.modpacks.oManifestJsonDesseModpack'), detalhar(e))
       }
       // O CurseForge deixa o pack escolher o nome da pasta de configurações.
       const over =
         typeof manifest.overrides === 'string' && /^[\w.-]{1,64}$/.test(manifest.overrides)
           ? manifest.overrides
           : 'overrides'
-      aoProgredir({ etapa: 'Lendo a lista de mods do modpack', recebido: 0, total: 0 })
+      aoProgredir({ etapa: t('p.modpacks.lendoAListaDeMods'), recebido: 0, total: 0 })
       const indice = await indiceDoManifest(manifest, m, manuais)
       const icone = imagemPermitida(m.logo?.thumbnailUrl) ? m.logo!.thumbnailUrl : null
       return await analisarPack(
@@ -717,7 +723,7 @@ async function indiceDoManifest(
 ): Promise<Indice> {
   const mc = (manifest.minecraft ?? {}) as { version?: unknown; modLoaders?: { id?: unknown }[] }
   if (manifest.manifestType !== 'minecraftModpack' || typeof mc.version !== 'string') {
-    throw new ErroApp('O manifest.json desse modpack não é de um modpack de Minecraft.')
+    throw new ErroApp(t('p.modpacks.oManifestJsonDesseModpack2'))
   }
   let loader: { tipo: TipoId; versao: string }
   try {
@@ -764,7 +770,7 @@ async function indiceDoManifest(
     })
   }
   const chave = CHAVE_LOADER[loader.tipo]
-  if (!chave) throw new ErroApp('O app ainda não instala esse loader.')
+  if (!chave) throw new ErroApp(t('p.modpacks.oAppAindaNaoInstala'))
   return {
     formatVersion: 1,
     game: 'minecraft',
@@ -780,9 +786,9 @@ export async function analisarDeArquivo(
   janela: BrowserWindow | null
 ): Promise<AnaliseModpack | null> {
   const opcoes = {
-    title: 'Escolha o modpack (.mrpack)',
+    title: t('p.modpacks.escolhaOModpackMrpack'),
     properties: ['openFile' as const],
-    filters: [{ name: 'Modpack do Modrinth', extensions: ['mrpack'] }]
+    filters: [{ name: t('p.modpacks.modpackDoModrinth'), extensions: ['mrpack'] }]
   }
   const escolha = janela
     ? await dialog.showOpenDialog(janela, opcoes)
@@ -800,17 +806,16 @@ export async function criarDeModpack(
   pedido: unknown,
   aoProgredir: AoProgredir
 ): Promise<InfoServidor> {
-  if (criando) throw new ErroApp('Já tem um servidor sendo criado. Espere terminar.')
+  if (criando) throw new ErroApp(t('p.modpacks.jaTemUmServidorSendo'))
   const { token, nome: nomeBruto, aceitouEula } = (pedido ?? {}) as Record<string, unknown>
   const a = typeof token === 'string' ? analises.get(token) : undefined
-  if (!a) throw new ErroApp('Escolha o modpack de novo.')
+  if (!a) throw new ErroApp(t('p.modpacks.escolhaOModpackDeNovo'))
   if (aceitouEula !== true) {
-    throw new ErroApp('Você precisa marcar que aceita o EULA do Minecraft para criar o servidor.')
+    throw new ErroApp(t('p.modpacks.vocePrecisaMarcarQueAceita'))
   }
   const nome = validarNome(nomeBruto)
   const pasta = join(pastaServidores(), nome)
-  if (existsSync(pasta))
-    throw new ErroApp(`Já existe uma pasta chamada "${nome}". Escolha outro nome.`)
+  if (existsSync(pasta)) throw new ErroApp(t('p.modpacks.jaExisteUmaPastaChamada', { nome }))
 
   criando = true
   // Tudo acontece numa pasta provisória; só no fim ela vira a pasta do servidor. Cancelar ou
@@ -855,7 +860,7 @@ export async function criarDeModpack(
         await copiarGrande(
           a.arquivo,
           join(provisoria, COPIA),
-          'Guardando uma cópia do modpack no servidor',
+          t('p.modpacks.guardandoUmaCopiaDoModpack'),
           avisar,
           sinal
         )
@@ -960,9 +965,7 @@ aoFalharAoLigar(async (info, linhas) => {
   await limparCacheDe(candidatos)
   if (!postos.length) return []
   await gravarEstado(info.pasta, estado)
-  return [
-    `O modpack marcou como "só do jogador" mods que o servidor precisa. Instalados no servidor: ${postos.join(', ')}.`
-  ]
+  return [t('p.modpacks.oModpackMarcouComoSo', { join: postos.join(', ') })]
 })
 
 // ---------- Atualizar o pack ----------
@@ -1020,12 +1023,10 @@ export async function planejarAtualizacaoModpack(
 ): Promise<PlanoAtualizacaoModpack> {
   const estado = await lerEstadoPack(info)
   if (!estado || !info.modpack?.projetoId) {
-    throw new ErroApp(
-      'Não achei os dados do modpack deste servidor, então não dá para atualizar por aqui.'
-    )
+    throw new ErroApp(t('p.modpacks.naoAcheiOsDadosDo'))
   }
   const r = await versaoNovaDoPack(info)
-  if (!r) throw new ErroApp('O modpack já está na versão mais nova.')
+  if (!r) throw new ErroApp(t('p.modpacks.oModpackJaEstaNa'))
   const { arquivo, temporario } = await baixarPack(info.modpack.projetoId, r.nova, aoProgredir)
   let aberto: PackAberto | undefined
   try {
@@ -1038,10 +1039,13 @@ export async function planejarAtualizacaoModpack(
     }
     if (loader.tipo !== info.tipo || aberto.indice.dependencies.minecraft !== info.versao) {
       throw new ErroApp(
-        `A versão nova do pack usa ${NOMES_TIPOS[loader.tipo]} ${aberto.indice.dependencies.minecraft}. Para ela, crie um servidor novo a partir do modpack.`
+        t('p.modpacks.aVersaoNovaDoPack', {
+          v: NOMES_TIPOS[loader.tipo],
+          minecraft: aberto.indice.dependencies.minecraft
+        })
       )
     }
-    aoProgredir({ etapa: 'Comparando com o que está no servidor', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.modpacks.comparandoComOQueEsta'), recebido: 0, total: 0 })
     const overrides = await arquivosDeOverrides(aberto.pasta, ['overrides', 'server-overrides'])
     const novos: Record<string, string> = {}
     for (const f of aberto.indice.files.filter(vaiProServidor))
@@ -1092,7 +1096,8 @@ export async function atualizarModpack(
   aoProgredir: AoProgredir
 ): Promise<void> {
   const plano = typeof token === 'string' ? planos.get(token) : undefined
-  if (!plano || plano.pasta !== info.pasta) throw new ErroApp('Clique em Atualizar de novo.')
+  if (!plano || plano.pasta !== info.pasta)
+    throw new ErroApp(t('p.modpacks.cliqueEmAtualizarDeNovo'))
   const lista = (escolhas ?? {}) as Record<string, unknown>
   const escolha = (c: string): EscolhaConflito => (lista[c] === 'pack' ? 'pack' : 'meu')
 
@@ -1110,15 +1115,12 @@ export async function atualizarModpack(
     ]
 
     // Backup antes de tudo: o mundo e o resto do servidor (mods, configs).
-    aoProgredir({ etapa: 'Fazendo backup do mundo', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.modpacks.fazendoBackupDoMundo'), recebido: 0, total: 0 })
     try {
       await compactarMundo(info, undefined, 'modpack')
       await backupDoServidor(info)
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui fazer o backup antes de atualizar, então nada foi mudado. Tente de novo.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.modpacks.naoConseguiFazerOBackup'), detalhar(e))
     }
 
     let versaoLoader = info.versaoLoader
@@ -1142,7 +1144,7 @@ export async function atualizarModpack(
       await copyFile(origem, join(espera, caminho))
     }
 
-    aoProgredir({ etapa: 'Aplicando a versão nova do pack', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.modpacks.aplicandoAVersaoNovaDo'), recebido: 0, total: 0 })
     for (const caminho of escrever) {
       const alvo = join(info.pasta, caminho)
       await mkdir(dirname(alvo), { recursive: true })
@@ -1208,10 +1210,7 @@ export async function descobrirVersaoLoader(info: InfoServidor): Promise<string>
   const pasta = argsDoRunBat(bat)?.split(/[\\/]/).slice(-2, -1)[0]
   // Forge: "1.20.1-47.2.0"; NeoForge: "21.1.77".
   const versao = info.tipo === 'forge' ? pasta?.replace(`${info.versao}-`, '') : pasta
-  if (!versao)
-    throw new ErroApp(
-      'Não consegui descobrir a versão do loader. Reinstale o loader na tela Software e tente de novo.'
-    )
+  if (!versao) throw new ErroApp(t('p.modpacks.naoConseguiDescobrirAVersao'))
   return versao
 }
 
@@ -1229,14 +1228,14 @@ export async function gerarPacoteAmigos(
   if (!chave && !extras.length) {
     throw new ErroApp(
       info.tipo === 'paper'
-        ? 'No Paper, os plugins ficam só no servidor: seus amigos entram com o jogo normal, sem instalar nada. Para mandar shaders ou resource packs, adicione pelo Explorar.'
-        : 'O Vanilla não usa mods: seus amigos entram com o jogo normal. Para mandar shaders ou resource packs, adicione pelo Explorar.'
+        ? t('p.modpacks.noPaperOsPluginsFicam')
+        : t('p.modpacks.oVanillaNaoUsaMods')
     )
   }
   const opcoes = {
-    title: 'Salvar o Pacote pros amigos',
+    title: t('p.modpacks.salvarOPacoteProsAmigos'),
     defaultPath: join(app.getPath('downloads'), `${info.nome} - amigos.mrpack`),
-    filters: [{ name: 'Modpack do Modrinth', extensions: ['mrpack'] }]
+    filters: [{ name: t('p.modpacks.modpackDoModrinth'), extensions: ['mrpack'] }]
   }
   const escolha = janela
     ? await dialog.showSaveDialog(janela, opcoes)
@@ -1392,7 +1391,7 @@ export async function montarPacoteAmigos(
     game: 'minecraft',
     versionId: `servsquare-${new Date().toISOString().slice(0, 10)}`,
     name: `${info.nome} (amigos)`,
-    summary: `Mods para entrar no servidor ${info.nome}. Gerado pelo ServSquare.`,
+    summary: t('p.modpacks.modsParaEntrarNoServidor', { nome: info.nome }),
     files: arquivos,
     dependencies:
       chave && versaoLoader

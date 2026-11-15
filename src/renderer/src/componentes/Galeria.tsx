@@ -196,7 +196,15 @@ export default function Galeria(): React.JSX.Element {
 
       <section className="flex flex-col gap-3">
         <h2 className={rotuloPequeno}>Banner e barra de ação (4 estados)</h2>
-        <Banner info={EXEMPLO} endereco="nome.joinmc.link" aviso="" />
+        <Banner
+          info={EXEMPLO}
+          endereco="nome.joinmc.link"
+          aviso=""
+          vitrine={false}
+          estado="desligado"
+          erroDoServidor={null}
+          aoLigarDesligar={() => {}}
+        />
         {ESTADOS.map((e) => (
           <BarraDeAcao
             key={e}

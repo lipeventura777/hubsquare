@@ -1,10 +1,12 @@
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import {
   appendFileSync,
   existsSync,
   mkdirSync,
   readdirSync,
   readFileSync,
+  rmSync,
   writeFileSync
 } from 'node:fs'
 import { homedir } from 'node:os'
@@ -12,6 +14,7 @@ import { join } from 'node:path'
 import type { Page } from '@playwright/test'
 import {
   amigoAceita,
+  criarPeloAssistente,
   donoComConvite,
   expect,
   pagina,
@@ -231,3 +234,70 @@ test('passar o servidor: sem segredos, outro PC hospeda, volta e atualiza o orig
     execFileSync(TAR, ['-xOf', join(backups, nomeBackup), 'world/level.dat'], { encoding: 'utf8' })
   ).toBe('nivel-original')
 })
+
+// Fase V10: a escolha de fundo do servidor vai junto; a imagem vai no zip (hubserver-fundo/).
+async function receberNoAssistente(
+  abrir: (nome?: string) => Promise<AppDeTeste>,
+  quem: string,
+  arquivo: string
+): Promise<AppDeTeste> {
+  const b = await abrir(quem)
+  const jb = b.janela
+  await jb.getByRole('button', { name: /Vou hospedar servidores/ }).click()
+  await expect(jb.getByText('Que tipo de servidor?')).toBeVisible()
+  await b.escolherArquivo(arquivo)
+  await jb.getByRole('button', { name: 'Receber servidor (.hubserver)' }).click()
+  const receber = jb.getByRole('dialog')
+  await receber.locator('label', { hasText: 'Li e aceito o' }).click({ position: { x: 6, y: 16 } })
+  await receber.getByRole('button', { name: 'Criar servidor' }).click()
+  await expect(jb.getByRole('tab', { name: 'ServSquare' })).toBeVisible({ timeout: 3 * 60_000 })
+  return b
+}
+
+test('passar o servidor leva o fundo: com a imagem e, sem ela, fica igual ao app', async ({
+  abrir
+}) => {
+  test.setTimeout(8 * 60_000)
+  const dono = await abrir('dono')
+  await criarPeloAssistente(dono.janela, NOME, MC)
+  // Uma imagem de fundo do servidor, guardada como o app guarda (nome = SHA-256 do conteúdo).
+  const bytes = readFileSync(join(__dirname, '..', '..', 'build', 'icon.png'))
+  const nome = `${createHash('sha256').update(bytes).digest('hex')}.png`
+  const fundos = join(dono.pasta, 'appData', 'ServSquare', 'fundos')
+  mkdirSync(fundos, { recursive: true })
+  writeFileSync(join(fundos, nome), bytes)
+  const infoA = join(pastaServidor(dono.pasta, NOME), 'servsquare.json')
+  const fundo = {
+    tipo: 'imagem',
+    imagem: nome,
+    ajuste: {
+      enquadrar: 'inteira',
+      focoX: 0.5,
+      focoY: 0.5,
+      desfoque: 4,
+      luz: -20,
+      particulas: null
+    }
+  }
+  writeFileSync(infoA, JSON.stringify({ ...lerJson(infoA), fundo }, null, 2))
+
+  // Com a imagem: ela vai no zip e a Bia fica com o mesmo fundo (a imagem na pasta de fundos dela).
+  const ida = join(dono.pasta, 'com-imagem.hubserver')
+  await passar(dono, 'Bia', ida)
+  expect(lerJsonDoZip(ida, 'hubserver.json').fundo).toEqual(fundo)
+  expect(execFileSync(TAR, ['-tf', ida], { encoding: 'utf8' })).toContain(`hubserver-fundo/${nome}`)
+  const bia = await receberNoAssistente(abrir, 'bia', ida)
+  expect(lerJson(join(pastaServidor(bia.pasta, NOME), 'servsquare.json')).fundo).toEqual(fundo)
+  expect(existsSync(join(bia.pasta, 'appData', 'ServSquare', 'fundos', nome))).toBe(true)
+  expect(existsSync(join(pastaServidor(bia.pasta, NOME), 'hubserver-fundo'))).toBe(false)
+
+  // Sem a imagem (ela sumiu deste PC): quem recebe fica "Igual ao app".
+  rmSync(join(fundos, nome))
+  const semImagem = join(dono.pasta, 'sem-imagem.hubserver')
+  await passar(dono, 'Cris', semImagem)
+  const cris = await receberNoAssistente(abrir, 'cris', semImagem)
+  expect(lerJson(join(pastaServidor(cris.pasta, NOME), 'servsquare.json')).fundo).toBeUndefined()
+})
+
+const lerJsonDoZip = (zip: string, nome: string): Record<string, unknown> =>
+  JSON.parse(execFileSync(TAR, ['-xOf', zip, nome], { encoding: 'utf8' }))

@@ -6,6 +6,7 @@ import type {
   TipoConteudo,
   TipoId
 } from '../shared/tipos'
+import { t } from '../shared/i18n'
 
 // Valores do campo "environment" do Modrinth em cada opção do filtro "ambiente".
 export const AMBIENTES: Record<Ambiente, string[]> = {
@@ -93,22 +94,22 @@ export function destinoDe(
           ? { destino: 'amigos' }
           : {
               destino: 'incompativel',
-              motivo: 'Shaders precisam do Iris ou do Oculus, que pedem Fabric, Forge ou NeoForge.'
+              motivo: t('p.explorarRegras.shadersPrecisamDoIrisOu')
             }
       case 'resourcepack':
         return { destino: 'amigos' }
       case 'datapack':
         return {
           destino: 'incompativel',
-          motivo: 'Datapacks ficam dentro de cada mundo. Adicione pelo ServSquare, no servidor.'
+          motivo: t('p.explorarRegras.datapacksFicamDentroDeCada')
         }
       case 'plugin':
-        return { destino: 'incompativel', motivo: 'Plugins rodam só em servidores Paper.' }
+        return { destino: 'incompativel', motivo: t('p.explorarRegras.pluginsRodamSoEmServidores') }
       case 'mod':
         if (!deMods) {
           return {
             destino: 'incompativel',
-            motivo: 'Mods precisam de Fabric, Forge ou NeoForge, e esta instalação é Vanilla.'
+            motivo: t('p.explorarRegras.modsPrecisamDeFabricForge')
           }
         }
         // Mods com dependências vão pela pasta mods (o planejamento instala as dependências).
@@ -127,12 +128,12 @@ export function destinoDe(
     case 'plugin':
       return servidor === 'paper'
         ? { destino: 'servidor' }
-        : { destino: 'incompativel', motivo: 'Plugins precisam do Paper. Troque na tela Software.' }
+        : { destino: 'incompativel', motivo: t('p.explorarRegras.pluginsPrecisamDoPaperTroque') }
     case 'mod':
       if (!deMods) {
         return {
           destino: 'incompativel',
-          motivo: 'Mods precisam de Fabric, Forge ou NeoForge. Troque na tela Software.'
+          motivo: t('p.explorarRegras.modsPrecisamDeFabricForge2')
         }
       }
       return { destino: ambiente === 'jogador' ? 'amigos' : 'servidor' }

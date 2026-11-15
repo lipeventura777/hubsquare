@@ -8,6 +8,7 @@ import { AjusteAtualizacoes } from './AjusteAtualizacoes'
 import { EditorIcone } from './EditorIcone'
 import { OpcoesDoJogo } from './OpcoesDoJogo'
 import { ListaDoServidor } from './Whitelist'
+import { t } from '../../../shared/i18n'
 
 export function TelaConfiguracoes({ aba }: { aba: string }): React.JSX.Element {
   const [info, setInfo] = useState<InfoServidor | null | undefined>(undefined)
@@ -24,25 +25,22 @@ export function TelaConfiguracoes({ aba }: { aba: string }): React.JSX.Element {
     <PaginaAjustes>
       {erro && <MensagemErro erro={erro} />}
       {info === undefined && !erro && <Esqueleto linhas={4} />}
-      {info === null && <p>Nenhum servidor encontrado. Crie um servidor na tela Painel.</p>}
+      {info === null && <p>{t('telaConfiguracoes.nenhumServidorEncontradoCrieUm')}</p>}
       {info && aba === 'Gerais' && (
         <>
-          <Secao titulo="Ícone do servidor">
+          <Secao titulo={t('telaConfiguracoes.iconeDoServidor')}>
             <EditorIcone nome={info.nome} />
           </Secao>
           <OpcoesDoJogo estado={estado} nome={info.nome} />
-          <Secao titulo="Atualizações">
+          <Secao titulo={t('telaConfiguracoes.atualizacoes')}>
             <AjusteAtualizacoes />
           </Secao>
         </>
       )}
       {info && aba === 'Whitelist' && <ListaDoServidor lista="whitelist" />}
       {aba === 'Gerais' && info !== undefined && (
-        <Secao titulo="Ajuda">
-          <p className="text-[13px] text-muted">
-            Algo deu errado? O relatório junta os logs e as configurações, sem segredos, para quem
-            for ajudar.
-          </p>
+        <Secao titulo={t('telaConfiguracoes.ajuda')}>
+          <p className="text-[13px] text-muted">{t('telaConfiguracoes.algoDeuErradoORelatorio')}</p>
           <div>
             <BotaoRelatorio />
           </div>

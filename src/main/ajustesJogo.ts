@@ -4,6 +4,7 @@ import { join } from 'path'
 import { AVISOS, type AjustesJogo, type InfoServidor, type TipoAviso } from '../shared/tipos'
 import { gravarComSeguranca, lerTexto, limitesRam } from './config'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // PlaySquare (Fases P3 e P5).
 
@@ -51,7 +52,7 @@ export async function mudarPastaDownloads(
     return gravar({ ...atual, pastasDownloads: atual.pastasDownloads.filter((p) => p !== remover) })
   }
   const opcoes = {
-    title: 'Escolha outra pasta onde você salva downloads',
+    title: t('p.ajustesJogo.escolhaOutraPastaOndeVoce'),
     properties: ['openDirectory' as const]
   }
   const escolha = janela
@@ -68,7 +69,7 @@ async function gravar(a: AjustesJogo): Promise<AjustesJogo> {
 }
 
 export async function ocultarAviso(tipo: unknown, ocultar: unknown): Promise<AjustesJogo> {
-  if (!AVISOS.includes(tipo as TipoAviso)) throw new ErroApp('Aviso desconhecido.')
+  if (!AVISOS.includes(tipo as TipoAviso)) throw new ErroApp(t('p.ajustesJogo.avisoDesconhecido'))
   const atual = await lerAjustesJogo()
   const outros = atual.avisosOcultos.filter((a) => a !== tipo)
   return gravar({
@@ -85,7 +86,7 @@ export async function salvarAjustesJogo(valor: unknown): Promise<AjustesJogo> {
     v.memoriaPadrao !== null &&
     !(Number.isInteger(v.memoriaPadrao) && v.memoriaPadrao! >= min && v.memoriaPadrao! <= max)
   ) {
-    throw new ErroApp(`A memória padrão precisa ficar entre ${min} e ${max} GB.`)
+    throw new ErroApp(t('p.ajustesJogo.aMemoriaPadraoPrecisaFicar', { min, max }))
   }
   const r = v.resolucao
   if (
@@ -100,7 +101,7 @@ export async function salvarAjustesJogo(valor: unknown): Promise<AjustesJogo> {
       r.altura <= 4320
     )
   ) {
-    throw new ErroApp('Use uma resolução entre 640×480 e 7680×4320.')
+    throw new ErroApp(t('p.ajustesJogo.useUmaResolucaoEntre640'))
   }
   return gravar({
     ...(await lerAjustesJogo()),
@@ -117,7 +118,7 @@ export async function escolherPastaInstalacoes(
   if (voltarAoPadrao === true)
     return gravar({ ...(await lerAjustesJogo()), pastaInstalacoes: null })
   const opcoes = {
-    title: 'Escolha onde ficam as instalações novas',
+    title: t('p.ajustesJogo.escolhaOndeFicamAsInstalacoes'),
     properties: ['openDirectory' as const, 'createDirectory' as const]
   }
   const escolha = janela

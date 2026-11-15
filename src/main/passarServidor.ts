@@ -28,6 +28,7 @@ import {
   entradaAceita,
   EXCLUIR_SEMPRE,
   INDICE_HUBSERVER,
+  PASTA_FUNDO_HUBSERVER,
   limparPropriedades,
   motivoParaFicar,
   motivoSemAtualizar,
@@ -47,7 +48,10 @@ import {
   validarNome,
   validarVersao
 } from './servidor'
+import { guardarImagem, pastaFundos } from './fundos'
+import type { FundoServidor } from '../shared/fundoRegras'
 import { acharItem, ARQUIVO_INFO, lerIndice, lerInfo, registrar } from './servidores'
+import { t } from '../shared/i18n'
 
 // Passar o servidor (Fase M7). "Passar para outro amigo" gera um .hubserver (zip) com o mundo,
 // as configurações e as listas de jogadores, e os mods só como link oficial + hash. Nada de .jar,
@@ -136,10 +140,7 @@ async function modsDoPacote(
   try {
     versoes = await modrinth.porHash(hashes)
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui conferir os mods no Modrinth. Confira sua internet e tente de novo.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.passarServidor.naoConseguiConferirOsMods'), detalhar(e))
   }
   const guardados = await lerGuardados()
   for (const [i, path] of jars.entries()) {
@@ -168,13 +169,13 @@ async function modsDoPacote(
   return { mods, manuais, semLink }
 }
 
-const FICA_SEMPRE = [
-  'Os .jar do servidor, dos mods e dos plugins (o novo dono baixa pelos links oficiais)',
-  'Cópias de segurança, registros (logs) e relatórios de travamento',
-  'Convite, pedidos para entrar e o túnel do playit',
-  'PIN do celular e chave do CurseForge',
-  'Arquivos baixados à mão (o novo dono baixa pela página oficial)',
-  'Do server.properties: a senha do RCON e o IP deste PC (saem em branco)'
+const FICA_SEMPRE = (): string[] => [
+  t('p.passarServidor.osJarDoServidorDos'),
+  t('p.passarServidor.copiasDeSegurancaRegistrosLogs'),
+  t('p.passarServidor.convitePedidosParaEntrarE'),
+  t('p.passarServidor.pinDoCelularEChave'),
+  t('p.passarServidor.arquivosBaixadosAMaoO'),
+  t('p.passarServidor.doServerPropertiesASenha')
 ]
 
 export async function previaPassar(info: InfoServidor): Promise<PreviaPassar> {
@@ -182,7 +183,7 @@ export async function previaPassar(info: InfoServidor): Promise<PreviaPassar> {
   return {
     tamanho: c.tamanho,
     vai: c.itens,
-    fica: [...FICA_SEMPRE, ...c.fica],
+    fica: [...FICA_SEMPRE(), ...c.fica],
     mods: m.mods.length,
     manuais: m.manuais.length,
     semLink: m.semLink
@@ -201,11 +202,11 @@ export async function passarServidor(
   } catch (e) {
     throw new ErroApp((e as Error).message)
   }
-  if (lerEstado() !== 'desligado') throw new ErroApp('Desligue o servidor antes de passar.')
+  if (lerEstado() !== 'desligado') throw new ErroApp(t('p.passarServidor.desligueOServidorAntesDe'))
   const opcoes = {
-    title: 'Salvar o servidor para passar',
+    title: t('p.passarServidor.salvarOServidorParaPassar'),
     defaultPath: join(app.getPath('downloads'), `${info.nome}.hubserver`),
-    filters: [{ name: 'Servidor do HubSquare', extensions: ['hubserver'] }]
+    filters: [{ name: t('p.passarServidor.servidorDoHubsquare'), extensions: ['hubserver'] }]
   }
   const escolha = janela
     ? await dialog.showSaveDialog(janela, opcoes)
@@ -228,14 +229,23 @@ export async function passarServidor(
       javaOtimizado: info.javaOtimizado,
       javaDosMods: info.javaDosMods,
       ...mods,
-      geradoEm: new Date().toISOString()
+      geradoEm: new Date().toISOString(),
+      fundo: info.fundo
     }
+    // Fase V10: a imagem do fundo vai junto (se ela ainda existir neste PC).
+    const imagemFundo =
+      info.fundo?.tipo === 'imagem' ? join(pastaFundos(), info.fundo.imagem) : null
     const montagem = join(tmpdir(), `servsquare-hubserver-${randomUUID()}`)
     const zip = `${montagem}.zip` // o tar escolhe o formato pela extensão
     try {
       await mkdir(montagem, { recursive: true })
       await writeFile(join(montagem, INDICE_HUBSERVER), JSON.stringify(pacote, null, 2))
       const soltos = [INDICE_HUBSERVER]
+      if (imagemFundo && existsSync(imagemFundo)) {
+        await mkdir(join(montagem, PASTA_FUNDO_HUBSERVER))
+        await copyFile(imagemFundo, join(montagem, PASTA_FUNDO_HUBSERVER, basename(imagemFundo)))
+        soltos.push(PASTA_FUNDO_HUBSERVER)
+      }
       if (conteudo.itens.includes('server.properties')) {
         const texto = await readFile(join(info.pasta, 'server.properties'), 'utf8')
         await writeFile(join(montagem, 'server.properties'), limparPropriedades(texto))
@@ -255,10 +265,7 @@ export async function passarServidor(
       ])
       await copyFile(zip, destino)
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui gerar o arquivo do servidor. Confira se tem espaço no disco e tente de novo.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.passarServidor.naoConseguiGerarOArquivo'), detalhar(e))
     } finally {
       await rm(montagem, { recursive: true, force: true }).catch(() => {})
       await rm(zip, { force: true }).catch(() => {})
@@ -280,20 +287,17 @@ async function listarEntradas(arquivo: string): Promise<string[]> {
   try {
     entradas = (await tar(['-tf', arquivo])).split(/\r?\n/).filter(Boolean)
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui abrir esse arquivo. Confira se ele é um .hubserver que não está corrompido.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.passarServidor.naoConseguiAbrirEsseArquivo'), detalhar(e))
   }
   const recusadas = entradas.filter((e) => !entradaAceita(e))
   if (recusadas.length) {
     throw new ErroApp(
-      'Esse arquivo tem programas, mods (.jar) ou caminhos que saem da pasta, então ele não foi aberto. Peça um arquivo novo, gerado pelo HubSquare.',
+      t('p.passarServidor.esseArquivoTemProgramasMods'),
       recusadas.slice(0, 20).join('\n')
     )
   }
   if (!entradas.includes(INDICE_HUBSERVER)) {
-    throw new ErroApp('Esse arquivo não é um servidor do HubSquare (falta o hubserver.json).')
+    throw new ErroApp(t('p.passarServidor.esseArquivoNaoEUm'))
   }
   return entradas
 }
@@ -302,9 +306,9 @@ export async function analisarHubserver(
   janela: BrowserWindow | null
 ): Promise<AnaliseHubserver | null> {
   const opcoes = {
-    title: 'Escolha o arquivo .hubserver',
+    title: t('p.passarServidor.escolhaOArquivoHubserver'),
     properties: ['openFile' as const],
-    filters: [{ name: 'Servidor do HubSquare', extensions: ['hubserver'] }]
+    filters: [{ name: t('p.passarServidor.servidorDoHubsquare'), extensions: ['hubserver'] }]
   }
   const escolha = janela
     ? await dialog.showOpenDialog(janela, opcoes)
@@ -318,7 +322,7 @@ export async function analisarHubserver(
   } catch (e) {
     throw new ErroApp(
       e instanceof SyntaxError
-        ? 'O hubserver.json desse arquivo está estragado. Peça um arquivo novo.'
+        ? t('p.passarServidor.oHubserverJsonDesseArquivo')
         : (e as Error).message,
       detalhar(e)
     )
@@ -356,18 +360,13 @@ async function extrair(arquivo: string): Promise<string> {
   try {
     await tar(['-xf', arquivo, '-C', pasta])
     if (await temAtalho(pasta)) {
-      throw new ErroApp(
-        'Esse arquivo tem atalhos (links) dentro, e por segurança o app não aceita.'
-      )
+      throw new ErroApp(t('p.passarServidor.esseArquivoTemAtalhosLinks'))
     }
     return pasta
   } catch (e) {
     await rm(pasta, { recursive: true, force: true }).catch(() => {})
     if (e instanceof ErroApp) throw e
-    throw new ErroApp(
-      'Não consegui abrir esse arquivo. Confira se ele não está corrompido.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.passarServidor.naoConseguiAbrirEsseArquivo2'), detalhar(e))
   }
 }
 
@@ -379,15 +378,15 @@ export async function receberHubserver(
 ): Promise<InfoServidor> {
   const { token, modo, nome, aceitouEula } = (pedido ?? {}) as Record<string, unknown>
   const a = typeof token === 'string' ? analisados.get(token) : undefined
-  if (!a) throw new ErroApp('Escolha o arquivo .hubserver de novo.')
+  if (!a) throw new ErroApp(t('p.passarServidor.escolhaOArquivoHubserverDe'))
   if (modo !== 'novo' && modo !== 'copia' && modo !== 'atualizar') {
-    throw new ErroApp('Escolha o que fazer com o arquivo.')
+    throw new ErroApp(t('p.passarServidor.escolhaOQueFazerCom'))
   }
   // Com o mesmo servidor aqui, só atualizar ou cópia (nunca dois servidores com o mesmo id).
   if ((modo === 'novo' && a.mesmo) || (modo === 'atualizar' && !a.mesmo)) {
-    throw new ErroApp('Escolha de novo o que fazer com o arquivo.')
+    throw new ErroApp(t('p.passarServidor.escolhaDeNovoOQue'))
   }
-  if (recebendo) throw new ErroApp('Já tem um servidor sendo recebido. Espere terminar.')
+  if (recebendo) throw new ErroApp(t('p.passarServidor.jaTemUmServidorSendo'))
   recebendo = true
   try {
     const info =
@@ -401,6 +400,19 @@ export async function receberHubserver(
   }
 }
 
+// Fase V10: o fundo que veio no pacote. A imagem entra na pasta de fundos deste PC pelo mesmo
+// caminho de qualquer imagem (tipo pelos bytes, até 25 MB); sem ela, "Igual ao app".
+async function fundoRecebido(
+  p: PacoteServidor,
+  extraido: string
+): Promise<FundoServidor | undefined> {
+  if (p.fundo?.tipo !== 'imagem') return p.fundo
+  const arquivo = join(extraido, PASTA_FUNDO_HUBSERVER, p.fundo.imagem)
+  if (!existsSync(arquivo)) return undefined
+  const nome = await guardarImagem(arquivo).catch(() => null)
+  return nome ? { ...p.fundo, imagem: nome } : undefined
+}
+
 async function criarDoPacote(
   p: PacoteServidor,
   arquivo: string,
@@ -410,24 +422,25 @@ async function criarDoPacote(
   aoProgredir: (p: Progresso) => void
 ): Promise<InfoServidor> {
   if (aceitouEula !== true) {
-    throw new ErroApp('Você precisa marcar que aceita o EULA do Minecraft para criar o servidor.')
+    throw new ErroApp(t('p.passarServidor.vocePrecisaMarcarQueAceita'))
   }
   const nome = validarNome(nomeBruto)
   const pasta = join(pastaServidores(), nome)
-  if (existsSync(pasta))
-    throw new ErroApp(`Já existe uma pasta chamada "${nome}". Escolha outro nome.`)
+  if (existsSync(pasta)) throw new ErroApp(t('p.passarServidor.jaExisteUmaPastaChamada', { nome }))
   const versao = await validarVersao(p.tipo, p.versao)
   const avisar = limitarProgresso(aoProgredir)
   // Tudo numa pasta provisória; só no fim ela vira a pasta do servidor.
   const provisoria = join(pastaServidores(), `.recebendo-${randomUUID()}`)
   let extraido: string | null = null
   try {
-    avisar({ etapa: 'Abrindo o arquivo', recebido: 0, total: 0 })
+    avisar({ etapa: t('p.passarServidor.abrindoOArquivo'), recebido: 0, total: 0 })
     extraido = await extrair(arquivo)
     await mkdir(provisoria, { recursive: true })
     for (const n of await readdir(extraido)) {
-      if (n !== INDICE_HUBSERVER) await rename(join(extraido, n), join(provisoria, n))
+      if (n !== INDICE_HUBSERVER && n !== PASTA_FUNDO_HUBSERVER)
+        await rename(join(extraido, n), join(provisoria, n))
     }
+    const fundo = await fundoRecebido(p, extraido)
     const { java, versaoLoader } = await instalarJarEJava(
       provisoria,
       p.tipo,
@@ -451,7 +464,8 @@ async function criarDoPacote(
       javaOtimizado: p.javaOtimizado,
       javaDosMods: p.javaDosMods,
       // Cópia: outro servidor, com id próprio (ele não atualiza nem é atualizado pelo original).
-      idFixo: modo === 'novo' ? p.idFixo : randomUUID()
+      idFixo: modo === 'novo' ? p.idFixo : randomUUID(),
+      fundo
     }
     await writeFile(join(provisoria, ARQUIVO_INFO), JSON.stringify(info, null, 2))
     await rename(provisoria, pasta)
@@ -474,27 +488,26 @@ async function atualizarMeu(
 ): Promise<InfoServidor> {
   const item = await acharItem(id)
   const info = item ? await lerInfo(item) : null
-  if (!info) throw new ErroApp('Esse servidor não está mais na lista.')
+  if (!info) throw new ErroApp(t('p.passarServidor.esseServidorNaoEstaMais'))
   const motivo = motivoSemAtualizar(info, p)
   if (motivo) throw new ErroApp(motivo)
   const avisar = limitarProgresso(aoProgredir)
   return comServidorDesligado(async () => {
-    avisar({ etapa: 'Abrindo o arquivo', recebido: 0, total: 0 })
+    avisar({ etapa: t('p.passarServidor.abrindoOArquivo'), recebido: 0, total: 0 })
     const extraido = await extrair(arquivo)
     try {
-      const itens = (await readdir(extraido)).filter((n) => n !== INDICE_HUBSERVER)
-      avisar({ etapa: 'Fazendo o backup do seu servidor', recebido: 0, total: 0 })
+      const itens = (await readdir(extraido)).filter(
+        (n) => n !== INDICE_HUBSERVER && n !== PASTA_FUNDO_HUBSERVER
+      )
+      avisar({ etapa: t('p.passarServidor.fazendoOBackupDoSeu'), recebido: 0, total: 0 })
       let backup: string | null
       try {
         backup = await compactarMundo(info, undefined, 'atualizar', itens)
         if (backup) await protegerBackup(info, backup, true)
       } catch (e) {
-        throw new ErroApp(
-          'Não consegui fazer o backup do seu servidor, então nada foi trocado. Confira o espaço no disco e tente de novo.',
-          detalhar(e)
-        )
+        throw new ErroApp(t('p.passarServidor.naoConseguiFazerOBackup'), detalhar(e))
       }
-      avisar({ etapa: 'Trocando o mundo', recebido: 0, total: 0 })
+      avisar({ etapa: t('p.passarServidor.trocandoOMundo'), recebido: 0, total: 0 })
       for (const n of itens) {
         const origem = join(extraido, n)
         const destino = join(info.pasta, n)
@@ -528,6 +541,6 @@ async function atualizarMeu(
 export async function infoPorId(id: unknown): Promise<InfoServidor> {
   const item = await acharItem(id)
   const info = item ? await lerInfo(item) : null
-  if (!info) throw new ErroApp('Esse servidor não está mais na lista.')
+  if (!info) throw new ErroApp(t('p.passarServidor.esseServidorNaoEstaMais'))
   return info
 }

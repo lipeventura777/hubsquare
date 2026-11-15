@@ -55,8 +55,11 @@ app.whenReady().then(async () => {
 
   const raiz = join(import.meta.dirname, '..')
   writeFileSync(join(raiz, 'build', 'icon.png'), grande.toPNG())
-  writeFileSync(join(raiz, 'resources', 'icon.png'), grande.resize({ width: 256, height: 256 }).toPNG())
-  const tamanhos = [256, 64, 48, 32, 24, 16]
+  writeFileSync(
+    join(raiz, 'resources', 'icon.png'),
+    grande.resize({ width: 256, height: 256 }).toPNG()
+  )
+  const tamanhos = [256, 128, 96, 64, 48, 40, 32, 24, 20, 16]
   writeFileSync(
     join(raiz, 'build', 'icon.ico'),
     montarIco(

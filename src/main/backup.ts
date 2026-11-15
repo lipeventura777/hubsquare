@@ -10,6 +10,7 @@ import { gravarComSeguranca } from './config'
 import { ErroApp, detalhar } from './erros'
 import { dentroDe, guardarMundoAtual, nivelDoMundo, pastasDoMundo } from './mundo'
 import { avisarTela, comServidorDesligado, eventos, registrarNoConsole } from './servidor'
+import { t } from '../shared/i18n'
 
 // Backups do mundo em .zip, feitos com o tar que vem no Windows (sem biblioteca extra).
 // Só apaga arquivos dentro de Documentos/ServSquare/backups.
@@ -129,15 +130,13 @@ export async function apagarBackups(
   const pedidos = Array.isArray(arquivos) ? [...new Set(arquivos)] : []
   const escolhidos = lista.filter((b) => pedidos.includes(b.arquivo))
   if (!escolhidos.length || escolhidos.length !== pedidos.length) {
-    throw new ErroApp('Algum desses backups não existe mais. Atualize a lista e tente de novo.')
+    throw new ErroApp(t('p.backup.algumDessesBackupsNaoExiste'))
   }
   if (escolhidos.some((b) => b.protegido)) {
-    throw new ErroApp('Backups protegidos não podem ser apagados. Tire o cadeado antes.')
+    throw new ErroApp(t('p.backup.backupsProtegidosNaoPodemSer'))
   }
   if (escolhidos.length === lista.length && nomeDigitado !== info.nome) {
-    throw new ErroApp(
-      'Para apagar todos os backups, digite o nome do servidor exatamente como aparece.'
-    )
+    throw new ErroApp(t('p.backup.paraApagarTodosOsBackups'))
   }
   for (const b of escolhidos) await apagarArquivo(info, b.arquivo)
   await mudarMeta(info, (m) => escolhidos.forEach((b) => delete m[b.arquivo]))
@@ -153,7 +152,7 @@ export async function protegerBackup(
     typeof arquivo !== 'string' ||
     !(await listarBackups(info)).some((b) => b.arquivo === arquivo)
   ) {
-    throw new ErroApp('Esse backup não existe mais. Atualize a lista.')
+    throw new ErroApp(t('p.backup.esseBackupNaoExisteMais'))
   }
   await mudarMeta(info, (m) => {
     m[arquivo] = { ...m[arquivo], protegido: protegido === true }
@@ -216,19 +215,19 @@ const FALHOU = 'ultimo-backup-falhou.txt'
 
 // Motivo do selo ⚠ em Cópias de segurança (DESIGN.md, 6.1), ou null se está tudo bem.
 export async function alertaBackups(info: InfoServidor): Promise<string | null> {
-  if (existsSync(join(pastaBackups(info), FALHOU))) return 'O último backup falhou'
-  if (!(await listarBackups(info)).length) return 'Ainda não há nenhuma cópia de segurança'
+  if (existsSync(join(pastaBackups(info), FALHOU))) return t('p.backup.oUltimoBackupFalhou')
+  if (!(await listarBackups(info)).length) return t('p.backup.aindaNaoHaNenhumaCopia')
   return null
 }
 
 // Backup automático sempre que o servidor desliga normalmente (não quando ele cai sozinho).
 eventos.on('desligou', ({ normal, info }) => {
   if (!normal) return
-  registrarNoConsole('[ServSquare] Fazendo backup do mundo...')
+  registrarNoConsole(t('p.backup.servsquareFazendoBackupDoMundo'))
   comServidorDesligado(() => compactarMundo(info, undefined, 'desligar'))
     .then((nome) =>
       registrarNoConsole(
-        nome ? `[ServSquare] Backup salvo: ${nome}` : '[ServSquare] Sem mundo para guardar ainda.'
+        nome ? `[ServSquare] Backup salvo: ${nome}` : t('p.backup.servsquareSemMundoParaGuardar')
       )
     )
     .catch((e) => marcarFalha(info, e))
@@ -251,7 +250,7 @@ export async function marcarFalha(info: InfoServidor, e: unknown): Promise<void>
 export async function restaurarBackup(info: InfoServidor, valor: unknown): Promise<void> {
   const arquivo = typeof valor === 'string' ? valor : ''
   if (!(await listarBackups(info)).some((b) => b.arquivo === arquivo)) {
-    throw new ErroApp('Esse backup não existe mais. Atualize a lista e escolha outro.')
+    throw new ErroApp(t('p.backup.esseBackupNaoExisteMais2'))
   }
   return comServidorDesligado(async () => {
     const nivel = await nivelDoMundo(info.pasta)
@@ -262,15 +261,10 @@ export async function restaurarBackup(info: InfoServidor, valor: unknown): Promi
       await mkdir(temporario)
       await tar(['-x', '-f', join(pastaBackups(info), arquivo), '-C', temporario])
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui abrir esse backup. O arquivo pode estar corrompido; tente outro backup.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.backup.naoConseguiAbrirEsseBackup'), detalhar(e))
     }
     if (!existsSync(join(temporario, nivel, 'level.dat'))) {
-      throw new ErroApp(
-        `Esse backup não tem o mundo "${nivel}". Ele pode ser de antes de mudar o nome do mundo; escolha outro backup.`
-      )
+      throw new ErroApp(t('p.backup.esseBackupNaoTemO', { nivel }))
     }
 
     try {
@@ -282,10 +276,7 @@ export async function restaurarBackup(info: InfoServidor, valor: unknown): Promi
         }
       }
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui trocar o mundo. Feche janelas do Explorer abertas na pasta do servidor e tente de novo. Nada foi apagado: o mundo atual está em "mundos-antigos".',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.backup.naoConseguiTrocarOMundo'), detalhar(e))
     }
     await rm(temporario, { recursive: true, force: true })
   })

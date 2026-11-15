@@ -44,6 +44,7 @@ import {
 import { FONTES, NOMES_FONTES, downloadPermitido, type Fonte } from '../shared/fontes'
 import { removerArquivo } from './removidos'
 import { pedidosDaPagina, tamanhoValido } from '../shared/paginaRegras'
+import { t as tx } from '../shared/i18n'
 
 // Aba Explorar da tela Mods (Fase 23): todos os tipos de conteúdo do Modrinth.
 // Mods e plugins do servidor seguem pelo mods.ts (Fase 16). Este arquivo cuida do resto:
@@ -109,18 +110,18 @@ function editar<T>(info: InfoServidor, mudar: (e: EstadoExplorar) => Promise<T>)
 
 function exigirId(id: unknown): string {
   if (typeof id === 'string' && /^[\w-]{1,64}$/.test(id)) return id
-  throw new ErroApp('Projeto inválido. Escolha um da lista.')
+  throw new ErroApp(tx('p.explorar.projetoInvalidoEscolhaUmDa'))
 }
 
 // Projetos do CurseForge e do Hangar são números.
 function exigirNumero(id: unknown): number {
   if (typeof id === 'string' && /^\d{1,12}$/.test(id)) return Number(id)
-  throw new ErroApp('Projeto inválido. Escolha um da lista.')
+  throw new ErroApp(tx('p.explorar.projetoInvalidoEscolhaUmDa'))
 }
 
 function exigirTipo(tipo: unknown): TipoConteudo {
   if (TIPOS_CONTEUDO.includes(tipo as TipoConteudo)) return tipo as TipoConteudo
-  throw new ErroApp('Tipo de conteúdo inválido. Escolha uma das abas.')
+  throw new ErroApp(tx('p.explorar.tipoDeConteudoInvalidoEscolha'))
 }
 
 const ORDENS = ['relevance', 'downloads', 'follows', 'newest', 'updated']
@@ -129,7 +130,7 @@ const texto = (v: unknown, max: number): string | null =>
 
 function exigirFonte(fonte: unknown): Fonte {
   if (FONTES.includes(fonte as Fonte)) return fonte as Fonte
-  throw new ErroApp('Fonte inválida. Escolha Modrinth, CurseForge ou Hangar.')
+  throw new ErroApp(tx('p.explorar.fonteInvalidaEscolhaModrinthCurseforge'))
 }
 
 function lerFiltros(f: unknown): FiltrosExplorar {
@@ -137,7 +138,7 @@ function lerFiltros(f: unknown): FiltrosExplorar {
   const fonte = exigirFonte(x.fonte ?? 'modrinth')
   const tipo = exigirTipo(x.tipo)
   if (!TIPOS_POR_FONTE[fonte].includes(tipo)) {
-    throw new ErroApp(`O ${NOMES_FONTES[fonte]} não tem esse tipo de conteúdo aqui no app.`)
+    throw new ErroApp(tx('p.explorar.oNaoTemEsseTipo', { v: NOMES_FONTES[fonte] }))
   }
   return {
     fonte,
@@ -319,41 +320,45 @@ export async function fraseDe(
   if (info.jogador) {
     switch (destino) {
       case 'servidor':
-        return `Vai para a pasta mods da instalação "${info.nome}", com as dependências.`
+        return tx('p.explorar.vaiParaAPastaMods', { nome: info.nome })
       case 'amigos':
-        return `Vai para a pasta ${pastaNoPacote(tipo)} da instalação "${info.nome}". É seu: a sincronização com o servidor nunca tira.`
+        return tx('p.explorar.vaiParaAPastaDa', {
+          pastaNoPacote: pastaNoPacote(tipo),
+          nome: info.nome
+        })
       case 'modpack':
-        return 'Cria uma instalação nova com este modpack. As outras não mudam.'
+        return tx('p.explorar.criaUmaInstalacaoNovaCom')
       default:
-        return motivo ?? 'Não serve para esta instalação.'
+        return motivo ?? tx('p.explorar.naoServeParaEstaInstalacao')
     }
   }
   switch (destino) {
     case 'servidor':
-      return `Vai para a pasta ${EXTRAS_TIPOS[info.tipo]} do servidor "${info.nome}".`
+      return tx('p.explorar.vaiParaAPastaDo', { v: EXTRAS_TIPOS[info.tipo], nome: info.nome })
     case 'datapack': {
       const nivel = await nivelDoMundo(info.pasta).catch(() => 'world')
-      return `Vai para a pasta datapacks do mundo ativo ("${nivel}").`
+      return tx('p.explorar.vaiParaAPastaDatapacks', { nivel })
     }
     case 'resourcepack':
-      return 'Como resource pack do servidor, o jogo de cada jogador baixa o pacote ao entrar. Ele também pode ir para o Pacote pros amigos.'
+      return tx('p.explorar.comoResourcePackDoServidor')
     case 'amigos':
       return tipo === 'shader'
-        ? 'O servidor não usa shaders: ele entra no Pacote pros amigos, na pasta shaderpacks.'
-        : 'É só do jogador, o servidor não usa: ele entra no Pacote pros amigos, na pasta mods.'
+        ? tx('p.explorar.oServidorNaoUsaShaders')
+        : tx('p.explorar.eSoDoJogadorO')
     case 'modpack':
-      return 'Cria um servidor novo com este modpack. O servidor atual não muda.'
+      return tx('p.explorar.criaUmServidorNovoCom')
     case 'incompativel':
-      return motivo ?? 'Não serve para este servidor.'
+      return motivo ?? tx('p.explorar.naoServeParaEsteServidor')
   }
 }
 
-const ROTULOS_LINKS = [
-  ['source_url', 'Código-fonte'],
-  ['wiki_url', 'Wiki'],
-  ['discord_url', 'Discord do projeto'],
-  ['issues_url', 'Relatar problemas']
-] as const
+const ROTULOS_LINKS = () =>
+  [
+    ['source_url', tx('p.explorar.codigoFonte')],
+    ['wiki_url', tx('p.explorar.wiki')],
+    ['discord_url', tx('p.explorar.discordDoProjeto')],
+    ['issues_url', tx('p.explorar.relatarProblemas')]
+  ] as const
 
 function ehHttps(url: string | null): url is string {
   try {
@@ -438,7 +443,7 @@ export async function detalhesProjeto(
       .filter((g) => urlDoModrinth(g.url))
       .map((g) => ({ url: g.url, titulo: g.title, descricao: g.description })),
     licenca: { id: p.license.id, nome: p.license.name, url: p.license.url },
-    links: ROTULOS_LINKS.flatMap(([campo, rotulo]) => {
+    links: ROTULOS_LINKS().flatMap(([campo, rotulo]) => {
       const url = p[campo]
       return ehHttps(url) ? [{ rotulo, url }] : []
     }),
@@ -489,12 +494,12 @@ async function versaoParaServidor(
   const versao = escolherVersao(await modrinth.versoes(id, loaders, info.versao))
   const titulo = (await modrinth.projetos([id])).get(id)?.title ?? id
   if (!versao) {
-    throw new ErroApp(`"${titulo}" não tem versão para o Minecraft ${info.versao}. Procure outro.`)
+    throw new ErroApp(tx('p.explorar.naoTemVersaoParaO', { titulo, versao: info.versao }))
   }
   const candidatos = versao.files.filter((f) => extensao.test(f.filename))
   const arquivo = candidatos.find((f) => f.primary) ?? candidatos[0]
   if (!arquivo || !nomeSeguro(arquivo.filename, extensao) || !urlDoModrinth(arquivo.url)) {
-    throw new ErroApp(`"${titulo}" tem um arquivo que o app não aceita.`)
+    throw new ErroApp(tx('p.explorar.temUmArquivoQueO', { titulo }))
   }
   return { versao, arquivo, titulo }
 }
@@ -531,8 +536,9 @@ export async function instalarDatapack(
     const { m, a } = await datapackCF(info, exigirNumero(id))
     const sha1 = cf.sha1Do(a)
     if (!a.downloadUrl || !downloadPermitido(a.downloadUrl, 'curseforge') || !sha1)
-      throw new ErroApp(`"${m.name}" tem um arquivo que o app não aceita.`)
-    if (!nomeSeguro(a.fileName, ZIP)) throw new ErroApp(`"${m.name}" não é um datapack em .zip.`)
+      throw new ErroApp(tx('p.explorar.temUmArquivoQueO2', { name: m.name }))
+    if (!nomeSeguro(a.fileName, ZIP))
+      throw new ErroApp(tx('p.explorar.naoEUmDatapackEm', { name: m.name }))
     projetoId = String(m.id)
     url = a.downloadUrl
     checksum = { algoritmo: 'sha1', valor: sha1 }
@@ -552,7 +558,7 @@ export async function instalarDatapack(
     url = arquivo.url
     checksum = { algoritmo: 'sha512', valor: arquivo.hashes.sha512 }
     novo = salvo(projetoId, titulo, versao, arquivo)
-  } else throw new ErroApp('O Hangar não tem datapacks.')
+  } else throw new ErroApp(tx('p.explorar.oHangarNaoTemDatapacks'))
   const mundo = await nivelDoMundo(info.pasta)
   const pasta = join(info.pasta, mundo, 'datapacks')
   await mkdir(pasta, { recursive: true })
@@ -647,7 +653,7 @@ export async function restaurarResourcePack(info: InfoServidor, dados: unknown):
   const url = d?.propriedades?.['resource-pack']
   // Só devolve um link https (o que o app gravou ou o que estava lá antes).
   if (typeof url !== 'string' || (url && !ehHttps(url))) {
-    throw new ErroApp('Não deu para restaurar esse resource pack.')
+    throw new ErroApp(tx('p.explorar.naoDeuParaRestaurarEsse'))
   }
   await editar(info, async (e) => {
     await gravarPropriedades(
@@ -668,7 +674,7 @@ export async function adicionarAosAmigos(
   const projetoId = exigirId(id)
   const t = exigirTipo(tipo)
   if (t !== 'shader' && t !== 'resourcepack' && t !== 'mod') {
-    throw new ErroApp('Só shaders, resource packs e mods do jogador vão para o Pacote pros amigos.')
+    throw new ErroApp(tx('p.explorar.soShadersResourcePacksE'))
   }
   if (t === 'mod') {
     // Mods que rodam no servidor vão para a pasta mods (e entram no pacote por lá).
@@ -681,9 +687,7 @@ export async function adicionarAosAmigos(
         !!info.jogador
       ).destino !== 'amigos'
     ) {
-      throw new ErroApp(
-        'Este mod roda no servidor: instale pela aba Mods, e ele entra no pacote sozinho.'
-      )
+      throw new ErroApp(tx('p.explorar.esteModRodaNoServidor'))
     }
   }
   const loaders = t === 'mod' ? [info.tipo] : t === 'resourcepack' ? ['minecraft'] : []
@@ -738,7 +742,7 @@ async function baixarParaJogo(
 ): Promise<void> {
   const extensao = a.tipo === 'mod' ? /\.jar$/i : ZIP
   if (!nomeSeguro(a.arquivo, extensao) || !urlDoModrinth(a.url)) {
-    throw new ErroApp(`"${a.titulo}" tem um arquivo que o app não aceita.`)
+    throw new ErroApp(tx('p.explorar.temUmArquivoQueO', { titulo: a.titulo }))
   }
   const pasta = join(info.pasta, pastaNoPacote(a.tipo))
   await mkdir(pasta, { recursive: true })
@@ -764,9 +768,7 @@ async function garantirModsNoJogo(info: InfoServidor, ids: string[]): Promise<vo
     if (naPasta.some((n) => n.startsWith(p.slug.toLowerCase()))) continue // posto à mão
     const plano = await planejarInstalacao(info, p.id, 'modrinth')
     if (!plano.itens.length) {
-      throw new ErroApp(
-        `O ${p.title} (que é preciso para isso) ainda não tem versão para esta instalação.`
-      )
+      throw new ErroApp(tx('p.explorar.oQueEPrecisoPara', { title: p.title }))
     }
     await instalarPlano(info, plano.token, () => {})
   }
@@ -818,7 +820,7 @@ export async function removerDosAmigos(
 export async function restaurarAmigo(info: InfoServidor, dados: unknown): Promise<void> {
   const a = dados as EstadoExplorar['amigos'][number]
   if (!a || typeof a.projetoId !== 'string' || !urlDoModrinth(a.url)) {
-    throw new ErroApp('Não deu para devolver esse item ao Pacote pros amigos.')
+    throw new ErroApp(tx('p.explorar.naoDeuParaDevolverEsse'))
   }
   await editar(info, async (e) => {
     e.amigos = [...e.amigos.filter((x) => x.projetoId !== a.projetoId), a]

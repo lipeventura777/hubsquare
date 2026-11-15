@@ -3,6 +3,7 @@ import type { ErroTela } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { Esqueleto } from '../componentes/movimento'
 import { Aviso, Botao, PaginaAjustes, Secao } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Mods › Proibidos para jogadores (Fases P2 e P3): mods que o dono pede para os amigos não usarem.
 // Vai no convite; o PlaySquare avisa e não abre o servidor com eles ativos. É um combinado entre
@@ -28,12 +29,8 @@ export function ProibidosParaJogadores(): React.JSX.Element {
   }
   return (
     <PaginaAjustes>
-      <Secao titulo="Proibidos para jogadores">
-        <p className="text-[13px] text-muted">
-          Um por linha, com parte do nome do arquivo do mod (ex.: “xray”). Quem entrar pelo convite
-          vê o aviso no PlaySquare e não abre o servidor com um mod assim ativo. É um combinado
-          entre amigos, não um antitrapaça: quem quiser burlar consegue.
-        </p>
+      <Secao titulo={t('proibidosParaJogadores.proibidosParaJogadores')}>
+        <p className="text-[13px] text-muted">{t('proibidosParaJogadores.umPorLinhaComParte')}</p>
         <textarea
           value={texto}
           onChange={(e) => {
@@ -41,7 +38,7 @@ export function ProibidosParaJogadores(): React.JSX.Element {
             setSalvo(false)
           }}
           rows={6}
-          aria-label="Mods proibidos para jogadores"
+          aria-label={t('proibidosParaJogadores.modsProibidosParaJogadores')}
           className="border border-linha bg-panel-2 p-2 font-mono text-[13px]"
         />
         <Botao
@@ -58,13 +55,9 @@ export function ProibidosParaJogadores(): React.JSX.Element {
             setSalvo(true)
           }}
         >
-          Salvar lista
+          {t('proibidosParaJogadores.salvarLista')}
         </Botao>
-        {salvo && (
-          <Aviso tipo="sucesso">
-            Salvo. Os amigos recebem a lista nova da próxima vez que abrirem o PlaySquare.
-          </Aviso>
-        )}
+        {salvo && <Aviso tipo="sucesso">{t('proibidosParaJogadores.salvoOsAmigosRecebemA')}</Aviso>}
         {erro && <MensagemErro erro={erro} />}
       </Secao>
     </PaginaAjustes>

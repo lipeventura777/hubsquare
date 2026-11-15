@@ -65,3 +65,6 @@ export function pegarConviteParaColar(): string | null {
   if (t) void window.api.conviteUsado()
   return t
 }
+
+// Fase V10: o fundo do servidor ativo mudou (Painel › Fundo): a janela relê o fundo das telas dele.
+export const EVENTO_FUNDO_SERVIDOR = 'hubsquare:fundo-servidor'

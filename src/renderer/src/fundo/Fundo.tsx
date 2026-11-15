@@ -5,6 +5,7 @@ import { Aviso, Botao } from '../componentes/ui'
 import { ALTURA, ARTE, LARGURA } from './biomas'
 import { criarMotor, type Motor } from './motor'
 import { CamadaFundo } from './CamadaFundo'
+import { t } from '../../../shared/i18n'
 
 // Fundo de bioma (Fases V1 e V2, DESIGN.md seção 7): pixel art pequena, ampliada sem suavizar.
 // Vivo (motor.ts), parado quando o jogo está aberto, a janela está escondida ou sem foco, ou um
@@ -82,7 +83,7 @@ const CHAVE_AVISO = 'hubsquare-aviso-fundo-leve'
 
 // Atrás de todo o app (inclusive do assistente de primeira vez).
 export function FundoDoApp(): React.JSX.Element | null {
-  const { aparencia, fundoApp, falhou, imagemFalhou, avisosFundo, fecharAvisosFundo, mudar } =
+  const { aparencia, fundoVigente, falhou, imagemFalhou, avisosFundo, fecharAvisosFundo, mudar } =
     useAparencia()
   const [aviso, setAviso] = useState(false)
   if (!aparencia) return null
@@ -102,7 +103,8 @@ export function FundoDoApp(): React.JSX.Element | null {
 
   // Fase V4: o fundo do app (bioma ou imagem com ajustes). A imagem que não abre volta ao bioma
   // padrão, com um aviso discreto (nunca a tela preta).
-  const fundo = fundoApp ?? { tipo: 'bioma' as const, bioma: aparencia.bioma }
+  // Fase V10: nas telas de um servidor com fundo próprio, o dele.
+  const fundo = fundoVigente ?? { tipo: 'bioma' as const, bioma: aparencia.bioma }
   return (
     <>
       {fundo.tipo === 'bioma' ? (
@@ -120,17 +122,14 @@ export function FundoDoApp(): React.JSX.Element | null {
         <div className="anim-aviso fixed bottom-4 left-4 z-(--z-avisos) flex w-[380px] max-w-[calc(100vw-32px)] flex-col gap-2">
           {falhou && (
             <Aviso tipo="atencao">
-              <span className="flex-1">
-                A imagem de fundo não abriu (foi apagada ou está estragada). Mostrando o bioma;
-                escolha outra em Aparência › Fundo.
-              </span>
+              <span className="flex-1">{t('fundo.aImagemDeFundoNao')}</span>
             </Aviso>
           )}
           {avisosFundo.map((a) => (
             <Aviso key={a} tipo="atencao">
               <span className="flex-1">{a}</span>
               <Botao tamanho="pequeno" onClick={fecharAvisosFundo}>
-                OK
+                {t('fundo.ok')}
               </Botao>
             </Aviso>
           ))}
@@ -139,12 +138,9 @@ export function FundoDoApp(): React.JSX.Element | null {
       {aviso && (
         <div className="anim-aviso fixed bottom-4 left-4 z-(--z-avisos) w-[380px] max-w-[calc(100vw-32px)]">
           <Aviso tipo="atencao">
-            <span className="flex-1">
-              O fundo animado estava pesando neste PC e passou para o modo leve. Dá para mudar em
-              Aparência › Tema.
-            </span>
+            <span className="flex-1">{t('fundo.oFundoAnimadoEstavaPesando')}</span>
             <Botao tamanho="pequeno" onClick={() => setAviso(false)}>
-              OK
+              {t('fundo.ok')}
             </Botao>
           </Aviso>
         </div>

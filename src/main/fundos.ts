@@ -14,6 +14,7 @@ import {
 } from '../shared/fundoRegras'
 import type { ImagemFundo } from '../shared/tipos'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // Fundos personalizados (Fase V4). As imagens escolhidas são copiadas para a pasta de dados
 // (fundos/<hash do conteúdo>.<tipo>): a mesma imagem não duplica e a original pode sumir. A tela
@@ -64,7 +65,7 @@ export async function guardarImagem(origem: string): Promise<string> {
     if (!s.isFile()) throw new Error('não é arquivo')
     tamanho = s.size
   } catch {
-    throw new ErroApp('Não achei esse arquivo. Escolha a imagem de novo.')
+    throw new ErroApp(t('p.fundos.naoAcheiEsseArquivoEscolha'))
   }
   // Os bytes do começo bastam para recusar sem ler um arquivo enorme.
   const cabeca = Buffer.alloc(16)
@@ -98,9 +99,9 @@ export async function guardarImagem(origem: string): Promise<string> {
 
 export async function escolherImagem(janela: BrowserWindow | null): Promise<string | null> {
   const opcoes = {
-    title: 'Escolha uma imagem de fundo',
+    title: t('p.fundos.escolhaUmaImagemDeFundo'),
     properties: ['openFile' as const],
-    filters: [{ name: 'Imagens (PNG, JPG, WEBP)', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+    filters: [{ name: t('p.fundos.imagensPngJpgWebp'), extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
   }
   const escolha = janela
     ? await dialog.showOpenDialog(janela, opcoes)
@@ -112,7 +113,8 @@ export async function escolherImagem(janela: BrowserWindow | null): Promise<stri
 
 // Imagem arrastada para o banner: o caminho vem da tela (webUtils), então tudo é conferido aqui.
 export async function guardarImagemArrastada(caminho: unknown): Promise<string> {
-  if (typeof caminho !== 'string' || !caminho) throw new ErroApp('Solte um arquivo de imagem.')
+  if (typeof caminho !== 'string' || !caminho)
+    throw new ErroApp(t('p.fundos.solteUmArquivoDeImagem'))
   return guardarImagem(caminho)
 }
 
@@ -133,7 +135,7 @@ export async function listarImagens(usos: Map<string, string[]>): Promise<Imagem
 }
 
 export async function apagarArquivoDeImagem(nome: unknown): Promise<string> {
-  if (!nomeValido(nome)) throw new ErroApp('Essa imagem não existe mais. Atualize a lista.')
+  if (!nomeValido(nome)) throw new ErroApp(t('p.fundos.essaImagemNaoExisteMais'))
   await rm(join(pastaFundos(), nome), { force: true })
   return nome
 }

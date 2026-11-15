@@ -3,6 +3,7 @@ import { ErroApp } from '../erros'
 import { detalhesVersao, versoesRelease } from '../mojang'
 import { baixar } from '../rede'
 import type { TipoServidor } from '.'
+import { t } from '../../shared/i18n'
 
 export const vanilla: TipoServidor = {
   listarVersoes: versoesRelease,
@@ -15,7 +16,7 @@ export const vanilla: TipoServidor = {
     const destino = join(pasta, 'server.jar')
     const servidor = (await detalhesVersao(versao)).downloads.server
     if (!servidor) {
-      throw new ErroApp(`A versão ${versao} não tem servidor oficial. Escolha outra versão.`)
+      throw new ErroApp(t('tipos.vanilla.aVersaoNaoTemServidor', { versao }))
     }
     await baixar(
       servidor.url,

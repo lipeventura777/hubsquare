@@ -4,6 +4,7 @@ import { rotuloPequeno } from '../componentes/estilos'
 import { CabecaJogador } from '../componentes/paineis'
 import { Campo, Dialogo, Menu } from '../componentes/ui'
 import { comandos, enviar, useJogadores } from './comandos'
+import { t } from '../../../shared/i18n'
 
 // Lista de jogadores online (seção 6.5): quadrado com a inicial (nunca skins), nome e menu ⋯.
 export function ListaJogadores({
@@ -32,10 +33,10 @@ export function ListaJogadores({
   return (
     <div className="flex min-h-0 flex-col border border-linha bg-panel">
       <div className={`${rotuloPequeno} border-b border-linha px-3 py-2`}>
-        Jogadores ({jogadores.length})
+        {t('listaJogadores.jogadores', { length: jogadores.length })}
       </div>
       {jogadores.length === 0 ? (
-        <p className="p-3 text-[13px] text-muted">Ninguém online agora.</p>
+        <p className="p-3 text-[13px] text-muted">{t('listaJogadores.ninguemOnlineAgora')}</p>
       ) : (
         <ul className="min-h-0 flex-1 overflow-auto">
           {jogadores.map((nome, i) => (
@@ -49,16 +50,22 @@ export function ListaJogadores({
                 {nome}
               </span>
               <Menu
-                rotulo={`Ações para ${nome}`}
+                rotulo={t('listaJogadores.acoesPara', { nome })}
                 classeBotao="flex h-8 w-8 items-center justify-center font-bold hover:bg-tile-active"
                 itens={[
-                  { rotulo: 'Dar OP', aoClicar: () => executar(comandos.darOp(nome)) },
-                  { rotulo: 'Tirar OP', aoClicar: () => executar(comandos.tirarOp(nome)) },
+                  {
+                    rotulo: t('listaJogadores.darOp'),
+                    aoClicar: () => executar(comandos.darOp(nome))
+                  },
+                  {
+                    rotulo: t('listaJogadores.tirarOp'),
+                    aoClicar: () => executar(comandos.tirarOp(nome))
+                  },
                   ...MODOS.map((m) => ({
-                    rotulo: `Modo: ${NOMES_MODOS[m]}`,
+                    rotulo: t('listaJogadores.modo', { v: NOMES_MODOS[m] }),
                     aoClicar: () => executar(comandos.mudarModo(nome, m))
                   })),
-                  { rotulo: 'Expulsar…', aoClicar: () => setExpulsando(nome) }
+                  { rotulo: t('listaJogadores.expulsar'), aoClicar: () => setExpulsando(nome) }
                 ]}
               >
                 ⋯
@@ -70,12 +77,12 @@ export function ListaJogadores({
 
       <Dialogo
         aberto={expulsando !== null}
-        titulo={`Expulsar ${expulsando ?? ''}?`}
+        titulo={t('listaJogadores.expulsar2', { v: expulsando ?? '' })}
         aoCancelar={() => setExpulsando(null)}
-        acao={{ rotulo: 'Expulsar', variante: 'perigo', aoClicar: expulsar }}
+        acao={{ rotulo: t('listaJogadores.expulsar3'), variante: 'perigo', aoClicar: expulsar }}
       >
         <label className="flex flex-col gap-1 text-[13px]">
-          Motivo (opcional, aparece para o jogador)
+          {t('listaJogadores.motivoOpcionalApareceParaO')}
           <Campo value={motivo} maxLength={200} onChange={(e) => setMotivo(e.target.value)} />
         </label>
       </Dialogo>

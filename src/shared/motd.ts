@@ -1,32 +1,33 @@
+import { t } from './i18n'
 // Códigos de formatação do MOTD (§ + caractere). Usado pelo editor, pela prévia e pelo banner.
 // Testado em tests/motd.test.ts.
 
 // Cores dos códigos §0 a §f: são o conteúdo do MOTD (o que o jogador vê), não o visual do app.
 export const CORES_MOTD: { codigo: string; nome: string; cor: string }[] = [
-  { codigo: '0', nome: 'Preto', cor: '#000000' },
+  { codigo: '0', nome: t('s.motd.preto'), cor: '#000000' },
   { codigo: '1', nome: 'Azul-escuro', cor: '#0000aa' },
   { codigo: '2', nome: 'Verde-escuro', cor: '#00aa00' },
   { codigo: '3', nome: 'Ciano-escuro', cor: '#00aaaa' },
   { codigo: '4', nome: 'Vermelho-escuro', cor: '#aa0000' },
-  { codigo: '5', nome: 'Roxo', cor: '#aa00aa' },
-  { codigo: '6', nome: 'Dourado', cor: '#ffaa00' },
-  { codigo: '7', nome: 'Cinza', cor: '#aaaaaa' },
+  { codigo: '5', nome: t('s.motd.roxo'), cor: '#aa00aa' },
+  { codigo: '6', nome: t('s.motd.dourado'), cor: '#ffaa00' },
+  { codigo: '7', nome: t('s.motd.cinza'), cor: '#aaaaaa' },
   { codigo: '8', nome: 'Cinza-escuro', cor: '#555555' },
-  { codigo: '9', nome: 'Azul', cor: '#5555ff' },
-  { codigo: 'a', nome: 'Verde', cor: '#55ff55' },
-  { codigo: 'b', nome: 'Ciano', cor: '#55ffff' },
-  { codigo: 'c', nome: 'Vermelho', cor: '#ff5555' },
-  { codigo: 'd', nome: 'Rosa', cor: '#ff55ff' },
-  { codigo: 'e', nome: 'Amarelo', cor: '#ffff55' },
-  { codigo: 'f', nome: 'Branco', cor: '#ffffff' }
+  { codigo: '9', nome: t('s.motd.azul'), cor: '#5555ff' },
+  { codigo: 'a', nome: t('s.motd.verde'), cor: '#55ff55' },
+  { codigo: 'b', nome: t('s.motd.ciano'), cor: '#55ffff' },
+  { codigo: 'c', nome: t('s.motd.vermelho'), cor: '#ff5555' },
+  { codigo: 'd', nome: t('s.motd.rosa'), cor: '#ff55ff' },
+  { codigo: 'e', nome: t('s.motd.amarelo'), cor: '#ffff55' },
+  { codigo: 'f', nome: t('s.motd.branco'), cor: '#ffffff' }
 ]
 
 export const ESTILOS_MOTD = [
-  { codigo: 'l', nome: 'Negrito' },
-  { codigo: 'o', nome: 'Itálico' },
-  { codigo: 'n', nome: 'Sublinhado' },
-  { codigo: 'm', nome: 'Riscado' },
-  { codigo: 'r', nome: 'Limpar formatação' }
+  { codigo: 'l', nome: t('s.motd.negrito') },
+  { codigo: 'o', nome: t('s.motd.italico') },
+  { codigo: 'n', nome: t('s.motd.sublinhado') },
+  { codigo: 'm', nome: t('s.motd.riscado') },
+  { codigo: 'r', nome: t('s.motd.limparFormatacao') }
 ] as const
 
 // Cabe na lista de servidores do jogo sem cortar (aproximado; a fonte do jogo varia de largura).

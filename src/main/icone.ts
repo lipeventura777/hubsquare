@@ -2,6 +2,7 @@ import { readFile, rm, writeFile } from 'fs/promises'
 import { join } from 'path'
 import type { InfoServidor } from '../shared/tipos'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // Ícone do servidor (Opções › Gerais): o server-icon.png de 64×64 que o jogo mostra na lista.
 // O recorte é feito na tela; aqui só confere e grava.
@@ -32,8 +33,7 @@ export async function salvarIcone(info: InfoServidor, dataUrl: unknown): Promise
       ? dataUrl.match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/)?.[1]
       : undefined
   const dados = base64 ? Buffer.from(base64, 'base64') : null
-  if (!dados || !pngDe64(dados))
-    throw new ErroApp('A imagem não ficou com 64×64. Escolha a imagem de novo.')
+  if (!dados || !pngDe64(dados)) throw new ErroApp(t('p.icone.aImagemNaoFicouCom'))
   await writeFile(join(info.pasta, ARQUIVO), dados)
   return `data:image/png;base64,${dados.toString('base64')}`
 }

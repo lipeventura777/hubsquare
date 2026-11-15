@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AvisoJogador } from '../../../shared/tipos'
 import { animacoesReduzidas } from './movimento'
+import { t } from '../../../shared/i18n'
 
 const MAXIMO = 3
 const DURACAO = 5000
@@ -79,12 +80,13 @@ export function AvisoDeJogador({
     >
       <div className="flex items-center gap-3 py-1 pr-1 pl-3">
         <span>
-          <b>{aviso.nome}</b> {aviso.tipo === 'entrou' ? 'entrou no servidor' : 'saiu do servidor'}
+          <b>{aviso.nome}</b>{' '}
+          {aviso.tipo === 'entrou' ? t('avisos.entrouNoServidor') : t('avisos.saiuDoServidor')}
         </span>
         <button
           type="button"
           onClick={aoFechar}
-          aria-label="Fechar aviso"
+          aria-label={t('avisos.fecharAviso')}
           className="flex h-8 w-8 items-center justify-center transition-colors duration-(--dur-fast) hover:bg-accent-hover"
         >
           ✕

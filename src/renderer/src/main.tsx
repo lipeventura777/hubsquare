@@ -1,3 +1,4 @@
+import './idioma' // Fase I1: primeiro de tudo, para os textos já saírem no idioma certo
 import './assets/main.css'
 
 import { StrictMode } from 'react'

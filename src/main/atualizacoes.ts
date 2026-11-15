@@ -32,6 +32,7 @@ import { maisNovaEstavel } from './tipos/fabric'
 import { versoesForge } from './tipos/forge'
 import { versoesNeoForge } from './tipos/neoforge'
 import { ultimaBuildPaper } from './tipos/paper'
+import { t } from '../shared/i18n'
 
 // Avisos de atualização (Fase 21): ao abrir o app e a cada 6 h, só VERIFICA. Nada é atualizado
 // sem o clique do usuário.
@@ -162,16 +163,13 @@ export async function atualizarBuild(
   aoProgredir: (p: Progresso) => void
 ): Promise<void> {
   const build = await buildNova(info)
-  if (!build) throw new ErroApp('O software já está na build mais nova.')
+  if (!build) throw new ErroApp(t('p.atualizacoes.oSoftwareJaEstaNa'))
   await comServidorDesligado(async () => {
-    aoProgredir({ etapa: 'Fazendo backup do mundo', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.atualizacoes.fazendoBackupDoMundo'), recebido: 0, total: 0 })
     try {
       await compactarMundo(info, undefined, 'atualizar')
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui fazer o backup antes de atualizar, então nada foi mudado. Tente de novo.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.atualizacoes.naoConseguiFazerOBackup'), detalhar(e))
     }
     // O Paper sempre baixa a build mais nova; os outros recebem a versão do loader escolhida.
     const { java, versaoLoader } = await instalarJarEJava(
@@ -184,7 +182,12 @@ export async function atualizarBuild(
     await atualizarInfo(info, { java, versaoLoader })
     await registrarAcao(
       info,
-      `${NOMES_TIPOS[info.tipo]} atualizado${build.atual ? ` de ${build.atual}` : ''} para ${versaoLoader ?? build.nova} (Minecraft ${info.versao}).`
+      t('p.atualizacoes.atualizadoParaMinecraft', {
+        v: NOMES_TIPOS[info.tipo],
+        v2: build.atual ? t('p.atualizacoes.de', { atual: build.atual }) : '',
+        v3: versaoLoader ?? build.nova,
+        versao: info.versao
+      })
     )
   })
   void verificar().catch(() => {})

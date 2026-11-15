@@ -3,6 +3,7 @@ import type { ErroTela, OpcoesRelatorio, RelatorioGerado } from '../../../shared
 import { MensagemErro } from './MensagemErro'
 import { Esqueleto } from './movimento'
 import { Aviso, Botao, CaixaSelecao, Dialogo, Selecao } from './ui'
+import { t } from '../../../shared/i18n'
 
 // Relatório de erro (Fase M8): um .zip sem segredos na Área de Trabalho, para quem for ajudar
 // entender o problema. Antes de salvar, mostra o que vai e deixa tirar itens. Nada é enviado.
@@ -14,7 +15,7 @@ export function BotaoRelatorio({ pequeno = false }: { pequeno?: boolean }): Reac
   return (
     <>
       <Botao tamanho={pequeno ? 'pequeno' : undefined} onClick={() => setAberto(true)}>
-        Gerar relatório de erro
+        {t('relatorioErro.gerarRelatorioDeErro')}
       </Botao>
       {aberto && <DialogoRelatorio aoFechar={() => setAberto(false)} />}
     </>
@@ -69,10 +70,14 @@ function DialogoRelatorio({ aoFechar }: { aoFechar: () => void }): React.JSX.Ele
   return (
     <Dialogo
       aberto
-      titulo="Relatório de erro"
+      titulo={t('relatorioErro.relatorioDeErro')}
       aoCancelar={aoFechar}
       acao={{
-        rotulo: pronto ? 'Fechar' : gerando ? 'Gerando...' : 'Salvar na Área de Trabalho',
+        rotulo: pronto
+          ? t('relatorioErro.fechar')
+          : gerando
+            ? t('relatorioErro.gerando')
+            : t('relatorioErro.salvarNaAreaDeTrabalho'),
         ocupado: gerando,
         desabilitado: !opcoes,
         aoClicar: gerar
@@ -83,31 +88,27 @@ function DialogoRelatorio({ aoFechar }: { aoFechar: () => void }): React.JSX.Ele
           <>
             <Aviso tipo="sucesso">
               <span>
-                Salvo na Área de Trabalho: <b>{pronto.arquivo}</b>. Mande esse arquivo para quem vai
-                ajudar.
+                {t('relatorioErro.salvoNaAreaDeTrabalho')} <b>{pronto.arquivo}</b>
+                {t('relatorioErro.mandeEsseArquivoParaQuem')}
               </span>
             </Aviso>
             <div>
               <Botao tamanho="pequeno" onClick={abrirPasta}>
-                Abrir pasta
+                {t('relatorioErro.abrirPasta')}
               </Botao>
             </div>
           </>
         ) : (
           <>
-            <p>
-              Junta num .zip o que ajuda a entender o problema. Senhas, tokens, PIN, chaves e o seu
-              nome de usuário saem antes de gravar. Nada é enviado: o arquivo fica só na sua Área de
-              Trabalho.
-            </p>
+            <p>{t('relatorioErro.juntaNumZipOQue')}</p>
             {!opcoes && !erro && <Esqueleto linhas={4} />}
             {opcoes && (
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="flex flex-col gap-1">
-                    Servidor
+                    {t('relatorioErro.servidor')}
                     <Selecao value={servidor} onChange={(e) => setServidor(e.target.value)}>
-                      <option value={NENHUM}>Nenhum</option>
+                      <option value={NENHUM}>{t('relatorioErro.nenhum')}</option>
                       {opcoes.servidores.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.nome}
@@ -116,9 +117,9 @@ function DialogoRelatorio({ aoFechar }: { aoFechar: () => void }): React.JSX.Ele
                     </Selecao>
                   </label>
                   <label className="flex flex-col gap-1">
-                    Instalação do jogo
+                    {t('relatorioErro.instalacaoDoJogo')}
                     <Selecao value={instalacao} onChange={(e) => setInstalacao(e.target.value)}>
-                      <option value={NENHUM}>Nenhuma</option>
+                      <option value={NENHUM}>{t('relatorioErro.nenhuma')}</option>
                       {opcoes.instalacoes.map((i) => (
                         <option key={i.id} value={i.id}>
                           {i.nome}
@@ -128,7 +129,7 @@ function DialogoRelatorio({ aoFechar }: { aoFechar: () => void }): React.JSX.Ele
                   </label>
                 </div>
                 <div>
-                  <p className="font-bold">Vai no relatório</p>
+                  <p className="font-bold">{t('relatorioErro.vaiNoRelatorio')}</p>
                   <ul className="mt-1 flex flex-col">
                     {opcoes.itens.map((i) => (
                       <li key={i.id}>
@@ -142,9 +143,7 @@ function DialogoRelatorio({ aoFechar }: { aoFechar: () => void }): React.JSX.Ele
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-1 text-xs text-muted">
-                    Sempre vai um LEIA-ME.txt com o resumo. Nunca vão mundos nem arquivos de mods.
-                  </p>
+                  <p className="mt-1 text-xs text-muted">{t('relatorioErro.sempreVaiUmLeiaMe')}</p>
                 </div>
               </>
             )}

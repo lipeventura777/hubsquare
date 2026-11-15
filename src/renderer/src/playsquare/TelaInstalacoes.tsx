@@ -27,31 +27,37 @@ import {
   Selecao,
   Slider
 } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Tela Instalações do PlaySquare (Fase P1, DESIGN.md seção 6.1.4): cards no padrão "notícias",
 // com Jogar, editar, duplicar, abrir pasta e apagar. Jogar abre o Minecraft Launcher oficial.
 
 const NOMES_LOADER: Record<LoaderCliente, string> = {
-  vanilla: 'Vanilla',
-  fabric: 'Fabric',
-  forge: 'Forge',
+  vanilla: t('telaInstalacoes.vanilla'),
+  fabric: t('telaInstalacoes.fabric'),
+  forge: t('telaInstalacoes.forge'),
   neoforge: 'NeoForge'
 }
 
 function quando(iso: string | null): string {
-  if (!iso) return 'Nunca jogada'
+  if (!iso) return t('telaInstalacoes.nuncaJogada')
   const dias = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
-  return dias <= 0 ? 'Jogada hoje' : dias === 1 ? 'Jogada ontem' : `Jogada há ${dias} dias`
+  return dias <= 0
+    ? t('telaInstalacoes.jogadaHoje')
+    : dias === 1
+      ? t('telaInstalacoes.jogadaOntem')
+      : t('telaInstalacoes.jogadaHaDias', { dias })
 }
 
 function origemTexto(i: Instalacao): string {
-  if (i.origem.tipo === 'servidor') return 'Do seu servidor (o app mantém os mods iguais)'
-  if (i.origem.tipo === 'modpack') return `Modpack ${i.origem.nomePack}`
+  if (i.origem.tipo === 'servidor') return t('telaInstalacoes.doSeuServidorOApp')
+  if (i.origem.tipo === 'modpack')
+    return t('telaInstalacoes.modpack', { nomePack: i.origem.nomePack })
   if (i.origem.tipo === 'convite') {
-    const fora = i.convite?.online === false ? ' (fora do ar agora)' : ''
-    return `Convite do servidor ${i.origem.servidor}${fora}`
+    const fora = i.convite?.online === false ? t('telaInstalacoes.foraDoArAgora') : ''
+    return t('telaInstalacoes.conviteDoServidor', { servidor: i.origem.servidor, fora })
   }
-  return 'Criada do zero'
+  return t('telaInstalacoes.criadaDoZero')
 }
 
 type Dialogos =
@@ -126,23 +132,22 @@ export function TelaInstalacoes(): React.JSX.Element {
     <div className="min-h-0 flex-1 overflow-auto">
       <div className="mx-auto flex max-w-[980px] flex-col p-10">
         <div className="flex items-start justify-between gap-3">
-          <TituloPagina>Instalações</TituloPagina>
+          <TituloPagina>{t('telaInstalacoes.instalacoes')}</TituloPagina>
           <div className="flex gap-2">
             <Botao disabled={!!algumOcupado} onClick={() => setDialogo({ tipo: 'convite' })}>
-              Entrar com convite
+              {t('telaInstalacoes.entrarComConvite')}
             </Botao>
             <Botao
               variante="primario"
               disabled={!!algumOcupado}
               onClick={() => setDialogo({ tipo: 'nova' })}
             >
-              + Nova instalação
+              {t('telaInstalacoes.novaInstalacao')}
             </Botao>
           </div>
         </div>
         <p className="mb-6 -mt-3 text-[13px] text-muted">
-          Cada instalação tem a própria pasta de jogo, com mundos, mods e configurações separados. O
-          jogo abre pelo Minecraft Launcher oficial, com a sua conta.
+          {t('telaInstalacoes.cadaInstalacaoTemAPropria')}
         </p>
 
         {avisoAtalho && (
@@ -170,7 +175,7 @@ export function TelaInstalacoes(): React.JSX.Element {
           algumOcupado && (
             <div className="mb-4">
               <BarraProgresso
-                rotulo={progresso?.etapa ?? 'Preparando...'}
+                rotulo={progresso?.etapa ?? t('telaInstalacoes.preparando')}
                 valor={progresso?.recebido ?? 0}
                 maximo={progresso?.total ?? 0}
               />
@@ -183,11 +188,11 @@ export function TelaInstalacoes(): React.JSX.Element {
         ) : lista.length === 0 ? (
           <EstadoVazio
             icone={<IconeInstalacoes />}
-            titulo="Nenhuma instalação ainda"
-            texto="Crie uma do zero ou a partir de um modpack. Cada servidor do ServSquare também ganha a sua."
+            titulo={t('telaInstalacoes.nenhumaInstalacaoAinda')}
+            texto={t('telaInstalacoes.crieUmaDoZeroOu')}
           >
             <Botao variante="primario" onClick={() => setDialogo({ tipo: 'nova' })}>
-              + Nova instalação
+              {t('telaInstalacoes.novaInstalacao')}
             </Botao>
           </EstadoVazio>
         ) : (
@@ -215,10 +220,10 @@ export function TelaInstalacoes(): React.JSX.Element {
                       onClick={() => void jogar(i)}
                     >
                       {algumOcupado === i.id
-                        ? 'Preparando...'
+                        ? t('telaInstalacoes.preparando')
                         : desatualizada(i)
-                          ? 'ATUALIZAR E JOGAR'
-                          : 'JOGAR'}
+                          ? t('telaInstalacoes.atualizarEJogar')
+                          : t('telaInstalacoes.jogar')}
                     </Botao>
                   ) : precisaInstalar(i) || algumOcupado === i.id ? (
                     <Botao
@@ -227,7 +232,9 @@ export function TelaInstalacoes(): React.JSX.Element {
                       disabled={!!algumOcupado}
                       onClick={() => void fluxo.jogar(i, undefined, 'instalar')}
                     >
-                      {algumOcupado === i.id ? 'Instalando...' : rotuloInstalar(i, false)}
+                      {algumOcupado === i.id
+                        ? t('telaInstalacoes.instalando')
+                        : rotuloInstalar(i, false)}
                     </Botao>
                   ) : (
                     <Botao
@@ -238,44 +245,47 @@ export function TelaInstalacoes(): React.JSX.Element {
                           .then((r) => !r.ok && setErro(r.erro))
                       }
                     >
-                      Abrir pasta
+                      {t('telaInstalacoes.abrirPasta')}
                     </Botao>
                   )}
                   {!abrirLigado && <JogarEmBreve />}
                   <Menu
-                    rotulo={`Mais ações para ${i.nome}`}
+                    rotulo={t('telaInstalacoes.maisAcoesPara', { nome: i.nome })}
                     desabilitado={!!algumOcupado}
                     classeBotao="flex h-10 w-8 items-center justify-center font-bold hover:bg-tile-active"
                     itens={[
-                      { rotulo: 'Editar', aoClicar: () => setDialogo({ tipo: 'editar', i }) },
                       {
-                        rotulo: 'Trocar imagem',
+                        rotulo: t('telaInstalacoes.editar'),
+                        aoClicar: () => setDialogo({ tipo: 'editar', i })
+                      },
+                      {
+                        rotulo: t('telaInstalacoes.trocarImagem'),
                         aoClicar: () =>
                           void executar(i.id, () => window.api.escolherImagemInstalacao(i.id))
                       },
                       ...(i.instalada && !abrirLigado
                         ? [
                             {
-                              rotulo: 'Exportar para Modrinth App / Prism Launcher',
+                              rotulo: t('telaInstalacoes.exportarParaModrinthAppPrism'),
                               aoClicar: async () => {
                                 const r = await window.api.exportarMrpack(i.id)
                                 if (!r.ok) return setErro(r.erro)
                                 setErro(null)
                                 if (r.valor)
                                   setAvisoAtalho(
-                                    `Salvo em Downloads como ${r.valor}. No Modrinth App ou no Prism Launcher, importe esse arquivo.`
+                                    t('telaInstalacoes.salvoEmDownloadsComoNo', { valor: r.valor })
                                   )
                               }
                             }
                           ]
                         : []),
                       {
-                        rotulo: 'Duplicar',
+                        rotulo: t('telaInstalacoes.duplicar'),
                         aoClicar: () =>
                           void executar(i.id, () => window.api.duplicarInstalacao(i.id))
                       },
                       {
-                        rotulo: 'Abrir pasta',
+                        rotulo: t('telaInstalacoes.abrirPasta'),
                         aoClicar: () =>
                           void window.api
                             .abrirPastaInstalacao(i.id)
@@ -283,17 +293,23 @@ export function TelaInstalacoes(): React.JSX.Element {
                       },
                       {
                         // Só quando o jogador pede (nunca automático).
-                        rotulo: 'Criar atalho na área de trabalho',
+                        rotulo: t('telaInstalacoes.criarAtalhoNaAreaDe'),
                         aoClicar: async () => {
                           const r = await window.api.criarAtalhoInstalacao(i.id)
                           if (!r.ok) return setErro(r.erro)
                           setErro(null)
                           setAvisoAtalho(
-                            `Atalho "${r.valor.replace(/\.lnk$/, '')}" criado na área de trabalho. Ele abre o HubSquare no Jogar de ${i.nome}.`
+                            t('telaInstalacoes.atalhoCriadoNaAreaDe', {
+                              replace: r.valor.replace(/\.lnk$/, ''),
+                              nome: i.nome
+                            })
                           )
                         }
                       },
-                      { rotulo: 'Apagar…', aoClicar: () => setDialogo({ tipo: 'apagar', i }) }
+                      {
+                        rotulo: t('telaInstalacoes.apagar'),
+                        aoClicar: () => setDialogo({ tipo: 'apagar', i })
+                      }
                     ]}
                   >
                     ⋯
@@ -327,10 +343,14 @@ export function TelaInstalacoes(): React.JSX.Element {
       )}
       <Dialogo
         aberto={dialogo?.tipo === 'apagar'}
-        titulo={dialogo?.tipo === 'apagar' ? `Apagar ${dialogo.i.nome}?` : 'Apagar'}
+        titulo={
+          dialogo?.tipo === 'apagar'
+            ? t('telaInstalacoes.apagar2', { nome: dialogo.i.nome })
+            : t('telaInstalacoes.apagar3')
+        }
         aoCancelar={() => setDialogo(null)}
         acao={{
-          rotulo: 'Apagar',
+          rotulo: t('telaInstalacoes.apagar3'),
           variante: 'perigo',
           aoClicar: () => {
             if (dialogo?.tipo !== 'apagar') return
@@ -340,10 +360,7 @@ export function TelaInstalacoes(): React.JSX.Element {
           }
         }}
       >
-        <p className="text-[13px]">
-          A instalação sai do app e do Minecraft Launcher. A pasta dela (com mundos e prints) vai
-          para a Lixeira do Windows, de onde dá para recuperar.
-        </p>
+        <p className="text-[13px]">{t('telaInstalacoes.aInstalacaoSaiDoApp')}</p>
       </Dialogo>
       {fluxo.dialogo}
       {dialogo?.tipo === 'convite' && (
@@ -402,9 +419,9 @@ function CamposVersao({
   return (
     <div className="grid grid-cols-2 gap-3">
       <label className="flex flex-col gap-1 text-[13px]">
-        Loader
+        {t('telaInstalacoes.loader')}
         <Selecao
-          aria-label="Loader"
+          aria-label={t('telaInstalacoes.loader')}
           value={loader}
           onChange={(e) => aoMudar(e.target.value as LoaderCliente, versao)}
         >
@@ -416,12 +433,12 @@ function CamposVersao({
         </Selecao>
       </label>
       <label className="flex flex-col gap-1 text-[13px]">
-        Versão do Minecraft
+        {t('telaInstalacoes.versaoDoMinecraft')}
         {versoes === null ? (
-          <span className="text-muted">Carregando...</span>
+          <span className="text-muted">{t('telaInstalacoes.carregando')}</span>
         ) : (
           <Selecao
-            aria-label="Versão do Minecraft"
+            aria-label={t('telaInstalacoes.versaoDoMinecraft')}
             value={versao}
             onChange={(e) => aoMudar(loader, e.target.value)}
           >
@@ -475,10 +492,10 @@ function DialogoNova({
   return (
     <Dialogo
       aberto
-      titulo="Nova instalação"
+      titulo={t('telaInstalacoes.novaInstalacao2')}
       aoCancelar={aoFechar}
       acao={{
-        rotulo: 'Criar',
+        rotulo: t('telaInstalacoes.criar'),
         variante: 'primario',
         desabilitado: !podeCriar,
         aoClicar: () =>
@@ -491,11 +508,15 @@ function DialogoNova({
           )
       }}
     >
-      <div role="radiogroup" aria-label="Como criar" className="mb-3 flex gap-2">
+      <div
+        role="radiogroup"
+        aria-label={t('telaInstalacoes.comoCriar')}
+        className="mb-3 flex gap-2"
+      >
         {(
           [
-            ['zero', 'Do zero'],
-            ['modpack', 'De um modpack']
+            ['zero', t('telaInstalacoes.doZero')],
+            ['modpack', t('telaInstalacoes.deUmModpack')]
           ] as const
         ).map(([m, rotulo]) => (
           <Botao
@@ -513,7 +534,7 @@ function DialogoNova({
       {modo === 'zero' ? (
         <div className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-[13px]">
-            Nome
+            {t('telaInstalacoes.nome')}
             <Campo
               value={nome}
               maxLength={48}
@@ -524,7 +545,7 @@ function DialogoNova({
           <CamposVersao loader={loader} versao={versao} aoMudar={mudarVersao} />
           {limites && (
             <Slider
-              rotulo="Memória (RAM)"
+              rotulo={t('telaInstalacoes.memoriaRam')}
               valor={ramAtual}
               min={limites.min}
               max={limites.max}
@@ -536,7 +557,7 @@ function DialogoNova({
       ) : (
         <div className="flex flex-col gap-3">
           <Campo
-            placeholder="Procurar modpack no Modrinth"
+            placeholder={t('telaInstalacoes.procurarModpackNoModrinth')}
             value={termo}
             onChange={(e) => setTermo(e.target.value)}
             autoFocus
@@ -544,12 +565,14 @@ function DialogoNova({
           <ul
             className="flex max-h-[280px] flex-col overflow-y-auto"
             role="listbox"
-            aria-label="Modpacks"
+            aria-label={t('telaInstalacoes.modpacks')}
           >
             {packs === null ? (
               <Esqueleto linhas={3} />
             ) : packs.length === 0 ? (
-              <li className="text-[13px] text-muted">Nenhum modpack encontrado.</li>
+              <li className="text-[13px] text-muted">
+                {t('telaInstalacoes.nenhumModpackEncontrado')}
+              </li>
             ) : (
               packs.map((p) => (
                 <li key={p.id} className="list-none">
@@ -580,10 +603,7 @@ function DialogoNova({
               ))
             )}
           </ul>
-          <p className="text-xs text-muted">
-            O app baixa o pack do Modrinth (com o hash conferido) e põe na pasta da instalação só o
-            que roda no jogador.
-          </p>
+          <p className="text-xs text-muted">{t('telaInstalacoes.oAppBaixaOPack')}</p>
         </div>
       )}
     </Dialogo>
@@ -612,10 +632,10 @@ function DialogoEditar({
   return (
     <Dialogo
       aberto
-      titulo={`Editar ${i.nome}`}
+      titulo={t('telaInstalacoes.editar2', { nome: i.nome })}
       aoCancelar={aoFechar}
       acao={{
-        rotulo: 'Salvar',
+        rotulo: t('telaInstalacoes.salvar'),
         variante: 'primario',
         desabilitado: !nome.trim(),
         aoClicar: () =>
@@ -624,7 +644,7 @@ function DialogoEditar({
     >
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 text-[13px]">
-          Nome
+          {t('telaInstalacoes.nome')}
           <Campo value={nome} maxLength={48} onChange={(e) => setNome(e.target.value)} />
         </label>
         {livre ? (
@@ -632,13 +652,13 @@ function DialogoEditar({
         ) : (
           <p className="text-xs text-muted">
             {i.origem.tipo === 'servidor'
-              ? 'A versão e o loader seguem o servidor. Para mudar, use Software no ServSquare.'
-              : 'A versão e o loader vêm do modpack.'}
+              ? t('telaInstalacoes.aVersaoEOLoader')
+              : t('telaInstalacoes.aVersaoEOLoader2')}
           </p>
         )}
         {limites && (
           <Slider
-            rotulo="Memória (RAM)"
+            rotulo={t('telaInstalacoes.memoriaRam')}
             valor={ram}
             min={limites.min}
             max={limites.max}
@@ -646,9 +666,7 @@ function DialogoEditar({
             formatar={(v) => `${v} GB`}
           />
         )}
-        <p className="text-xs text-muted">
-          Mundos, prints e configurações da pasta continuam lá, mesmo trocando a versão.
-        </p>
+        <p className="text-xs text-muted">{t('telaInstalacoes.mundosPrintsEConfiguracoesDa')}</p>
       </div>
     </Dialogo>
   )
@@ -677,59 +695,53 @@ function DialogoConvite({
   return (
     <Dialogo
       aberto
-      titulo="Entrar com convite"
+      titulo={t('telaInstalacoes.entrarComConvite')}
       aoCancelar={aoFechar}
       acao={{
-        rotulo: 'Entrar',
+        rotulo: t('telaInstalacoes.entrar'),
         variante: 'primario',
         desabilitado: !texto.trim() || !nickOk,
         aoClicar: () => aoEntrar(() => window.api.entrarComConvite(texto.trim(), pedido))
       }}
     >
       <div className="flex flex-col gap-3 text-[13px]">
-        <p>
-          Cole o código ou o link que o dono do servidor mandou. O app cria a instalação do servidor
-          com os mods certos.
-        </p>
+        <p>{t('telaInstalacoes.coleOCodigoOuO')}</p>
         <textarea
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           rows={3}
           autoFocus
-          aria-label="Código ou link do convite"
+          aria-label={t('telaInstalacoes.codigoOuLinkDoConvite')}
           placeholder="26.12.34.56:8788#K7QF-M2XA-9TBC-H4PZ"
           className="border border-linha bg-panel-2 p-2 font-mono text-[13px]"
         />
         <label className="flex flex-col gap-1">
-          Seu nick no Minecraft
+          {t('telaInstalacoes.seuNickNoMinecraft')}
           <Campo
             value={nick}
             maxLength={16}
-            aria-label="Seu nick no Minecraft"
-            placeholder="Steve"
+            aria-label={t('telaInstalacoes.seuNickNoMinecraft')}
+            placeholder={t('telaInstalacoes.steve')}
             onChange={(e) => setNick(e.target.value)}
           />
         </label>
         <label className="flex flex-col gap-1">
-          Recado para o dono (opcional)
+          {t('telaInstalacoes.recadoParaODonoOpcional')}
           <Campo
             value={recado}
             maxLength={100}
-            aria-label="Recado para o dono"
-            placeholder="Oi, sou o amigo do Discord!"
+            aria-label={t('telaInstalacoes.recadoParaODono')}
+            placeholder={t('telaInstalacoes.oiSouOAmigoDo')}
             onChange={(e) => setRecado(e.target.value)}
           />
         </label>
-        <p className="text-xs text-muted">
-          O app confere o nick na Mojang e pede ao dono para você entrar na lista de quem pode jogar
-          (whitelist). Você vê a resposta na tela Jogar.
-        </p>
+        <p className="text-xs text-muted">{t('telaInstalacoes.oAppConfereONick')}</p>
         <Botao
           className="self-start"
           disabled={!nickOk}
           onClick={() => aoEntrar(() => window.api.entrarComArquivoDeConvite(pedido))}
         >
-          Abrir arquivo de convite (.hubsquare)
+          {t('telaInstalacoes.abrirArquivoDeConviteHubsquare')}
         </Botao>
       </div>
     </Dialogo>

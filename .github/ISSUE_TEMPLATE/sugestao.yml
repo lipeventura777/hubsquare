@@ -1,0 +1,20 @@
+name: Feature request / Sugestão
+description: An idea to make HubSquare better. / Uma ideia para melhorar o HubSquare.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: What problem does it solve? / Que problema resolve?
+    validations:
+      required: true
+  - type: textarea
+    id: ideia
+    attributes:
+      label: Your idea / Sua ideia
+    validations:
+      required: true
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternatives you considered / Outras saídas que você pensou

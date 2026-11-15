@@ -1,4 +1,5 @@
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'crypto'
+import { t } from '../shared/i18n'
 
 // Regras do painel pelo celular sem rede nem Electron. Testadas em tests/celular.test.ts.
 
@@ -120,7 +121,7 @@ export function nomeDoAparelho(ua: string | undefined): string {
           ? 'Windows'
           : /Mac OS/.test(u)
             ? 'Mac'
-            : 'Aparelho'
+            : t('p.celularRegras.aparelho')
   const navegador = /EdgA?\//.test(u)
     ? 'Edge'
     : /SamsungBrowser/.test(u)

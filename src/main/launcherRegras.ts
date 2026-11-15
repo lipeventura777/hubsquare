@@ -1,4 +1,5 @@
 import { win32 } from 'path'
+import { t } from '../shared/i18n'
 
 // Regras sem rede nem Electron do PlaySquare (Fase P1): o perfil no launcher_profiles.json do
 // launcher oficial e a lista de servidores (servers.dat) da pasta da instalação. Testadas em
@@ -97,11 +98,11 @@ export function aplicarPerfil(texto: string, chave: string, perfil: PerfilLaunch
   try {
     dados = JSON.parse(texto)
   } catch {
-    throw new Error('O launcher_profiles.json não é um JSON válido.')
+    throw new Error(t('p.launcherRegras.jsonInvalido'))
   }
   const perfis = (dados as { profiles?: unknown } | null)?.profiles
   if (!dados || typeof dados !== 'object' || !perfis || typeof perfis !== 'object') {
-    throw new Error('O launcher_profiles.json não tem a lista "profiles" que o app conhece.')
+    throw new Error(t('p.launcherRegras.semProfiles'))
   }
   const lista = perfis as Record<string, Record<string, unknown>>
   const anterior = lista[chave] ?? {}
@@ -260,7 +261,9 @@ export function pastaDoNome(nome: string): string {
     .trim()
     .replace(/[. ]+$/, '')
     .slice(0, 48)
-  return /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(limpo) || !limpo ? 'Instalação' : limpo
+  return /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(limpo) || !limpo
+    ? t('p.launcherRegras.instalacao')
+    : limpo
 }
 
 // ---------- Qual launcher abrir (Fase M1) ----------

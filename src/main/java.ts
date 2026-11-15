@@ -5,6 +5,7 @@ import { mkdir, readdir, rename, rm } from 'fs/promises'
 import { join } from 'path'
 import { ErroApp } from './erros'
 import { baixar, buscarJson, type AoProgredir } from './rede'
+import { t } from '../shared/i18n'
 
 interface PacoteAdoptium {
   binary: { package: { link: string; checksum: string } }
@@ -23,9 +24,7 @@ export async function garantirJava(versao: number, aoProgredir: AoProgredir): Pr
   )
   const pacote = pacotes[0]?.binary.package
   if (!pacote) {
-    throw new ErroApp(
-      `Não encontrei o Java ${versao} para Windows. Escolha outra versão do Minecraft.`
-    )
+    throw new ErroApp(t('p.java.naoEncontreiOJavaPara', { versao }))
   }
 
   await mkdir(base, { recursive: true })
@@ -39,7 +38,7 @@ export async function garantirJava(versao: number, aoProgredir: AoProgredir): Pr
     aoProgredir
   )
 
-  aoProgredir({ etapa: `Instalando o Java ${versao}`, recebido: 0, total: 0 })
+  aoProgredir({ etapa: t('p.java.instalandoOJava', { versao }), recebido: 0, total: 0 })
   await rm(extraindo, { recursive: true, force: true })
   await mkdir(extraindo)
   await extrair(zip, extraindo)
@@ -49,8 +48,7 @@ export async function garantirJava(versao: number, aoProgredir: AoProgredir): Pr
   await rm(extraindo, { recursive: true, force: true })
   await rm(zip, { force: true })
 
-  if (!existsSync(exe))
-    throw new ErroApp(`O Java ${versao} foi baixado, mas veio incompleto. Tente de novo.`)
+  if (!existsSync(exe)) throw new ErroApp(t('p.java.oJavaFoiBaixadoMas', { versao }))
   return exe
 }
 
@@ -62,15 +60,15 @@ function extrair(zip: string, destino: string): Promise<void> {
     let saida = ''
     processo.stderr.on('data', (d) => (saida += d))
     processo.on('error', (e) =>
-      falhar(new ErroApp('Não consegui descompactar o Java. Tente de novo.', String(e)))
+      falhar(new ErroApp(t('p.java.naoConseguiDescompactarOJava'), String(e)))
     )
     processo.on('close', (codigo) =>
       codigo === 0
         ? resolver()
         : falhar(
             new ErroApp(
-              'Não consegui descompactar o Java. Tente de novo.',
-              `tar saiu com código ${codigo}\n${saida}`
+              t('p.java.naoConseguiDescompactarOJava'),
+              t('p.java.tarSaiuComCodigo', { codigo, saida })
             )
           )
     )

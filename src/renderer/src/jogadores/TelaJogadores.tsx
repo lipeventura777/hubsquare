@@ -7,6 +7,7 @@ import { BotoesBloco, CabecaJogador, CardPainel } from '../componentes/paineis'
 import { Campo, EstadoVazio } from '../componentes/ui'
 import { DetalhesJogador } from './DetalhesJogador'
 import { PedidosParaEntrar } from './PedidosParaEntrar'
+import { t, tNome } from '../../../shared/i18n'
 
 // Jogadores › Todos e Online (DESIGN.md, 6.14 e 6.15): atalhos para as listas, busca e a
 // grade de cards. Clicar num card abre os Detalhes do jogador.
@@ -60,7 +61,7 @@ export function TelaJogadores({
     <div className="min-h-0 flex-1 overflow-auto">
       <div className="mx-auto flex max-w-[1100px] flex-col gap-4 p-10">
         <PedidosParaEntrar />
-        <CardPainel titulo="Listas">
+        <CardPainel titulo={t('telaJogadores.listas')}>
           <BotoesBloco
             itens={[
               {
@@ -70,19 +71,19 @@ export function TelaJogadores({
                 aoClicar: () => aoAbrirAba('Whitelist')
               },
               {
-                rotulo: 'Operadores',
+                rotulo: tNome('Operadores'),
                 icone: <IconeServidor />,
                 variante: 'primario',
                 aoClicar: () => aoAbrirAba('Operadores')
               },
               {
-                rotulo: 'Jogadores banidos',
+                rotulo: t('telaJogadores.jogadoresBanidos'),
                 icone: <IconeJogadores />,
                 variante: 'perigo',
                 aoClicar: () => aoAbrirAba('Banidos')
               },
               {
-                rotulo: 'IPs banidos',
+                rotulo: tNome('IPs banidos'),
                 icone: <IconeMundos />,
                 variante: 'perigo',
                 aoClicar: () => aoAbrirAba('IPs banidos')
@@ -94,8 +95,8 @@ export function TelaJogadores({
         <Campo
           type="search"
           value={busca}
-          placeholder="Buscar por nome"
-          aria-label="Buscar jogador por nome"
+          placeholder={t('telaJogadores.buscarPorNome')}
+          aria-label={t('telaJogadores.buscarJogadorPorNome')}
           onChange={(e) => setBusca(e.target.value)}
         />
 
@@ -107,10 +108,10 @@ export function TelaJogadores({
             icone={<IconeJogadores />}
             titulo={
               termo
-                ? 'Ninguém com esse nome'
+                ? t('telaJogadores.ninguemComEsseNome')
                 : aba === 'Online'
-                  ? 'Ninguém online agora'
-                  : 'Ninguém entrou no servidor ainda'
+                  ? t('telaJogadores.ninguemOnlineAgora')
+                  : t('telaJogadores.ninguemEntrouNoServidorAinda')
             }
           />
         ) : (
@@ -131,7 +132,9 @@ export function TelaJogadores({
                     <span className="truncate text-base font-bold" title={j.nome}>
                       {j.nome}
                     </span>
-                    <span className="text-xs text-muted">{j.online ? 'Online' : 'Offline'}</span>
+                    <span className="text-xs text-muted">
+                      {j.online ? t('telaJogadores.online') : t('telaJogadores.offline')}
+                    </span>
                   </span>
                   <span
                     aria-hidden="true"

@@ -31,6 +31,7 @@ import { IconeMods } from '../componentes/icones'
 import { COR_ETIQUETA } from './etiquetas'
 import { AbasDeTipo } from './partesExplorar'
 import { IconeProjeto } from './TelaMods'
+import { t } from '../../../shared/i18n'
 
 type Aba = 'geral' | 'config' | 'versoes'
 
@@ -70,7 +71,7 @@ export function PainelMod({
 
   return (
     <aside
-      aria-label={`Mod ${item.titulo}`}
+      aria-label={t('painelMod.mod', { titulo: item.titulo })}
       className="anim-item fixed inset-y-0 right-0 z-30 flex w-[560px] max-w-full flex-col border-l-2 border-linha bg-panel shadow-2xl"
     >
       <header className="flex shrink-0 items-start gap-3 border-b border-linha p-4">
@@ -80,20 +81,20 @@ export function PainelMod({
             {item.titulo}
           </h2>
           <p className="truncate text-xs text-muted">
-            {item.versao ?? 'Sem versão'} · {item.caminho ?? arquivo}
+            {item.versao ?? t('painelMod.semVersao')} · {item.caminho ?? arquivo}
           </p>
         </div>
-        <Botao tamanho="pequeno" onClick={aoFechar} aria-label="Fechar o painel">
-          ×
+        <Botao tamanho="pequeno" onClick={aoFechar} aria-label={t('painelMod.fecharOPainel')}>
+          {t('painelMod.texto')}
         </Botao>
       </header>
       <div className="shrink-0 px-4 pt-2">
         <AbasDeTipo<Aba>
-          rotulo="Partes do mod"
+          rotulo={t('painelMod.partesDoMod')}
           abas={[
-            { id: 'geral', nome: 'Visão geral' },
-            { id: 'config', nome: 'Configuração' },
-            { id: 'versoes', nome: 'Versões' }
+            { id: 'geral', nome: t('painelMod.visaoGeral') },
+            { id: 'config', nome: t('painelMod.configuracao') },
+            { id: 'versoes', nome: t('painelMod.versoes') }
           ]}
           ativa={aba}
           aoEscolher={setAba}
@@ -156,7 +157,7 @@ function VisaoGeral({
   return (
     <div className="flex flex-col gap-4">
       {item.problemas.length > 0 && (
-        <CardPainel titulo={`Problemas (${item.problemas.length})`}>
+        <CardPainel titulo={t('painelMod.problemas', { length: item.problemas.length })}>
           <ul className="flex flex-col gap-3">
             {item.problemas.map((p, i) => (
               <li
@@ -181,22 +182,22 @@ function VisaoGeral({
         </CardPainel>
       )}
 
-      <CardPainel titulo="Sobre">
+      <CardPainel titulo={t('painelMod.sobre')}>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
-          <dt className="text-muted">Fonte</dt>
-          <dd>{item.fonte === 'manual' ? 'Instalado manualmente' : item.fonte}</dd>
-          <dt className="text-muted">Versão</dt>
+          <dt className="text-muted">{t('painelMod.fonte')}</dt>
+          <dd>{item.fonte === 'manual' ? t('painelMod.instaladoManualmente') : item.fonte}</dd>
+          <dt className="text-muted">{t('painelMod.versao')}</dt>
           <dd>
             {item.versao ?? '—'}
             {item.travado && ' (travada)'}
           </dd>
-          <dt className="text-muted">Tamanho</dt>
+          <dt className="text-muted">{t('painelMod.tamanho')}</dt>
           <dd>{item.tamanho !== null ? tamanho(item.tamanho) : '—'}</dd>
-          <dt className="text-muted">Instalado em</dt>
+          <dt className="text-muted">{t('painelMod.instaladoEm')}</dt>
           <dd>{item.data ? dataHora(item.data) : '—'}</dd>
           {item.categorias.length > 0 && (
             <>
-              <dt className="text-muted">Categorias</dt>
+              <dt className="text-muted">{t('painelMod.categorias')}</dt>
               <dd>{item.categorias.join(', ')}</dd>
             </>
           )}
@@ -206,16 +207,16 @@ function VisaoGeral({
             <span className="flex items-center gap-2 text-[13px]">
               <Interruptor
                 ligado={item.ativo}
-                rotulo={`${item.titulo}: ${item.ativo ? 'ativo' : 'desativado'}`}
+                rotulo={`${item.titulo}: ${item.ativo ? t('painelMod.ativo') : t('painelMod.desativado')}`}
                 disabled={ocupado || item.removerAoDesligar}
                 aoMudar={aoAlternar}
               />
-              {item.ativo ? 'Ativo' : 'Desativado'}
+              {item.ativo ? t('painelMod.ativo2') : t('painelMod.desativado2')}
             </span>
           )}
           {aoAbrirPagina && (
             <Botao tamanho="pequeno" onClick={aoAbrirPagina}>
-              Página completa
+              {t('painelMod.paginaCompleta')}
             </Botao>
           )}
           {item.removivel && (
@@ -225,17 +226,19 @@ function VisaoGeral({
               disabled={ocupado || item.removerAoDesligar}
               onClick={aoRemover}
             >
-              {item.removerAoDesligar ? 'Será removido ao desligar' : 'Remover'}
+              {item.removerAoDesligar
+                ? t('painelMod.seraRemovidoAoDesligar')
+                : t('painelMod.remover')}
             </Botao>
           )}
         </div>
       </CardPainel>
 
-      <CardPainel titulo="Etiqueta e nota">
+      <CardPainel titulo={t('painelMod.etiquetaENota')}>
         <div
           className="flex flex-wrap items-center gap-2"
           role="radiogroup"
-          aria-label="Cor da etiqueta"
+          aria-label={t('painelMod.corDaEtiqueta')}
         >
           <button
             type="button"
@@ -244,7 +247,7 @@ function VisaoGeral({
             onClick={() => setCor(null)}
             className={`h-7 border-2 px-2 text-xs ${!cor ? 'border-accent' : 'border-linha'}`}
           >
-            Sem cor
+            {t('painelMod.semCor')}
           </button>
           {CORES_ETIQUETA.map((c) => (
             <button
@@ -261,8 +264,8 @@ function VisaoGeral({
           ))}
         </div>
         <textarea
-          aria-label="Nota sobre o mod"
-          placeholder="Uma nota para você (ex.: por que este mod está aqui)"
+          aria-label={t('painelMod.notaSobreOMod')}
+          placeholder={t('painelMod.umaNotaParaVoceEx')}
           maxLength={500}
           value={nota}
           onChange={(e) => setNota(e.target.value)}
@@ -275,7 +278,7 @@ function VisaoGeral({
             disabled={!mudou || salvando}
             onClick={salvar}
           >
-            {salvando ? 'Salvando...' : 'Salvar etiqueta'}
+            {salvando ? t('painelMod.salvando') : t('painelMod.salvarEtiqueta')}
           </Botao>
         </div>
         {erro && <MensagemErro erro={erro} />}
@@ -338,9 +341,7 @@ function Configuracao({
     setSalvando(false)
     if (!r.ok) return setErro(r.erro)
     setAviso(
-      r.valor
-        ? 'Salvo. Reinicie o servidor para o mod ler a mudança. Se o mod regravar o arquivo ao desligar e a mudança sumir, salve de novo com o servidor desligado.'
-        : 'Salvo. Vale na próxima vez que o servidor ligar.'
+      r.valor ? t('painelMod.salvoReinicieOServidorPara') : t('painelMod.salvoValeNaProximaVez')
     )
     await abrir(config.caminho)
   }
@@ -351,7 +352,9 @@ function Configuracao({
     setRestaurando(false)
     if (!r.ok) return setErro(r.erro)
     setAviso(
-      `Arquivo apagado (a cópia ficou nos backups). O mod cria um novo, com os valores padrão, ${r.valor ? 'quando o servidor reiniciar' : 'na próxima vez que o servidor ligar'}.`
+      t('painelMod.arquivoApagadoACopiaFicou', {
+        v: r.valor ? t('painelMod.quandoOServidorReiniciar') : t('painelMod.naProximaVezQueO')
+      })
     )
     const lista = (arquivos ?? []).filter((a) => a !== escolhido)
     setArquivos(lista)
@@ -364,8 +367,8 @@ function Configuracao({
     return (
       <EstadoVazio
         icone={<IconeMods />}
-        titulo="Nenhum arquivo de configuração"
-        texto="Não achei arquivos deste mod em config, defaultconfigs, plugins ou serverconfig. Muitos mods só criam o arquivo depois de o servidor ligar uma vez."
+        titulo={t('painelMod.nenhumArquivoDeConfiguracao')}
+        texto={t('painelMod.naoAcheiArquivosDesteMod')}
       />
     )
   }
@@ -376,17 +379,13 @@ function Configuracao({
 
   return (
     <div className="flex flex-col gap-4">
-      {ligado && (
-        <Aviso tipo="atencao">
-          O servidor está ligado: o que você salvar aqui só vale depois de reiniciar.
-        </Aviso>
-      )}
+      {ligado && <Aviso tipo="atencao">{t('painelMod.oServidorEstaLigadoO')}</Aviso>}
       {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}
       {erro && <MensagemErro erro={erro} />}
 
       <div className="flex flex-wrap items-center gap-2">
         <Selecao
-          aria-label="Arquivo de configuração"
+          aria-label={t('painelMod.arquivoDeConfiguracao')}
           value={escolhido ?? ''}
           onChange={(e) => {
             setEscolhido(e.target.value)
@@ -402,10 +401,10 @@ function Configuracao({
           ))}
         </Selecao>
         <Botao tamanho="pequeno" onClick={() => setTexto(!texto)}>
-          {texto ? 'Ver como formulário' : 'Editar como texto'}
+          {texto ? t('painelMod.verComoFormulario') : t('painelMod.editarComoTexto')}
         </Botao>
         <Botao tamanho="pequeno" variante="perigo" onClick={() => setRestaurando(true)}>
-          Restaurar padrão
+          {t('painelMod.restaurarPadrao')}
         </Botao>
       </div>
 
@@ -414,23 +413,18 @@ function Configuracao({
           caminho={escolhido}
           aoFechar={() => setTexto(false)}
           aoSalvar={(reiniciar) => {
-            setAviso(reiniciar ? 'Salvo. Reinicie o servidor para o mod ler a mudança.' : 'Salvo.')
+            setAviso(reiniciar ? t('painelMod.salvoReinicieOServidorPara2') : t('painelMod.salvo'))
             setTexto(false)
           }}
         />
       ) : !config ? (
         !erro && <Esqueleto linhas={6} />
       ) : !config.campos.length ? (
-        <p className="text-[13px] text-muted">
-          Não consegui montar um formulário para este arquivo. Use &quot;Editar como texto&quot;.
-        </p>
+        <p className="text-[13px] text-muted">{t('painelMod.naoConseguiMontarUmFormulario')}</p>
       ) : (
         <>
           {editaveis < config.campos.length && (
-            <p className="text-xs text-muted">
-              Algumas opções só dá para mudar pelo &quot;Editar como texto&quot; (aparecem em
-              cinza).
-            </p>
+            <p className="text-xs text-muted">{t('painelMod.algumasOpcoesSoDaPara')}</p>
           )}
           {secoes.map((s) => (
             <section key={s} className="flex flex-col gap-3">
@@ -458,10 +452,10 @@ function Configuracao({
           ))}
           <div className="sticky bottom-0 flex justify-end gap-2 border-t border-linha bg-panel py-3">
             <Botao disabled={!alterado || salvando} onClick={() => setMudancas({})}>
-              Desfazer
+              {t('painelMod.desfazer')}
             </Botao>
             <Botao variante="primario" disabled={!alterado || salvando} onClick={salvar}>
-              {salvando ? 'Salvando...' : 'Salvar'}
+              {salvando ? t('painelMod.salvando') : t('painelMod.salvar')}
             </Botao>
           </div>
         </>
@@ -469,15 +463,13 @@ function Configuracao({
 
       <Dialogo
         aberto={restaurando}
-        titulo="Restaurar o padrão deste arquivo?"
+        titulo={t('painelMod.restaurarOPadraoDesteArquivo')}
         aoCancelar={() => setRestaurando(false)}
-        acao={{ rotulo: 'Restaurar padrão', variante: 'perigo', aoClicar: restaurar }}
+        acao={{ rotulo: t('painelMod.restaurarPadrao'), variante: 'perigo', aoClicar: restaurar }}
       >
         <p>
-          Antes, uma cópia de <b>{escolhido}</b> vai para os backups do servidor (pasta configs).
-          Depois o arquivo é apagado, e o mod cria um novo com os valores padrão na próxima vez que
-          o servidor ligar.
-          {ligado && ' Com o servidor ligado, isso só acontece depois de reiniciar.'}
+          {t('painelMod.antesUmaCopiaDe')} <b>{escolhido}</b> {t('painelMod.vaiParaOsBackupsDo')}
+          {ligado && t('painelMod.comOServidorLigadoIsso')}
         </p>
       </Dialogo>
     </div>
@@ -513,11 +505,11 @@ function CampoDoForm({
           onChange={(e) => aoMudar(e.target.value.split('\n').filter((x) => x.trim() !== ''))}
           className={`${classeCampo} h-24 resize-y py-2 font-mono`}
           aria-describedby={undefined}
-          placeholder="Um item por linha"
+          placeholder={t('painelMod.umItemPorLinha')}
         />
       ) : c.tipo === 'leitura' ? (
         <span className="font-mono text-xs break-all text-muted">
-          {String(valor).slice(0, 120) || '(valor de várias linhas)'}
+          {String(valor).slice(0, 120) || t('painelMod.valorDeVariasLinhas')}
         </span>
       ) : (
         <Campo
@@ -580,13 +572,13 @@ function Versoes({
 
   if (!dados) return erro ? <MensagemErro erro={erro} /> : <Esqueleto linhas={5} />
 
-  const reiniciar = ' Com o servidor ligado, a troca acontece quando ele desligar.'
+  const reiniciar = t('painelMod.comOServidorLigadoA')
   return (
     <div className="flex flex-col gap-4">
       {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}
       {erro && <MensagemErro erro={erro} />}
       <LinhaControle
-        rotulo="Travar versão"
+        rotulo={t('painelMod.travarVersao')}
         ligado={dados.travado}
         aoMudar={async (v) => {
           const r = await api.travarVersaoMod(dados.idMod, v)
@@ -594,12 +586,12 @@ function Versoes({
           await Promise.all([carregar(), aoMudar()])
         }}
       >
-        Travada, ela não aparece em Atualizações.
+        {t('painelMod.travadaElaNaoApareceEm')}
       </LinhaControle>
       {dados.anterior && (
         <div className="flex flex-wrap items-center gap-3 border-l-4 border-accent bg-panel-2 px-3 py-2 text-[13px]">
           <span className="flex-1">
-            Versão anterior guardada: <b>{dados.anterior}</b>
+            {t('painelMod.versaoAnteriorGuardada')} <b>{dados.anterior}</b>
           </span>
           <Botao
             tamanho="pequeno"
@@ -608,11 +600,13 @@ function Versoes({
               rodar(
                 'voltar',
                 () => api.voltarVersaoMod(arquivo),
-                `Pronto: voltou para ${dados.anterior}. A versão ficou travada para não atualizar sozinha.${reiniciar}`
+                t('painelMod.prontoVoltouParaAVersao', { anterior: dados.anterior, reiniciar })
               )
             }
           >
-            {ocupado === 'voltar' ? 'Voltando...' : 'Voltar para a versão anterior'}
+            {ocupado === 'voltar'
+              ? t('painelMod.voltando')
+              : t('painelMod.voltarParaAVersaoAnterior')}
           </Botao>
         </div>
       )}
@@ -626,11 +620,11 @@ function Versoes({
       {!dados.versoes.length ? (
         <p className="text-[13px] text-muted">
           {item.fonte === 'manual'
-            ? 'Este mod foi instalado à mão: o app não sabe de onde vêm as outras versões.'
-            : 'Não achei versões deste mod compatíveis com o servidor.'}
+            ? t('painelMod.esteModFoiInstaladoA')
+            : t('painelMod.naoAcheiVersoesDesteMod')}
         </p>
       ) : (
-        <CardPainel titulo={`Versões compatíveis (${dados.versoes.length})`}>
+        <CardPainel titulo={t('painelMod.versoesCompativeis', { length: dados.versoes.length })}>
           <ul className="flex flex-col divide-y divide-linha">
             {dados.versoes.map((v) => (
               <li key={v.id} className="flex items-center gap-3 py-2 text-[13px]">
@@ -640,12 +634,16 @@ function Versoes({
                   </p>
                   <p className="text-xs text-muted">
                     {dataHora(v.data)} ·{' '}
-                    {v.tipo === 'release' ? 'Estável' : v.tipo === 'beta' ? 'Beta' : 'Alfa'}
+                    {v.tipo === 'release'
+                      ? t('painelMod.estavel')
+                      : v.tipo === 'beta'
+                        ? t('painelMod.beta')
+                        : t('painelMod.alfa')}
                   </p>
                 </div>
                 {v.atual ? (
                   <span className="bg-accent px-1.5 py-0.5 text-xs text-accent-text">
-                    Instalada
+                    {t('painelMod.instalada')}
                   </span>
                 ) : (
                   <Botao
@@ -655,11 +653,11 @@ function Versoes({
                       rodar(
                         v.id,
                         () => api.trocarVersaoMod(arquivo, v.id),
-                        `Trocado para ${v.nome}. A versão de antes ficou guardada para voltar.${reiniciar}`
+                        t('painelMod.trocadoParaAVersaoDe', { nome: v.nome, reiniciar })
                       )
                     }
                   >
-                    {ocupado === v.id ? 'Trocando...' : 'Usar esta versão'}
+                    {ocupado === v.id ? t('painelMod.trocando') : t('painelMod.usarEstaVersao')}
                   </Botao>
                 )}
               </li>

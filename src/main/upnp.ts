@@ -1,4 +1,5 @@
 import { createSocket } from 'dgram'
+import { t } from '../shared/i18n'
 
 // Pede ao roteador, por UPnP, para redirecionar uma porta para este PC.
 // Feito à mão com o que vem no Node (dgram + fetch), sem biblioteca.
@@ -51,7 +52,7 @@ function procurarRoteador(): Promise<string> {
     const socket = createSocket('udp4')
     const fim = setTimeout(() => {
       socket.close()
-      falhar(new Error('Nenhum roteador respondeu ao UPnP em 3 s.'))
+      falhar(new Error(t('p.upnp.nenhumRoteador')))
     }, 3000)
     socket.on('message', (msg) => {
       const location = lerLocation(msg.toString())
@@ -108,7 +109,7 @@ export async function abrirPorta(porta: number, ipLocal: string): Promise<string
   const location = await procurarRoteador()
   const xml = await (await fetch(location, { signal: AbortSignal.timeout(5000) })).text()
   const controle = acharControle(xml, location)
-  if (!controle) throw new Error(`O roteador não tem o serviço de portas do UPnP.\n${location}`)
+  if (!controle) throw new Error(`${t('p.upnp.semServico')}\n${location}`)
   await soap(controle, 'AddPortMapping', {
     NewRemoteHost: '',
     NewExternalPort: porta,

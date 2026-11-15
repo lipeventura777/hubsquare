@@ -6,6 +6,7 @@ import { createInterface } from 'readline'
 import { ErroApp } from '../erros'
 import { baixar, buscarBytes, type AoProgredir } from '../rede'
 import { argsDoRunBat } from './versoesLoader'
+import { t } from '../../shared/i18n'
 
 // Forge e NeoForge: baixam o instalador oficial, rodam em modo servidor numa pasta temporária
 // e copiam o resultado para a pasta do servidor (sem apagar mundo, mods nem configurações).
@@ -31,12 +32,16 @@ export async function rodarInstalador(
       url,
       jar,
       { algoritmo: 'sha1', valor: sha1 },
-      `Baixando o instalador do ${nome}`,
+      t('tipos.instalador.baixandoOInstaladorDo', { nome }),
       aoProgredir
     )
     await executar(java, ['-jar', jar, '--installServer', saida], temporaria, nome, aoProgredir)
 
-    aoProgredir({ etapa: `Copiando os arquivos do ${nome}`, recebido: 0, total: 0 })
+    aoProgredir({
+      etapa: t('tipos.instalador.copiandoOsArquivosDo', { nome }),
+      recebido: 0,
+      total: 0
+    })
     // Arquivos de inicialização do loader anterior sairiam errados se sobrassem.
     for (const item of await readdir(pasta)) {
       if (/^(run\.(bat|sh)|user_jvm_args\.txt)$|^forge-.*\.jar$/.test(item)) {
@@ -56,7 +61,7 @@ function executar(
   nome: string,
   aoProgredir: AoProgredir
 ): Promise<void> {
-  const etapa = `Instalando o ${nome} (pode levar alguns minutos)`
+  const etapa = t('tipos.instalador.instalandoOPodeLevarAlguns', { nome })
   aoProgredir({ etapa, recebido: 0, total: 0 })
   return new Promise((resolver, falhar) => {
     const filho = spawn(java, args, { cwd, windowsHide: true })
@@ -73,15 +78,15 @@ function executar(
       })
     }
     filho.on('error', (e) =>
-      falhar(new ErroApp(`O instalador do ${nome} não abriu. Tente de novo.`, String(e)))
+      falhar(new ErroApp(t('tipos.instalador.oInstaladorDoNaoAbriu', { nome }), String(e)))
     )
     filho.on('close', (codigo) =>
       codigo === 0
         ? resolver()
         : falhar(
             new ErroApp(
-              `Não consegui instalar o ${nome}. Confira sua internet e tente de novo.`,
-              `O instalador saiu com código ${codigo}\n\n${ultimas.join('\n')}`
+              t('tipos.instalador.naoConseguiInstalarOConfira', { nome }),
+              t('tipos.instalador.oInstaladorSaiuComCodigo', { codigo, join: ultimas.join('\n') })
             )
           )
     )
@@ -100,7 +105,5 @@ export async function argumentosDoInstalador(pasta: string, nome: string): Promi
     (f) => /^forge-.*\.jar$/.test(f) && !/-(installer|shim)\.jar$/.test(f)
   )
   if (jar) return ['-jar', jar, 'nogui']
-  throw new ErroApp(
-    `Não encontrei os arquivos do ${nome} na pasta do servidor. Instale de novo pela tela Software.`
-  )
+  throw new ErroApp(t('tipos.instalador.naoEncontreiOsArquivosDo', { nome }))
 }

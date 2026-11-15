@@ -640,3 +640,52 @@ main p {
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   }
 }
+
+/* ---------- Modo vitrine (Fase V11) ----------
+   Jogar e Painel sem o painel por cima do fundo: os cards e barras saem com fade e um deslize
+   curto para baixo (250 ms, ease-out, escalonados por --ordem), o banner cresce até ocupar a
+   tela e o bloco da vitrine entra. O título de cima recolhe. Com "Reduzir animações" (ou o
+   Windows pedindo menos movimento), troca na hora. */
+.vitrine-sai {
+  transition:
+    opacity 250ms var(--ease-out),
+    transform 250ms var(--ease-out);
+  transition-delay: calc(var(--ordem, 0) * 40ms);
+}
+.vitrine-sai[data-escondido] {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+.vitrine-altura {
+  transition: height 250ms var(--ease-out);
+}
+.vitrine-bloco {
+  animation: vitrine-entra 250ms var(--ease-out) 120ms both;
+}
+@keyframes vitrine-entra {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+.vitrine-titulo {
+  transition:
+    height 250ms var(--ease-out),
+    margin 250ms var(--ease-out),
+    opacity 200ms var(--ease-out),
+    border-width 250ms var(--ease-out);
+}
+.vitrine-titulo[data-escondido] {
+  height: 0;
+  margin-top: 0;
+  opacity: 0;
+  border-width: 0;
+  overflow: hidden;
+}
+[data-reduzir-animacoes] :is(.vitrine-sai, .vitrine-altura, .vitrine-titulo) {
+  transition: none !important;
+}
+[data-reduzir-animacoes] .vitrine-bloco {
+  animation: none;
+}

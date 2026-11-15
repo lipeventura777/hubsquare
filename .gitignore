@@ -47,3 +47,17 @@ release/
 .env.*
 curseforge.json
 celular.json
+
+# Arquivos do sistema e de editores
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Servidor passado entre amigos (Fase M7) e cobertura de testes
+*.hubserver
+coverage/

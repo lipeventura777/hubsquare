@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import type { Area } from '../aparencia/useAparencia'
+import { t } from '../../../shared/i18n'
 
 const AREAS: { area: Area; curto: string; nome: string }[] = [
-  { area: 'serv', curto: 'Serv', nome: 'ServSquare' },
-  { area: 'play', curto: 'Play', nome: 'PlaySquare' }
+  { area: 'serv', curto: t('trocaDeArea.serv'), nome: 'ServSquare' },
+  { area: 'play', curto: t('trocaDeArea.play'), nome: 'PlaySquare' }
 ]
 
 // Troca de área no topo da barra lateral (DESIGN.md, seção 6.1.1; Fase V3): um trilho de vidro
@@ -88,7 +89,7 @@ export function TrocaDeArea({
         <div
           ref={lista}
           role="tablist"
-          aria-label="Área do app"
+          aria-label={t('trocaDeArea.areaDoApp')}
           aria-orientation="vertical"
           onKeyDown={teclas}
           className="flex flex-col gap-1 rounded-(--raio-item) bg-(--bg-panel-2) p-1"
@@ -105,7 +106,7 @@ export function TrocaDeArea({
       <div
         ref={lista}
         role="tablist"
-        aria-label="Área do app"
+        aria-label={t('trocaDeArea.areaDoApp')}
         onKeyDown={teclas}
         className="relative flex gap-1 rounded-(--raio-item) bg-(--bg-panel-2) p-1"
       >

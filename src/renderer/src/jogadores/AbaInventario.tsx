@@ -6,6 +6,7 @@ import { IconeArquivos, IconeJogadores } from '../componentes/icones'
 import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import { Acordeao, CardPainel } from '../componentes/paineis'
 import { Aviso, Botao, EstadoVazio } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Aba Inventário (DESIGN.md, 6.18). Lê o .dat; com o jogador online, o servidor salva antes.
 export function AbaInventario({ nome }: { nome: string }): React.JSX.Element {
@@ -37,18 +38,18 @@ export function AbaInventario({ nome }: { nome: string }): React.JSX.Element {
       {inventario.semDados ? (
         <EstadoVazio
           icone={<IconeJogadores />}
-          titulo="Sem inventário ainda"
-          texto="Ele aparece depois que o jogador entrar no servidor."
+          titulo={t('abaInventario.semInventarioAinda')}
+          texto={t('abaInventario.eleApareceDepoisQueO')}
         />
       ) : (
         <>
           <CardPainel
-            titulo="Inventário"
+            titulo={t('abaInventario.inventario')}
             acoes={
               <Botao
                 tamanho="pequeno"
-                title="Atualizar"
-                aria-label="Atualizar"
+                title={t('abaInventario.atualizar')}
+                aria-label={t('abaInventario.atualizar')}
                 disabled={atualizando}
                 onClick={() => void carregar()}
               >
@@ -74,7 +75,7 @@ export function AbaInventario({ nome }: { nome: string }): React.JSX.Element {
           <Acordeao
             itens={[
               {
-                titulo: 'Baú do Ender',
+                titulo: t('abaInventario.bauDoEnder'),
                 icone: <IconeArquivos />,
                 conteudo: <Grade itens={inventario.ender} />
               }
@@ -140,7 +141,7 @@ function Slot({ item }: { item: SlotItem }): React.JSX.Element {
             <div className="flex w-max max-w-64 flex-col gap-0.5 border border-linha bg-panel px-2 py-1.5 text-[13px] shadow-lg">
               <span className="font-bold">
                 {item.nomeProprio ?? item.nome}
-                {item.quantidade > 1 && ` × ${item.quantidade}`}
+                {item.quantidade > 1 && t('abaInventario.texto', { quantidade: item.quantidade })}
               </span>
               {item.nomeProprio && <span className="text-xs">{item.nome}</span>}
               {item.encantamentos.map((e) => (
@@ -150,7 +151,10 @@ function Slot({ item }: { item: SlotItem }): React.JSX.Element {
               ))}
               {item.danoMax && (
                 <span className="text-xs">
-                  Durabilidade: {item.danoMax - item.dano} / {item.danoMax}
+                  {t('abaInventario.durabilidade', {
+                    v: item.danoMax - item.dano,
+                    danoMax: item.danoMax
+                  })}
                 </span>
               )}
               <span className="font-mono text-xs text-muted">{item.id}</span>
@@ -207,7 +211,7 @@ export function AvisoIcones({ aoBaixar }: { aoBaixar: () => void }): React.JSX.E
 
   async function baixar(): Promise<void> {
     setErro(null)
-    setProgresso({ etapa: 'Baixando ícones dos itens', recebido: 0, total: 0 })
+    setProgresso({ etapa: t('abaInventario.baixandoIconesDosItens'), recebido: 0, total: 0 })
     const r = await window.api.baixarIcones()
     setProgresso(null)
     if (!r.ok) return setErro(r.erro)
@@ -220,12 +224,13 @@ export function AvisoIcones({ aoBaixar }: { aoBaixar: () => void }): React.JSX.E
     <div className="flex flex-col gap-2">
       <Aviso tipo="atencao">
         <span className="flex-1">
-          Sem ícones e nomes em português, os itens aparecem com &quot;?&quot; e o nome técnico.
-          Eles vêm dos arquivos oficiais do jogo
-          {tamanho > 0 && ` (cerca de ${Math.round(tamanho / 1_000_000)} MB para baixar)`}.
+          {t('abaInventario.semIconesENomesEm')}
+          {tamanho > 0 &&
+            t('abaInventario.cercaDeMbParaBaixar', { round: Math.round(tamanho / 1_000_000) })}
+          .
         </span>
         <Botao variante="primario" tamanho="pequeno" disabled={!!progresso} onClick={baixar}>
-          Baixar ícones
+          {t('abaInventario.baixarIcones')}
         </Botao>
       </Aviso>
       {progresso && (

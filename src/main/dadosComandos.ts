@@ -13,6 +13,7 @@ import { tar } from './importarZip'
 import { garantirJava } from './java'
 import { detalhesVersao, javaDaVersao } from './mojang'
 import { baixar, buscarJson, type AoProgredir } from './rede'
+import { t } from '../shared/i18n'
 
 // Central de comandos (Fase 26): a sintaxe exata de cada versão vem do próprio servidor.
 // O app baixa o server.jar oficial da Mojang dessa versão e roda o gerador de relatórios
@@ -23,7 +24,7 @@ import { baixar, buscarJson, type AoProgredir } from './rede'
 
 function pasta(versao: string): string {
   if (!/^[\w.-]+$/.test(versao) || versao.includes('..')) {
-    throw new ErroApp('A versão deste servidor tem um nome estranho.', versao)
+    throw new ErroApp(t('p.dadosComandos.aVersaoDesteServidorTem'), versao)
   }
   return join(app.getPath('userData'), 'jogo', versao, 'comandos')
 }
@@ -79,7 +80,7 @@ async function preparar(versao: string, aoProgredir: AoProgredir): Promise<void>
   const destino = pasta(versao)
   const v = await detalhesVersao(versao)
   const servidor = v.downloads.server
-  if (!servidor) throw new ErroApp('A Mojang não tem o servidor desta versão para baixar.')
+  if (!servidor) throw new ErroApp(t('p.dadosComandos.aMojangNaoTemO'))
   const temp = join(tmpdir(), `servsquare-comandos-${randomUUID()}`)
   await mkdir(temp, { recursive: true })
   try {
@@ -88,15 +89,15 @@ async function preparar(versao: string, aoProgredir: AoProgredir): Promise<void>
       servidor.url,
       jar,
       { algoritmo: 'sha1', valor: servidor.sha1 },
-      'Baixando o servidor oficial para ler os comandos',
+      t('p.dadosComandos.baixandoOServidorOficial'),
       aoProgredir
     )
-    aoProgredir({ etapa: 'Lendo os comandos desta versão', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.dadosComandos.lendoOsComandosDestaVersao'), recebido: 0, total: 0 })
     const java = await garantirJava(await javaDaVersao(versao), aoProgredir)
     try {
       await gerarRelatorios(java, jar, join(temp, 'saida'), temp)
     } catch (e) {
-      throw new ErroApp('Não consegui ler os comandos desta versão do Minecraft.', detalhar(e))
+      throw new ErroApp(t('p.dadosComandos.naoConseguiLerOsComandos'), detalhar(e))
     }
     const relatorios = join(temp, 'saida', 'reports')
     const arvore = JSON.parse(
@@ -116,10 +117,10 @@ async function preparar(versao: string, aoProgredir: AoProgredir): Promise<void>
         origem = join(temp, ...interno.split('/'))
       }
       const tudo = JSON.parse(await tar(['-xOf', origem, 'assets/minecraft/lang/en_us.json']))
-      en = Object.fromEntries(Object.entries(tudo).filter(([k]) => MENSAGENS.test(k))) as Record<
-        string,
-        string
-      >
+      // Fase I1: em inglês, os nomes de itens, blocos e efeitos também vêm daqui.
+      en = Object.fromEntries(
+        Object.entries(tudo).filter(([k]) => MENSAGENS.test(k) || /^(item|block|effect)./.test(k))
+      ) as Record<string, string>
     } catch {
       en = {} // sem os modelos, as respostas aparecem como vieram do console
     }
@@ -139,7 +140,7 @@ async function preparar(versao: string, aoProgredir: AoProgredir): Promise<void>
           `https://resources.download.minecraft.net/${hash.slice(0, 2)}/${hash}`,
           arq,
           { algoritmo: 'sha1', valor: hash },
-          'Baixando as mensagens em português',
+          t('p.dadosComandos.baixandoAsMensagens'),
           aoProgredir
         )
         pt = JSON.parse(await readFile(arq, 'utf8'))
@@ -176,7 +177,7 @@ export function dadosComandos(versao: string): Promise<DadosComandos> {
     d = (async () => {
       const p = pasta(versao)
       if (!existsSync(join(p, 'pronto'))) {
-        throw new ErroApp('Prepare os comandos desta versão primeiro (tela Comandos).')
+        throw new ErroApp(t('p.dadosComandos.prepareOsComandosDestaVersao'))
       }
       const arvore = JSON.parse(await readFile(join(p, 'arvore.json'), 'utf8')) as NoComando
       const dados = JSON.parse(await readFile(join(p, 'dados.json'), 'utf8'))

@@ -1,3 +1,4 @@
+import { t as tx } from './i18n'
 // Central de comandos (Fase 26), sem rede nem arquivos. Usado pela tela (prévia do comando) e
 // pelo processo principal (que remonta o comando a partir da ação, sem confiar no texto da tela).
 // Testado em tests/comandos.test.ts.
@@ -244,11 +245,11 @@ export function montarComandos(acao: unknown, ctx: ContextoComandos): string[] {
     alvos((a as Jogadores).jogadores).map(f)
   switch (a.tipo) {
     case 'tempo':
-      return [`time set ${inteiro(a.ticks, 0, 24000, 'A hora')}`]
+      return [`time set ${inteiro(a.ticks, 0, 24000, tx('s.comandos.aHora'))}`]
     case 'clima': {
       if (!['clear', 'rain', 'thunder'].includes(a.clima)) throw new Error('Clima inválido.')
       if (a.segundos === null || a.segundos === undefined) return [`weather ${a.clima}`]
-      const s = inteiro(a.segundos, 1, 1_000_000, 'A duração')
+      const s = inteiro(a.segundos, 1, 1_000_000, tx('s.comandos.aDuracao'))
       return [`weather ${a.clima} ${cap.climaComUnidade ? `${s}s` : s}`]
     }
     case 'dificuldade':
@@ -263,9 +264,9 @@ export function montarComandos(acao: unknown, ctx: ContextoComandos): string[] {
       return [`execute at ${j} run setworldspawn ~ ~ ~`]
     }
     case 'borda': {
-      const t = inteiro(a.tamanho, 1, 59_999_968, 'O tamanho da borda')
+      const t = inteiro(a.tamanho, 1, 59_999_968, tx('s.comandos.oTamanhoDaBorda'))
       if (a.segundos === null || a.segundos === undefined) return [`worldborder set ${t}`]
-      const s = inteiro(a.segundos, 1, 1_000_000, 'O tempo da mudança')
+      const s = inteiro(a.segundos, 1, 1_000_000, tx('s.comandos.oTempoDaMudanca'))
       return [`worldborder set ${t} ${cap.bordaComUnidade ? `${s}s` : s}`]
     }
     case 'centroBorda':
@@ -278,7 +279,7 @@ export function montarComandos(acao: unknown, ctx: ContextoComandos): string[] {
         return [`gamerule ${regra.nome} ${a.valor}`]
       }
       return [
-        `gamerule ${regra.nome} ${inteiro(a.valor, regra.min ?? -2_147_483_648, regra.max ?? 2_147_483_647, 'O valor')}`
+        `gamerule ${regra.nome} ${inteiro(a.valor, regra.min ?? -2_147_483_648, regra.max ?? 2_147_483_647, tx('s.comandos.oValor'))}`
       ]
     }
     case 'modo':
@@ -305,45 +306,53 @@ export function montarComandos(acao: unknown, ctx: ContextoComandos): string[] {
     case 'xp': {
       if (a.unidade !== 'points' && a.unidade !== 'levels')
         throw new Error('Escolha pontos ou níveis.')
-      const n = inteiro(a.quantidade, 1, 1_000_000, 'A quantidade de XP')
+      const n = inteiro(a.quantidade, 1, 1_000_000, tx('s.comandos.aQuantidadeDeXp'))
       return porJogador((j) => `xp add ${j} ${n} ${a.unidade}`)
     }
     case 'kick':
     case 'ban': {
-      const motivo = textoLivre(a.motivo, 100, 'O motivo', true)
+      const motivo = textoLivre(a.motivo, 100, tx('s.comandos.oMotivo'), true)
       return porJogador((j) => `${a.tipo} ${j}${motivo ? ` ${motivo}` : ''}`)
     }
     case 'dar': {
-      const item = idRecurso(a.item, 'Item')
+      const item = idRecurso(a.item, tx('s.comandos.item'))
       if (ctx.itens && !ctx.itens.has(item)) throw new Error('Esse item não existe neste servidor.')
-      const n = inteiro(a.quantidade, 1, 6400, 'A quantidade')
+      const n = inteiro(a.quantidade, 1, 6400, tx('s.comandos.aQuantidade'))
       return porJogador((j) => `give ${j} ${item} ${n}`)
     }
     case 'efeito': {
-      const efeito = idRecurso(a.efeito, 'Efeito')
+      const efeito = idRecurso(a.efeito, tx('s.comandos.efeito'))
       if (ctx.efeitos && !ctx.efeitos.has(efeito))
         throw new Error('Esse efeito não existe neste servidor.')
-      const amp = inteiro(a.nivel, 1, 256, 'O nível') - 1
+      const amp = inteiro(a.nivel, 1, 256, tx('s.comandos.oNivel')) - 1
       let duracao: string
       if (a.segundos === null) {
         if (!cap.efeitoInfinito) throw new Error('Esta versão não tem efeito infinito.')
         duracao = 'infinite'
-      } else duracao = String(inteiro(a.segundos, 1, 1_000_000, 'A duração'))
+      } else duracao = String(inteiro(a.segundos, 1, 1_000_000, tx('s.comandos.aDuracao')))
       return porJogador((j) => `effect give ${j} ${efeito} ${duracao} ${amp} ${a.ocultar === true}`)
     }
     case 'say':
-      return [`say ${textoLivre(a.texto, 256, 'A mensagem')}`]
+      return [`say ${textoLivre(a.texto, 256, tx('s.comandos.aMensagem'))}`]
     case 'chat': {
-      const t = componente(textoLivre(a.texto, 256, 'A mensagem'), a.cor, a.negrito === true)
+      const t = componente(
+        textoLivre(a.texto, 256, tx('s.comandos.aMensagem')),
+        a.cor,
+        a.negrito === true
+      )
       return alvosOuTodos(a.jogadores).map((j) => `tellraw ${j} ${t}`)
     }
     case 'barra': {
-      const t = componente(textoLivre(a.texto, 128, 'A mensagem'), a.cor, a.negrito === true)
+      const t = componente(
+        textoLivre(a.texto, 128, tx('s.comandos.aMensagem')),
+        a.cor,
+        a.negrito === true
+      )
       return alvosOuTodos(a.jogadores).map((j) => `title ${j} actionbar ${t}`)
     }
     case 'titulo': {
-      const titulo = textoLivre(a.titulo, 64, 'O título')
-      const sub = textoLivre(a.subtitulo, 96, 'O subtítulo', true)
+      const titulo = textoLivre(a.titulo, 64, tx('s.comandos.oTitulo'))
+      const sub = textoLivre(a.subtitulo, 96, tx('s.comandos.oSubtitulo'), true)
       // O subtítulo vai antes: ele só aparece junto quando o título é mandado depois.
       return alvosOuTodos(a.jogadores).flatMap((j) => [
         ...(sub ? [`title ${j} subtitle ${componente(sub, a.cor)}`] : []),
@@ -359,7 +368,7 @@ export const VARIAVEL_JOGADOR = '{jogador}'
 
 // Um comando de atalho: uma linha, até 256 letras, sem "/" na frente.
 export function comandoDeAtalho(v: unknown): string {
-  const c = textoLivre(v, 256, 'O comando').replace(/^\//, '')
+  const c = textoLivre(v, 256, tx('s.comandos.oComando')).replace(/^\//, '')
   if (!/^[a-z][\w:-]*/i.test(c)) throw new Error(`"${c}" não parece um comando.`)
   return c
 }

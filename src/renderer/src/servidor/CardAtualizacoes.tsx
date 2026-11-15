@@ -12,6 +12,7 @@ import { BarraProgresso } from '../componentes/movimento'
 import { CardPainel } from '../componentes/paineis'
 import { Botao, Dialogo } from '../componentes/ui'
 import { abrirTela } from '../estrutura/navegar'
+import { t } from '../../../shared/i18n'
 
 // "Atualizações disponíveis" no Painel (Fase 21). Só avisa; cada atualização precisa de um clique.
 export function CardAtualizacoes({
@@ -64,12 +65,12 @@ export function CardAtualizacoes({
 
   return (
     <CardPainel
-      titulo="Atualizações disponíveis"
+      titulo={t('cardAtualizacoes.atualizacoesDisponiveis')}
       // Chega uns segundos depois de abrir o app: entra com o fade + 6px das listas (seção 8).
       className="anim-item"
       acoes={
         <Botao tamanho="pequeno" onClick={verificarDeNovo} disabled={verificando}>
-          {verificando ? 'Verificando...' : 'Verificar de novo'}
+          {verificando ? t('cardAtualizacoes.verificando') : t('cardAtualizacoes.verificarDeNovo')}
         </Botao>
       }
     >
@@ -77,11 +78,14 @@ export function CardAtualizacoes({
         {a.build && (
           <li className="flex flex-wrap items-center gap-3 py-2">
             <span className="flex-1">
-              Nova versão do {nome} para o Minecraft {info.versao}:{' '}
+              {t('cardAtualizacoes.novaVersaoDoParaO', { nome, versao: info.versao })}{' '}
               {a.build.atual ? `${a.build.atual} → ` : ''}
               <b>{a.build.nova}</b>.
               {!desligado && (
-                <span className="text-muted"> Desligue o servidor para atualizar.</span>
+                <span className="text-muted">
+                  {' '}
+                  {t('cardAtualizacoes.desligueOServidorParaAtualizar')}
+                </span>
               )}
             </span>
             <Botao
@@ -90,38 +94,46 @@ export function CardAtualizacoes({
               disabled={!desligado}
               onClick={() => setConfirmando(true)}
             >
-              Atualizar
+              {t('cardAtualizacoes.atualizar')}
             </Botao>
           </li>
         )}
         {a.minecraft && (
           <li className="flex flex-wrap items-center gap-3 py-2">
             <span className="flex-1">
-              O {nome} já tem o <b>Minecraft {a.minecraft}</b>. Mods e plugins podem ainda não ter
-              sido atualizados para ele: troque pela tela Software quando eles estiverem prontos.
+              {t('cardAtualizacoes.oJaTemO', { nome })}{' '}
+              <b>{t('cardAtualizacoes.minecraft', { minecraft: a.minecraft })}</b>
+              {t('cardAtualizacoes.modsEPluginsPodemAinda')}
             </span>
             <Botao tamanho="pequeno" onClick={() => abrirTela('Software')}>
-              Abrir Software
+              {t('cardAtualizacoes.abrirSoftware')}
             </Botao>
           </li>
         )}
         {a.modpack && (
           <li className="flex flex-wrap items-center gap-3 py-2">
             <span className="flex-1">
-              Modpack {a.modpack.nome}: {a.modpack.versaoAtual} → <b>{a.modpack.versaoNova}</b>.
+              {t('cardAtualizacoes.modpack', {
+                nome: a.modpack.nome,
+                versaoAtual: a.modpack.versaoAtual
+              })}{' '}
+              <b>{a.modpack.versaoNova}</b>.
             </span>
             <Botao tamanho="pequeno" onClick={() => abrirTela('Mods', 'Atualizações')}>
-              Ver
+              {t('cardAtualizacoes.ver')}
             </Botao>
           </li>
         )}
         {a.mods > 0 && (
           <li className="flex flex-wrap items-center gap-3 py-2">
             <span className="flex-1">
-              {a.mods === 1 ? '1 mod ou plugin tem' : `${a.mods} mods ou plugins têm`} versão nova.
+              {a.mods === 1
+                ? t('cardAtualizacoes.n1ModOuPluginTem')
+                : t('cardAtualizacoes.modsOuPluginsTem', { mods: a.mods })}{' '}
+              {t('cardAtualizacoes.versaoNova')}
             </span>
             <Botao tamanho="pequeno" onClick={() => abrirTela('Mods', 'Atualizações')}>
-              Ver
+              {t('cardAtualizacoes.ver')}
             </Botao>
           </li>
         )}
@@ -134,14 +146,19 @@ export function CardAtualizacoes({
 
       <Dialogo
         aberto={confirmando}
-        titulo={`Atualizar o ${nome}?`}
+        titulo={t('cardAtualizacoes.atualizarO', { nome })}
         aoCancelar={() => !ocupado && setConfirmando(false)}
-        acao={{ rotulo: ocupado ? 'Atualizando...' : 'Atualizar', ocupado, aoClicar: atualizar }}
+        acao={{
+          rotulo: ocupado ? t('cardAtualizacoes.atualizando') : t('cardAtualizacoes.atualizar'),
+          ocupado,
+          aoClicar: atualizar
+        }}
       >
         <div className="flex flex-col gap-3">
           <p>
-            Continua no Minecraft {info.versao}, só com a versão nova do {nome}
-            {a.build ? ` (${a.build.nova})` : ''}. Um backup do mundo é feito antes.
+            {t('cardAtualizacoes.continuaNoMinecraftSoCom', { versao: info.versao, nome })}
+            {a.build ? ` (${a.build.nova})` : ''}
+            {t('cardAtualizacoes.umBackupDoMundoE')}
           </p>
           {ocupado && progresso && (
             <div className="flex flex-col gap-1 text-[13px]">

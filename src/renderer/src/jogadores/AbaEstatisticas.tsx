@@ -6,10 +6,11 @@ import { Esqueleto } from '../componentes/movimento'
 import { CardPainel } from '../componentes/paineis'
 import { Botao, EstadoVazio } from '../componentes/ui'
 import { AvisoIcones, IconeItem } from './AbaInventario'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
 const LIMITE = 15
 const numero = (n: number, casas = 0): string =>
-  n.toLocaleString('pt-BR', { maximumFractionDigits: casas })
+  n.toLocaleString(idiomaAtual(), { maximumFractionDigits: casas })
 
 // 20 ticks por segundo.
 function tempoDeJogo(ticks: number): string {
@@ -42,27 +43,39 @@ export function AbaEstatisticas({ nome }: { nome: string }): React.JSX.Element {
     return (
       <EstadoVazio
         icone={<IconeRegistro />}
-        titulo="Sem estatísticas ainda"
-        texto="Elas aparecem depois que o jogador jogar um pouco. Versões antes da 1.13 não são lidas."
+        titulo={t('abaEstatisticas.semEstatisticasAinda')}
+        texto={t('abaEstatisticas.elasAparecemDepoisQueO')}
       />
     )
   }
 
   const destaques = [
-    { icone: <IconeLigar />, titulo: 'Tempo de jogo', valor: tempoDeJogo(stats.tempo) },
-    { icone: <IconeJogadores />, titulo: 'Abates de jogadores', valor: numero(stats.abates) },
-    { icone: <IconeCoracao />, titulo: 'Mortes', valor: numero(stats.mortes) },
+    {
+      icone: <IconeLigar />,
+      titulo: t('abaEstatisticas.tempoDeJogo'),
+      valor: tempoDeJogo(stats.tempo)
+    },
+    {
+      icone: <IconeJogadores />,
+      titulo: t('abaEstatisticas.abatesDeJogadores'),
+      valor: numero(stats.abates)
+    },
+    { icone: <IconeCoracao />, titulo: t('abaEstatisticas.mortes'), valor: numero(stats.mortes) },
     {
       icone: <IconeRegistro />,
-      titulo: 'KDR',
+      titulo: t('abaEstatisticas.kdr'),
       valor: numero(stats.abates / Math.max(1, stats.mortes), 2)
     }
   ]
   const colunas: { titulo: string; linhas: LinhaEstatistica[]; unidade?: string }[] = [
-    { titulo: 'Distância percorrida', linhas: stats.distancia, unidade: ' blocos' },
-    { titulo: 'Blocos quebrados', linhas: stats.quebrados },
-    { titulo: 'Itens usados', linhas: stats.usados },
-    { titulo: 'Entidades mortas', linhas: stats.mortos }
+    {
+      titulo: t('abaEstatisticas.distanciaPercorrida'),
+      linhas: stats.distancia,
+      unidade: ' blocos'
+    },
+    { titulo: t('abaEstatisticas.blocosQuebrados'), linhas: stats.quebrados },
+    { titulo: t('abaEstatisticas.itensUsados'), linhas: stats.usados },
+    { titulo: t('abaEstatisticas.entidadesMortas'), linhas: stats.mortos }
   ]
   const temMais = colunas.some((c) => c.linhas.length > LIMITE)
 
@@ -70,7 +83,7 @@ export function AbaEstatisticas({ nome }: { nome: string }): React.JSX.Element {
     <div className="flex flex-col gap-4">
       <AvisoIcones aoBaixar={() => void carregar()} />
       {erro && <MensagemErro erro={erro} />}
-      <CardPainel titulo="Destaques">
+      <CardPainel titulo={t('abaEstatisticas.destaques')}>
         <div className="grid grid-cols-2 gap-4 min-[900px]:grid-cols-4">
           {destaques.map((d) => (
             <div key={d.titulo} className="flex items-center gap-3">
@@ -95,7 +108,7 @@ export function AbaEstatisticas({ nome }: { nome: string }): React.JSX.Element {
       </div>
       {temMais && (
         <Botao variante="primario" className="self-center" onClick={() => setTudo((t) => !t)}>
-          {tudo ? 'Mostrar menos' : 'Mostrar tudo'}
+          {tudo ? t('abaEstatisticas.mostrarMenos') : t('abaEstatisticas.mostrarTudo')}
         </Botao>
       )}
     </div>
@@ -111,12 +124,13 @@ function Ranking({
   unidade?: string
   tudo: boolean
 }): React.JSX.Element {
-  if (!linhas.length) return <p className="text-[13px] text-muted">Sem dados</p>
+  if (!linhas.length)
+    return <p className="text-[13px] text-muted">{t('abaEstatisticas.semDados')}</p>
   const total = linhas.reduce((s, l) => s + l.valor, 0)
   return (
     <ul className="flex flex-col gap-1 text-[13px]">
       <li className="flex justify-between gap-2 border-b border-linha pb-1 font-bold">
-        Total
+        {t('abaEstatisticas.total')}
         <span className="font-mono">
           {numero(total)}
           {unidade}

@@ -27,6 +27,7 @@ import {
   versaoDoLevelDat,
   type LoaderDetectado
 } from './zipSeguro'
+import { t } from '../shared/i18n'
 
 // Importar servidor ou mundo de um .zip (ex.: baixado do Aternos). Usa o tar do Windows,
 // que abre .zip, como os backups. Nenhum caminho do zip pode sair da pasta de destino.
@@ -56,9 +57,9 @@ export function tar(argumentos: string[]): Promise<string> {
 
 export async function analisarZip(janela: BrowserWindow | null): Promise<AnaliseZip | null> {
   const opcoes = {
-    title: 'Escolha o arquivo .zip do servidor ou do mundo',
+    title: t('p.importarZip.escolhaOArquivoZipDo'),
     properties: ['openFile' as const],
-    filters: [{ name: 'Arquivo .zip', extensions: ['zip'] }]
+    filters: [{ name: t('p.importarZip.arquivoZip'), extensions: ['zip'] }]
   }
   const escolha = janela
     ? await dialog.showOpenDialog(janela, opcoes)
@@ -70,29 +71,19 @@ export async function analisarZip(janela: BrowserWindow | null): Promise<Analise
   try {
     entradas = (await tar(['-tf', zip])).split(/\r?\n/).filter(Boolean)
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui abrir esse arquivo. Confira se ele é um .zip que não está corrompido.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.importarZip.naoConseguiAbrirEsseArquivo'), detalhar(e))
   }
   const perigosas = entradas.filter((e) => !caminhoSeguro(e))
   if (perigosas.length) {
-    throw new ErroApp(
-      'Esse .zip tem arquivos que tentam sair da pasta onde seriam colocados, então ele não foi aberto. Use um zip de fonte confiável.',
-      perigosas.slice(0, 20).join('\n')
-    )
+    throw new ErroApp(t('p.importarZip.esseZipTemArquivosQue'), perigosas.slice(0, 20).join('\n'))
   }
   const conteudo = detectarConteudo(entradas)
   // Pack do CurseForge para o jogo: os mods vêm só como números do CurseForge (sem a API, não dá).
   if (!conteudo && entradas.includes('manifest.json')) {
-    throw new ErroApp(
-      'Esse é o pacote do CurseForge para o jogo, não o de servidor: a maioria dos mods vem só como uma lista, sem os arquivos. Na página do modpack no CurseForge, baixe o arquivo de servidor ("Server Pack") e importe ele. Ou procure o modpack em Mods › Explorar › Modpacks, na fonte CurseForge, e crie o servidor por lá (o app baixa os mods da lista).'
-    )
+    throw new ErroApp(t('p.importarZip.esseEOPacoteDo'))
   }
   if (!conteudo) {
-    throw new ErroApp(
-      'Não achei um servidor (server.properties) nem um mundo (level.dat) dentro desse .zip. Escolha outro arquivo.'
-    )
+    throw new ErroApp(t('p.importarZip.naoAcheiUmServidorServer'))
   }
 
   // Versão do mundo, lida do level.dat extraído sozinho numa pasta temporária.
@@ -118,9 +109,7 @@ export async function analisarZip(janela: BrowserWindow | null): Promise<Analise
       : undefined
     loader = detectarLoader(entradas, conteudo.raiz, variaveis)
     if (loader?.tipo === 'quilt') {
-      throw new ErroApp(
-        'Esse servidor usa o Quilt, que o HubSquare ainda não aceita. Use um pack para Fabric, Forge ou NeoForge.'
-      )
+      throw new ErroApp(t('p.importarZip.esseServidorUsaOQuilt'))
     }
   }
 
@@ -131,7 +120,7 @@ export async function analisarZip(janela: BrowserWindow | null): Promise<Analise
     token,
     arquivo: basename(zip),
     conteudo: conteudo.tipo,
-    nomeSugerido: sugestao || 'Servidor importado',
+    nomeSugerido: sugestao || t('p.importarZip.servidorImportado'),
     versaoDoMundo,
     loader: loader && { tipo: loader.tipo as TipoId, versao: loader.versao }
   }
@@ -152,25 +141,18 @@ export async function temAtalho(pasta: string): Promise<boolean> {
 // lá dentro. Quem chama move o mundo para o lugar e apaga a pasta temporária.
 export async function extrairMundoDoZip(token: string, temporaria: string): Promise<string> {
   const zip = analisados.get(token)
-  if (!zip) throw new ErroApp('Escolha o arquivo .zip de novo.')
+  if (!zip) throw new ErroApp(t('p.importarZip.escolhaOArquivoZipDe'))
   if (zip.conteudo !== 'mundo') {
-    throw new ErroApp(
-      'Esse .zip é de um servidor inteiro, não de um mundo. Para ele, use "Importar de arquivo .zip" na tela Servidores.'
-    )
+    throw new ErroApp(t('p.importarZip.esseZipEDeUm'))
   }
   await mkdir(temporaria, { recursive: true })
   try {
     await tar(['-xf', zip.zip, '-C', temporaria])
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui abrir esse .zip. Confira se ele não está corrompido.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.importarZip.naoConseguiAbrirEsseZip'), detalhar(e))
   }
   if (await temAtalho(temporaria)) {
-    throw new ErroApp(
-      'Esse .zip tem atalhos (links) dentro, e por segurança o app não aceita. Use outro arquivo.'
-    )
+    throw new ErroApp(t('p.importarZip.esseZipTemAtalhosLinks'))
   }
   analisados.delete(token)
   return join(temporaria, zip.raiz).replace(/[\\/]+$/, '')
@@ -182,7 +164,7 @@ export async function criarDeZip(
   pedido: unknown,
   aoProgredir: (p: Progresso) => void
 ): Promise<InfoServidor> {
-  if (importando) throw new ErroApp('Já tem uma importação em andamento. Espere terminar.')
+  if (importando) throw new ErroApp(t('p.importarZip.jaTemUmaImportacaoEm'))
   const {
     token,
     nome: nomeBruto,
@@ -191,15 +173,14 @@ export async function criarDeZip(
     aceitouEula
   } = (pedido ?? {}) as Record<string, unknown>
   const zip = typeof token === 'string' ? analisados.get(token) : undefined
-  if (!zip) throw new ErroApp('Escolha o arquivo .zip de novo.')
+  if (!zip) throw new ErroApp(t('p.importarZip.escolhaOArquivoZipDe'))
   if (aceitouEula !== true) {
-    throw new ErroApp('Você precisa marcar que aceita o EULA do Minecraft para criar o servidor.')
+    throw new ErroApp(t('p.importarZip.vocePrecisaMarcarQueAceita'))
   }
-  if (!ehTipo(tipo)) throw new ErroApp('Tipo de servidor desconhecido. Escolha um tipo da lista.')
+  if (!ehTipo(tipo)) throw new ErroApp(t('p.importarZip.tipoDeServidorDesconhecidoEscolha'))
   const nome = validarNome(nomeBruto)
   const pasta = join(pastaServidores(), nome)
-  if (existsSync(pasta))
-    throw new ErroApp(`Já existe uma pasta chamada "${nome}". Escolha outro nome.`)
+  if (existsSync(pasta)) throw new ErroApp(t('p.importarZip.jaExisteUmaPastaChamada', { nome }))
   const versaoOk = await validarVersao(tipo, versao)
 
   importando = true
@@ -210,19 +191,14 @@ export async function criarDeZip(
     const destino = join(provisoria, 'servidor')
     await mkdir(extraido, { recursive: true })
     await mkdir(destino)
-    aoProgredir({ etapa: 'Abrindo o .zip', recebido: 0, total: 0 })
+    aoProgredir({ etapa: t('p.importarZip.abrindoOZip'), recebido: 0, total: 0 })
     try {
       await tar(['-xf', zip.zip, '-C', extraido])
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui abrir esse .zip. Confira se ele não está corrompido.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.importarZip.naoConseguiAbrirEsseZip'), detalhar(e))
     }
     if (await temAtalho(extraido)) {
-      throw new ErroApp(
-        'Esse .zip tem atalhos (links) dentro, e por segurança o app não aceita. Use outro arquivo.'
-      )
+      throw new ErroApp(t('p.importarZip.esseZipTemAtalhosLinks'))
     }
 
     const origem = join(extraido, zip.raiz)

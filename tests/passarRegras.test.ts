@@ -119,3 +119,28 @@ test('"Com <nome> desde <data>" e o nome do amigo', () => {
   assert.throws(() => nomeDoAmigo('a\nb'))
   assert.throws(() => nomeDoAmigo('x'.repeat(33)))
 })
+
+test('Fase V10: o pacote leva a escolha de fundo; estragada, fica igual ao app', () => {
+  const imagem = {
+    tipo: 'imagem',
+    imagem: `${'b'.repeat(64)}.png`,
+    ajuste: {
+      enquadrar: 'preencher',
+      focoX: 0.5,
+      focoY: 0.5,
+      desfoque: 0,
+      luz: -30,
+      particulas: null
+    }
+  }
+  assert.deepEqual(validarPacote(pacote({ fundo: imagem })).fundo, imagem)
+  assert.deepEqual(validarPacote(pacote({ fundo: { tipo: 'instalacao' } })).fundo, {
+    tipo: 'instalacao'
+  })
+  // Escolha estragada (ou de versão nova que este app não conhece): o servidor chega igual ao app.
+  assert.equal(
+    validarPacote(pacote({ fundo: { tipo: 'imagem', imagem: '../x.png' } })).fundo,
+    undefined
+  )
+  assert.equal(validarPacote(pacote()).fundo, undefined) // pacotes antigos, sem o campo
+})

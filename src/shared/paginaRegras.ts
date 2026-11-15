@@ -1,4 +1,5 @@
 import type { Fonte } from './fontes'
+import { t, idiomaAtual } from './i18n'
 
 // Páginas nas listas de mods (Fase V9). Sem DOM nem Electron: testado em tests/paginaRegras.test.ts.
 // Páginas começam em 1.
@@ -30,8 +31,8 @@ export function intervalo(
 
 export const textoIntervalo = (pagina: number, tamanho: number, total: number): string => {
   const { de, ate } = intervalo(pagina, tamanho, total)
-  const n = (v: number): string => v.toLocaleString('pt-BR')
-  return `Mostrando ${n(de)}–${n(ate)} de ${n(total)}`
+  const n = (v: number): string => v.toLocaleString(idiomaAtual())
+  return t('s.paginaRegras.mostrandoDe', { n: n(de), n2: n(ate), n3: n(total) })
 }
 
 // Números da barra: sempre a primeira e a última, a atual com uma de cada lado, e "…" no

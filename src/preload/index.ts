@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { Fonte } from '../shared/fontes'
+import type { Idioma } from '../shared/i18n'
 import type { AcaoCentral } from '../shared/comandos'
 import type {
   AjustesJogo,
@@ -98,6 +99,7 @@ import type {
   ResultadoUpnp,
   Screenshot,
   EstadoServidor,
+  FundoDoServidor,
   InfoServidor,
   LinhaConsole,
   PedidoCriacao,
@@ -108,7 +110,7 @@ import type {
 } from '../shared/tipos'
 import type { Conserto, LinhaDiagnostico } from '../shared/diagnosticoRegras'
 import type { ModoApp } from '../shared/modoRegras'
-import type { EscolhaFundo } from '../shared/fundoRegras'
+import type { EscolhaFundo, FundoServidor } from '../shared/fundoRegras'
 
 // Assina um aviso do processo principal; devolve a função que cancela a assinatura.
 function ouvir<T>(canal: string, aoReceber: (dado: T) => void): () => void {
@@ -614,6 +616,10 @@ const api = {
     ipcRenderer.invoke('jogo:fundo', id, escolha),
   usarFundoEmTodas: (escolha: EscolhaFundo | null): Promise<Resultado<void>> =>
     ipcRenderer.invoke('jogo:fundoEmTodas', escolha),
+  // Fase V10: fundo do servidor ativo (null = igual ao app).
+  fundoDoServidor: (): Promise<Resultado<FundoDoServidor>> => ipcRenderer.invoke('servidor:fundo'),
+  definirFundoServidor: (escolha: FundoServidor | null): Promise<Resultado<void>> =>
+    ipcRenderer.invoke('servidor:definirFundo', escolha),
   // Correção P1: INSTALAR monta a pasta da instalação; o Jogar fica "Em breve" (opção interna).
   abrirLauncherLigado: (): Promise<boolean> => ipcRenderer.invoke('jogo:abrirLauncherLigado'),
   instalarInstalacao: (
@@ -633,6 +639,11 @@ const api = {
     ipcRenderer.invoke('modo:escolher', modo),
   conviteUsado: (): Promise<void> => ipcRenderer.invoke('modo:conviteUsado'),
   aoConvite: (f: (texto: string) => void) => ouvir('app:convite', f),
+  // Fase I1: idioma do app. Lido na hora (síncrono) para a tela já abrir no idioma certo.
+  idioma: ipcRenderer.sendSync('idioma:obter') as { idioma: Idioma; perguntar: boolean },
+  escolherIdioma: (idioma: Idioma): Promise<Resultado<Idioma>> =>
+    ipcRenderer.invoke('idioma:escolher', idioma),
+  aoMudarIdioma: (f: (idioma: Idioma) => void) => ouvir('idioma:mudou', f),
   listarCapturas: (id: string | null): Promise<Resultado<Captura[]>> =>
     ipcRenderer.invoke('capturas:listar', id),
   capturaGrande: (id: string, nome: string): Promise<Resultado<string>> =>

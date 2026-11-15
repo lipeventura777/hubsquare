@@ -12,6 +12,7 @@ import { infoDaInstalacao } from './instalacoes'
 import { instalarBaixado, jaTemArquivo } from './mods'
 import { avisarTela } from './servidor'
 import { acharItem, lerInfo } from './servidores'
+import { t as tx } from '../shared/i18n'
 
 // Fase D: assistente de downloads manuais (o fluxo do ATLauncher).
 // Arquivos do CurseForge que o autor não deixa outros apps baixarem: o usuário baixa pela página
@@ -121,7 +122,8 @@ async function avisar(): Promise<void> {
 
 export async function abrirPagina(id: unknown): Promise<void> {
   const p = (await lerPendencias()).find((x) => x.id === id)
-  if (!p || !paginaOficial(p.url)) throw new ErroApp('Esse download não está mais na lista.')
+  if (!p || !paginaOficial(p.url))
+    throw new ErroApp(tx('p.downloadsManuais.esseDownloadNaoEstaMais'))
   await shell.openExternal(p.url)
 }
 
@@ -411,13 +413,14 @@ export async function pastasMudaram(): Promise<void> {
 // ---------- Escolher ou arrastar o arquivo ----------
 
 export async function conferirArquivo(id: unknown, caminho: unknown): Promise<void> {
-  if (typeof caminho !== 'string' || !isAbsolute(caminho)) throw new ErroApp('Arquivo inválido.')
+  if (typeof caminho !== 'string' || !isAbsolute(caminho))
+    throw new ErroApp(tx('p.downloadsManuais.arquivoInvalido'))
   const t = await stat(caminho).catch(() => null)
-  if (!t?.isFile()) throw new ErroApp('Não achei esse arquivo. Escolha de novo.')
+  if (!t?.isFile()) throw new ErroApp(tx('p.downloadsManuais.naoAcheiEsseArquivoEscolha'))
   await enfileirar(async () => {
     const itens = await lerPendencias()
     const p = itens.find((x) => x.id === id)
-    if (!p) throw new ErroApp('Esse download não está mais na lista.')
+    if (!p) throw new ErroApp(tx('p.downloadsManuais.esseDownloadNaoEstaMais'))
     if (p.pronto) return
     conferindo.add(p.id)
     await avisar()
@@ -439,8 +442,8 @@ export async function conferirArquivo(id: unknown, caminho: unknown): Promise<vo
         escolhidosErrados.set(
           p.id,
           t.size !== p.tamanho
-            ? `Esse não é o arquivo esperado: o tamanho não bate. Baixe "${p.arquivo}" pela página.`
-            : 'Esse não é o arquivo esperado: o conteúdo (hash) é diferente. Baixe de novo pela página.'
+            ? tx('p.downloadsManuais.esseNaoEOArquivo', { arquivo: p.arquivo })
+            : tx('p.downloadsManuais.esseNaoEOArquivo2')
         )
     } finally {
       conferindo.delete(p.id)
@@ -451,12 +454,12 @@ export async function conferirArquivo(id: unknown, caminho: unknown): Promise<vo
 
 export async function escolherArquivo(id: unknown, janela: BrowserWindow | null): Promise<void> {
   const p = (await lerPendencias()).find((x) => x.id === id)
-  if (!p) throw new ErroApp('Esse download não está mais na lista.')
+  if (!p) throw new ErroApp(tx('p.downloadsManuais.esseDownloadNaoEstaMais'))
   const opcoes = {
-    title: `Escolha o arquivo ${p.arquivo}`,
+    title: tx('p.downloadsManuais.escolhaOArquivo', { arquivo: p.arquivo }),
     defaultPath: app.getPath('downloads'),
     properties: ['openFile' as const],
-    filters: [{ name: 'Mod', extensions: ['jar', 'zip'] }]
+    filters: [{ name: tx('p.downloadsManuais.mod'), extensions: ['jar', 'zip'] }]
   }
   const escolha = janela
     ? await dialog.showOpenDialog(janela, opcoes)

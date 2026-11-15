@@ -9,6 +9,7 @@ import {
 import { MensagemErro } from '../componentes/MensagemErro'
 import { BarraProgresso } from '../componentes/movimento'
 import { Botao, CaixaSelecao, Campo, Dialogo, Selecao } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // "Importar de arquivo .zip": escolhe o arquivo, mostra o que foi achado (servidor inteiro ou
 // só o mundo) e pergunta nome, tipo, versão e o EULA antes de criar o servidor novo.
@@ -79,10 +80,10 @@ export function ImportarZip({ bloqueado }: { bloqueado: boolean }): React.JSX.El
   return (
     <>
       <Botao onClick={escolher} disabled={bloqueado || abrindo} className="w-full">
-        {abrindo ? 'Abrindo...' : 'Importar de arquivo .zip'}
+        {abrindo ? t('importarZip.abrindo') : t('importarZip.importarDeArquivoZip')}
       </Botao>
       {bloqueado && (
-        <p className="mt-2 text-xs text-muted">Desligue o servidor para importar outro.</p>
+        <p className="mt-2 text-xs text-muted">{t('importarZip.desligueOServidorParaImportar')}</p>
       )}
       {erro && (
         <div className="mt-3">
@@ -92,10 +93,10 @@ export function ImportarZip({ bloqueado }: { bloqueado: boolean }): React.JSX.El
 
       <Dialogo
         aberto={analise !== null}
-        titulo="Importar servidor"
+        titulo={t('importarZip.importarServidor')}
         aoCancelar={() => setAnalise(null)}
         acao={{
-          rotulo: criando ? 'Criando...' : 'Criar servidor',
+          rotulo: criando ? t('importarZip.criando') : t('importarZip.criarServidor'),
           ocupado: criando,
           desabilitado: !eula || !versao || !nome.trim(),
           aoClicar: criar
@@ -104,26 +105,27 @@ export function ImportarZip({ bloqueado }: { bloqueado: boolean }): React.JSX.El
         {analise && (
           <div className="flex flex-col gap-3 text-[13px]">
             <p>
-              Em <b>{analise.arquivo}</b> achei{' '}
+              {t('importarZip.em')} <b>{analise.arquivo}</b> {t('importarZip.achei')}{' '}
               {analise.conteudo === 'servidor'
-                ? 'um servidor inteiro (com server.properties). Tudo dele vai para o servidor novo.'
-                : 'um mundo (com level.dat). Ele vira o mundo de um servidor novo.'}
-              {analise.versaoDoMundo && ` O mundo é da versão ${analise.versaoDoMundo}.`}
+                ? t('importarZip.umServidorInteiroComServer')
+                : t('importarZip.umMundoComLevelDat')}
+              {analise.versaoDoMundo &&
+                t('importarZip.oMundoEDaVersao', { versaoDoMundo: analise.versaoDoMundo })}
             </p>
             <label className="flex flex-col gap-1">
-              Nome do servidor
+              {t('importarZip.nomeDoServidor')}
               <Campo value={nome} maxLength={32} onChange={(e) => setNome(e.target.value)} />
             </label>
             {analise.loader && (
               <p className="text-xs text-muted">
-                Pelos arquivos do pack, ele é {NOMES_TIPOS[analise.loader.tipo]}
-                {analise.loader.versao ? ` ${analise.loader.versao}` : ''}. O app instala a mesma
-                versão do loader que veio nele.
+                {t('importarZip.pelosArquivosDoPackEle', { v: NOMES_TIPOS[analise.loader.tipo] })}
+                {analise.loader.versao ? ` ${analise.loader.versao}` : ''}
+                {t('importarZip.oAppInstalaAMesma')}
               </p>
             )}
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1">
-                Tipo
+                {t('importarZip.tipo')}
                 <Selecao value={tipo} onChange={(e) => setTipo(e.target.value as TipoId)}>
                   {(Object.keys(NOMES_TIPOS) as TipoId[]).map((t) => (
                     <option key={t} value={t}>
@@ -133,13 +135,13 @@ export function ImportarZip({ bloqueado }: { bloqueado: boolean }): React.JSX.El
                 </Selecao>
               </label>
               <label className="flex flex-col gap-1">
-                Versão do jogo
+                {t('importarZip.versaoDoJogo')}
                 <Selecao
                   value={versao}
                   disabled={!versoes}
                   onChange={(e) => setVersao(e.target.value)}
                 >
-                  {!versoes && <option>Carregando...</option>}
+                  {!versoes && <option>{t('importarZip.carregando')}</option>}
                   {versoes?.map((v) => (
                     <option key={v} value={v}>
                       {v}
@@ -150,19 +152,18 @@ export function ImportarZip({ bloqueado }: { bloqueado: boolean }): React.JSX.El
             </div>
             {analise.versaoDoMundo && versao && versao !== analise.versaoDoMundo && (
               <p className="text-xs text-muted">
-                Usar uma versão mais antiga que a do mundo ({analise.versaoDoMundo}) pode estragar o
-                mundo.
+                {t('importarZip.usarUmaVersaoMaisAntiga', { versaoDoMundo: analise.versaoDoMundo })}
               </p>
             )}
             <CaixaSelecao marcada={eula} aoMudar={setEula} disabled={criando}>
-              Li e aceito o{' '}
+              {t('importarZip.liEAceitoO')}{' '}
               <a
                 href="https://aka.ms/MinecraftEULA"
                 target="_blank"
                 rel="noreferrer"
                 className="underline"
               >
-                EULA do Minecraft
+                {t('importarZip.eulaDoMinecraft')}
               </a>
             </CaixaSelecao>
             {criando && progresso && (

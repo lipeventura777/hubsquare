@@ -5,12 +5,13 @@ import { MensagemErro } from '../componentes/MensagemErro'
 import { Esqueleto } from '../componentes/movimento'
 import { TituloPagina } from '../componentes/paineis'
 import { Aviso, Botao, Dialogo, EstadoVazio, Selecao } from '../componentes/ui'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
 // PlaySquare › Capturas de tela (Fase P5, DESIGN.md seção 6.1.6): os prints (F2) da pasta
 // screenshots de cada instalação, com filtro, visualização grande, copiar, abrir pasta, apagar
 // (com confirmação; vai para a Lixeira) e "Usar como fundo" da instalação.
 
-const dataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const dataHora = new Intl.DateTimeFormat(idiomaAtual(), { dateStyle: 'short', timeStyle: 'short' })
 
 export function TelaCapturas(): React.JSX.Element {
   const [instalacoes, setInstalacoes] = useState<Instalacao[]>([])
@@ -44,14 +45,14 @@ export function TelaCapturas(): React.JSX.Element {
     <div className="min-h-0 flex-1 overflow-auto">
       <div className="mx-auto flex max-w-[1100px] flex-col gap-4 p-10">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <TituloPagina>Capturas de tela</TituloPagina>
+          <TituloPagina>{t('telaCapturas.capturasDeTela')}</TituloPagina>
           <Selecao
-            aria-label="Instalação"
+            aria-label={t('telaCapturas.instalacao')}
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
             className="min-w-[220px]"
           >
-            <option value="">Todas as instalações</option>
+            <option value="">{t('telaCapturas.todasAsInstalacoes')}</option>
             {instalacoes.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.nome}
@@ -59,17 +60,15 @@ export function TelaCapturas(): React.JSX.Element {
             ))}
           </Selecao>
         </div>
-        <p className="-mt-6 text-[13px] text-muted">
-          Os prints que você tira com F2 no jogo, de cada instalação. Os mais novos primeiro.
-        </p>
+        <p className="-mt-6 text-[13px] text-muted">{t('telaCapturas.osPrintsQueVoceTira')}</p>
         {erro && <MensagemErro erro={erro} />}
         {lista === null ? (
           <Esqueleto linhas={4} />
         ) : !lista.length ? (
           <EstadoVazio
             icone={<IconeCaptura />}
-            titulo="Nenhum print ainda"
-            texto="No jogo, aperte F2 para tirar um print. Ele aparece aqui."
+            titulo={t('telaCapturas.nenhumPrintAinda')}
+            texto={t('telaCapturas.noJogoAperteF2Para')}
           />
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
@@ -84,7 +83,7 @@ export function TelaCapturas(): React.JSX.Element {
                 <span className="aspect-video overflow-hidden">
                   <img
                     src={c.miniatura}
-                    alt={`Print de ${c.instalacao}`}
+                    alt={t('telaCapturas.printDe', { instalacao: c.instalacao })}
                     className="h-full w-full object-cover transition-transform duration-(--dur-fast) group-hover:scale-[1.03]"
                   />
                 </span>
@@ -151,20 +150,23 @@ function VerCaptura({
     return (
       <Dialogo
         aberto
-        titulo="Apagar este print?"
+        titulo={t('telaCapturas.apagarEstePrint')}
         aoCancelar={() => setApagar(false)}
         acao={{
-          rotulo: 'Apagar',
+          rotulo: t('telaCapturas.apagar'),
           variante: 'perigo',
           aoClicar: async () => {
-            if (await rodar(() => window.api.apagarCaptura(c.instalacaoId, c.nome), 'Apagado.'))
+            if (
+              await rodar(
+                () => window.api.apagarCaptura(c.instalacaoId, c.nome),
+                t('telaCapturas.apagado')
+              )
+            )
               await aoMudar()
           }
         }}
       >
-        <p className="text-[13px]">
-          O print {c.nome} vai para a Lixeira do Windows, de onde dá para recuperar.
-        </p>
+        <p className="text-[13px]">{t('telaCapturas.oPrintVaiParaA', { nome: c.nome })}</p>
         {erro && <MensagemErro erro={erro} />}
       </Dialogo>
     )
@@ -175,14 +177,14 @@ function VerCaptura({
       aberto
       titulo={`${c.instalacao} · ${dataHora.format(new Date(c.data))}`}
       aoCancelar={aoFechar}
-      acao={{ rotulo: 'Fechar', aoClicar: aoFechar }}
+      acao={{ rotulo: t('telaCapturas.fechar'), aoClicar: aoFechar }}
     >
       <div className="flex flex-col gap-3">
         <div className="flex min-h-[200px] items-center justify-center bg-console">
           {grande ? (
             <img
               src={grande}
-              alt={`Print de ${c.instalacao}`}
+              alt={t('telaCapturas.printDe', { instalacao: c.instalacao })}
               className="max-h-[60vh] w-full object-contain"
             />
           ) : (
@@ -198,30 +200,30 @@ function VerCaptura({
             onClick={() =>
               void rodar(
                 () => window.api.copiarCaptura(c.instalacaoId, c.nome),
-                'Copiado: é só colar onde quiser.'
+                t('telaCapturas.copiadoESoColarOnde')
               )
             }
           >
-            Copiar
+            {t('telaCapturas.copiar')}
           </Botao>
           <Botao
             onClick={() => void rodar(() => window.api.mostrarCaptura(c.instalacaoId, c.nome), '')}
           >
-            Abrir pasta
+            {t('telaCapturas.abrirPasta')}
           </Botao>
           <Botao
             variante="destaque"
             onClick={() =>
               void rodar(
                 () => window.api.usarCapturaComoFundo(c.instalacaoId, c.nome),
-                `Agora é o fundo da instalação ${c.instalacao} na tela Jogar.`
+                t('telaCapturas.agoraEOFundoDa', { instalacao: c.instalacao })
               )
             }
           >
-            Usar como fundo
+            {t('telaCapturas.usarComoFundo')}
           </Botao>
           <Botao variante="perigo" onClick={() => setApagar(true)}>
-            Apagar…
+            {t('telaCapturas.apagar2')}
           </Botao>
         </div>
         {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}

@@ -2,6 +2,7 @@ import type { PlanoMods, Progresso } from '../../../shared/tipos'
 import { BarraProgresso } from '../componentes/movimento'
 import { Dialogo } from '../componentes/ui'
 import { ListaManuais, separarManuais } from './ListaManuais'
+import { t } from '../../../shared/i18n'
 
 function tamanho(bytes: number): string {
   return bytes >= 1024 * 1024
@@ -35,7 +36,7 @@ export function DialogoPlano({
       titulo={titulo}
       aoCancelar={() => !ocupado && aoCancelar()}
       acao={{
-        rotulo: ocupado ? 'Instalando...' : 'Instalar',
+        rotulo: ocupado ? t('dialogoPlano.instalando') : t('dialogoPlano.instalar'),
         variante: 'primario',
         ocupado,
         desabilitado: (!plano?.itens.length && !comAssistente.length) || !!plano?.problemas.length,
@@ -46,7 +47,7 @@ export function DialogoPlano({
         <div className="flex flex-col gap-3 text-[13px]">
           {plano.itens.length > 0 && (
             <>
-              <p>Estes arquivos vão para a pasta {extras}:</p>
+              <p>{t('dialogoPlano.estesArquivosVaoParaA', { extras })}</p>
               <ul className="flex max-h-56 flex-col gap-1 overflow-auto">
                 {plano.itens.map((i) => (
                   <li key={i.arquivo} className="flex items-baseline gap-2">
@@ -54,7 +55,11 @@ export function DialogoPlano({
                       {i.titulo}
                     </b>
                     <span className="text-muted">{i.versao}</span>
-                    {i.dependencia && <span className="bg-panel-2 px-1.5 text-xs">necessário</span>}
+                    {i.dependencia && (
+                      <span className="bg-panel-2 px-1.5 text-xs">
+                        {t('dialogoPlano.necessario')}
+                      </span>
+                    )}
                     <span className="ml-auto shrink-0 text-xs text-muted">
                       {tamanho(i.tamanho)}
                     </span>
@@ -64,7 +69,7 @@ export function DialogoPlano({
             </>
           )}
           {!plano.itens.length && !comAssistente.length && !plano.problemas.length && (
-            <p className="text-muted">Nada novo para instalar: já está tudo no servidor.</p>
+            <p className="text-muted">{t('dialogoPlano.nadaNovoParaInstalarJa')}</p>
           )}
           {plano.avisos.map((a) => (
             <p key={a} className="text-warning">
@@ -73,16 +78,16 @@ export function DialogoPlano({
           ))}
           {plano.problemas.map((p) => (
             <p key={p} className="text-danger">
-              {p} Por isso, nada vai ser instalado.
+              {t('dialogoPlano.porIssoNadaVaiSer', { p })}
             </p>
           ))}
           <ListaManuais
             itens={comAssistente}
-            texto={`O autor não deixa outros apps baixarem estes arquivos. Ao instalar, a janela Downloads necessários abre a página de cada um; baixe pelo navegador e o app põe na pasta ${extras} sozinho:`}
+            texto={t('dialogoPlano.oAutorNaoDeixaOutros', { extras })}
           />
           <ListaManuais
             itens={soLink}
-            texto={`O autor não deixa outros apps baixarem estes arquivos. Baixe pelo site e coloque na pasta ${extras}:`}
+            texto={t('dialogoPlano.oAutorNaoDeixaOutros2', { extras })}
           />
           {ocupado && progresso && (
             <BarraProgresso

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type -- JavaScript puro, sem tipos */
 // Lê o .cpuprofile do processo principal e mostra os trechos em que ele ficou ocupado sem
 // parar por mais de 300 ms (o que trava a janela), com as funções que mais apareceram.
 import { readFileSync } from 'node:fs'

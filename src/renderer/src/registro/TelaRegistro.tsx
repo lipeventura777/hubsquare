@@ -7,6 +7,7 @@ import { IconeRegistro } from '../componentes/icones'
 import { Esqueleto } from '../componentes/movimento'
 import { Aviso, Botao, CaixaSelecao, Campo, EstadoVazio } from '../componentes/ui'
 import { corDaLinha } from '../servidor/comandos'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
 type Tipo = 'logs' | 'travamentos'
 
@@ -42,8 +43,8 @@ function AcoesDoApp(): React.JSX.Element {
       ) : !acoes.length ? (
         <EstadoVazio
           icone={<IconeRegistro />}
-          titulo="Nada por aqui ainda"
-          texto="Quando a tela Automação desligar, reiniciar ou fizer um backup sozinha, isso aparece aqui."
+          titulo={t('telaRegistro.nadaPorAquiAinda')}
+          texto={t('telaRegistro.quandoATelaAutomacaoDesligar')}
         />
       ) : (
         <ul className="flex max-w-[900px] flex-col divide-y divide-linha border border-linha bg-panel">
@@ -83,12 +84,12 @@ function ArquivosDoRegistro({ aba }: { aba: string }): React.JSX.Element {
       <aside className="flex w-60 shrink-0 flex-col border border-linha bg-panel">
         <header className="flex h-12 items-center justify-between border-b border-linha px-4">
           <h2 className="text-sm font-bold">
-            {tipo === 'logs' ? 'Arquivos de log' : 'Relatórios'}
+            {tipo === 'logs' ? t('telaRegistro.arquivosDeLog') : t('telaRegistro.relatorios')}
           </h2>
           <Botao
             tamanho="pequeno"
-            title="Atualizar"
-            aria-label="Atualizar"
+            title={t('telaRegistro.atualizar')}
+            aria-label={t('telaRegistro.atualizar')}
             onClick={() => void carregar()}
           >
             ⟳
@@ -122,11 +123,15 @@ function ArquivosDoRegistro({ aba }: { aba: string }): React.JSX.Element {
         ) : !aberto ? (
           <EstadoVazio
             icone={<IconeRegistro />}
-            titulo={tipo === 'logs' ? 'Nenhum log ainda' : 'Nenhum travamento'}
+            titulo={
+              tipo === 'logs'
+                ? t('telaRegistro.nenhumLogAinda')
+                : t('telaRegistro.nenhumTravamento')
+            }
             texto={
               tipo === 'logs'
-                ? 'Os logs aparecem depois que o servidor ligar pela primeira vez.'
-                : 'Que bom: o servidor nunca travou a ponto de gerar um relatório.'
+                ? t('telaRegistro.osLogsAparecemDepoisQue')
+                : t('telaRegistro.queBomOServidorNunca')
             }
           />
         ) : tipo === 'logs' ? (
@@ -180,8 +185,8 @@ function VisualizadorLog({ nome }: { nome: string }): React.JSX.Element {
       <div className="flex flex-wrap items-center gap-3">
         <Campo
           type="search"
-          aria-label="Buscar no log"
-          placeholder="Buscar…"
+          aria-label={t('telaRegistro.buscarNoLog')}
+          placeholder={t('telaRegistro.buscar')}
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           className="w-64"
@@ -205,18 +210,20 @@ function VisualizadorLog({ nome }: { nome: string }): React.JSX.Element {
               setTimeout(() => setCopiado(false), 1500)
             }}
           >
-            {copiado ? 'Copiado!' : 'Copiar'}
+            {copiado ? t('telaRegistro.copiado') : t('telaRegistro.copiar')}
           </Botao>
           <Botao tamanho="pequeno" onClick={download.baixar}>
-            Baixar
+            {t('telaRegistro.baixar')}
           </Botao>
         </div>
       </div>
       {download.erro && <MensagemErro erro={download.erro} />}
       <p className="text-xs text-muted">
-        {filtradas.length.toLocaleString('pt-BR')} linhas
+        {filtradas.length.toLocaleString(idiomaAtual())} {t('telaRegistro.linhas')}
         {filtradas.length > MAX_LINHAS &&
-          ` (mostrando as últimas ${MAX_LINHAS.toLocaleString('pt-BR')})`}
+          t('telaRegistro.mostrandoAsUltimas', {
+            toLocaleString: MAX_LINHAS.toLocaleString(idiomaAtual())
+          })}
       </p>
       <pre className="min-h-0 flex-1 overflow-auto bg-console p-3 font-mono text-[13px] leading-5 whitespace-pre-wrap break-all">
         {visiveis.map((l, i) => (
@@ -244,14 +251,11 @@ function Travamento({ nome }: { nome: string }): React.JSX.Element {
       {relatorio.causa ? (
         <Aviso tipo="atencao">
           <span>
-            <strong>Causa provável:</strong> {relatorio.causa}
+            <strong>{t('telaRegistro.causaProvavel')}</strong> {relatorio.causa}
           </span>
         </Aviso>
       ) : (
-        <p className="text-[13px] text-muted">
-          Não deu para identificar a causa sozinho. O texto completo está abaixo; ele pode ajudar
-          quem entende de servidores.
-        </p>
+        <p className="text-[13px] text-muted">{t('telaRegistro.naoDeuParaIdentificarA')}</p>
       )}
       <div className="flex justify-end gap-2">
         <Botao
@@ -259,10 +263,10 @@ function Travamento({ nome }: { nome: string }): React.JSX.Element {
           variante="destaque"
           onClick={() => void window.api.copiar(relatorio.texto)}
         >
-          Copiar
+          {t('telaRegistro.copiar')}
         </Botao>
         <Botao tamanho="pequeno" onClick={download.baixar}>
-          Baixar
+          {t('telaRegistro.baixar')}
         </Botao>
       </div>
       {download.erro && <MensagemErro erro={download.erro} />}

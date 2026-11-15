@@ -6,6 +6,7 @@ import { gravarComSeguranca, lerArquivoPropriedades, lerTexto } from './config'
 import { ErroApp } from './erros'
 import { buscarJsonOpcional } from './rede'
 import { comServidorDesligado, enviarComando, lerEstado, servidorAtual } from './servidor'
+import { t } from '../shared/i18n'
 
 // As quatro listas em .json do servidor: whitelist, OPs, jogadores banidos e IPs banidos.
 // Ligado: o servidor cuida do arquivo, então mandamos o comando. Desligado: o app edita o .json
@@ -21,7 +22,8 @@ const LISTA: Record<ListaId, { arquivo: string; adicionar: string; remover: stri
 }
 
 function validarLista(valor: unknown): ListaId {
-  if (!LISTAS.includes(valor as ListaId)) throw new ErroApp('Lista desconhecida.', String(valor))
+  if (!LISTAS.includes(valor as ListaId))
+    throw new ErroApp(t('p.whitelist.listaDesconhecida'), String(valor))
   return valor as ListaId
 }
 
@@ -52,7 +54,7 @@ function mesma(e: Entrada, lista: ListaId, valor: string): boolean {
 function servidorRodando(): boolean {
   const estado = lerEstado()
   if (estado === 'desligando') {
-    throw new ErroApp('O servidor está desligando. Espere ele desligar e tente de novo.')
+    throw new ErroApp(t('p.whitelist.oServidorEstaDesligandoEspere'))
   }
   return estado !== 'desligado'
 }
@@ -80,9 +82,7 @@ async function acharPerfil(info: InfoServidor, nome: string): Promise<Amigo> {
     `https://api.mojang.com/users/profiles/minecraft/${nome}`
   )
   if (!perfil) {
-    throw new ErroApp(
-      `Não existe conta do Minecraft com o nome "${nome}". Confira se digitou certo.`
-    )
+    throw new ErroApp(t('p.whitelist.naoExisteContaDoMinecraft', { nome }))
   }
   // A Mojang devolve o UUID sem tracinhos; os .json usam com tracinhos.
   return {

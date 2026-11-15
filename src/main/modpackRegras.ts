@@ -1,6 +1,7 @@
 import type { TipoId } from '../shared/tipos'
 import { versaoLoaderValida } from './tipos/versoesLoader'
 import { caminhoSeguro } from './zipSeguro'
+import { t } from '../shared/i18n'
 
 // Regras dos modpacks (.mrpack) sem rede nem arquivos. Testadas em tests/modpackRegras.test.ts.
 // Formato: support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack
@@ -67,23 +68,23 @@ export function lerIndice(texto: string): Indice {
   try {
     dado = JSON.parse(texto)
   } catch {
-    throw new Error('O arquivo do modpack está estragado (o índice não é um JSON válido).')
+    throw new Error(t('p.modpackRegras.indiceInvalido'))
   }
   if (dado?.game !== 'minecraft' || dado.formatVersion !== 1) {
-    throw new Error('Esse arquivo não é um modpack do Minecraft no formato do Modrinth.')
+    throw new Error(t('p.modpackRegras.naoEModpack'))
   }
   if (typeof dado.dependencies?.minecraft !== 'string' || !Array.isArray(dado.files)) {
-    throw new Error('O modpack não diz qual versão do Minecraft usa.')
+    throw new Error(t('p.modpackRegras.semVersao'))
   }
   for (const f of dado.files) {
     if (!caminhoDoPack(f?.path)) {
-      throw new Error(`O modpack tem um arquivo com caminho perigoso: ${String(f?.path)}`)
+      throw new Error(t('p.modpackRegras.caminhoPerigoso', { caminho: String(f?.path) }))
     }
     if (
       !/^[0-9a-f]{40}$/i.test(f.hashes?.sha1 ?? '') ||
       !/^[0-9a-f]{128}$/i.test(f.hashes?.sha512 ?? '')
     ) {
-      throw new Error(`O modpack não traz os hashes de ${f.path}.`)
+      throw new Error(t('p.modpackRegras.semHashes', { caminho: f.path }))
     }
   }
   return dado
@@ -95,21 +96,17 @@ export function loaderDoIndice(dependencias: Record<string, string>): {
   versaoLoader: string
 } {
   if (dependencias['quilt-loader']) {
-    throw new Error(
-      'Esse modpack usa o Quilt, que o HubSquare ainda não aceita. Escolha um pack para Fabric, Forge ou NeoForge.'
-    )
+    throw new Error(t('p.modpackRegras.usaQuilt'))
   }
   for (const [tipo, chave] of Object.entries(CHAVE_LOADER) as [TipoId, string][]) {
     const versao = dependencias[chave]
     if (versao !== undefined) {
       if (!versaoLoaderValida(versao))
-        throw new Error(`A versão do ${chave} no modpack é inválida.`)
+        throw new Error(t('p.modpackRegras.versaoInvalida', { chave }))
       return { tipo, versaoLoader: versao }
     }
   }
-  throw new Error(
-    'Esse modpack não usa Fabric, Forge nem NeoForge, então o app não consegue montar o servidor.'
-  )
+  throw new Error(t('p.modpackRegras.semLoader'))
 }
 
 // O servidor baixa tudo que não for marcado como "não roda no servidor".
@@ -125,13 +122,14 @@ export function ehMod(caminho: string): boolean {
 export function sugerirRam(mods: number, maximo: number): { gb: number; explicacao: string } {
   const ideal = mods <= 50 ? 4 : mods <= 150 ? 6 : 8
   const gb = Math.max(1, Math.min(ideal, maximo))
-  const base = `Este pack tem ${mods} ${mods === 1 ? 'mod' : 'mods'}, então sugerimos ${ideal} GB de RAM.`
+  const base = t('p.modpackRegras.estePackTemEntaoSugerimos', {
+    mods,
+    v: mods === 1 ? t('p.modpackRegras.mod') : t('p.modpackRegras.mods'),
+    ideal
+  })
   return {
     gb,
-    explicacao:
-      gb < ideal
-        ? `${base} Seu PC só deixa usar ${gb} GB, então o servidor pode ficar lento.`
-        : base
+    explicacao: gb < ideal ? t('p.modpackRegras.seuPcSoDeixaUsar', { base, gb }) : base
   }
 }
 
@@ -165,12 +163,15 @@ export function compararPack(
     const atual = disco(caminho)
     const antigo = antigos[caminho]
     if (atual === hashNovo) continue
-    if (atual === 'desativado') r.conflitos.push({ caminho, motivo: 'Você desativou este mod.' })
+    if (atual === 'desativado')
+      r.conflitos.push({ caminho, motivo: t('p.modpackRegras.voceDesativouEsteMod') })
     else if (atual === null || atual === antigo) r.escrever.push(caminho)
     else
       r.conflitos.push({
         caminho,
-        motivo: antigo ? 'Você mudou este arquivo.' : 'Já existe um arquivo seu com esse nome.'
+        motivo: antigo
+          ? t('p.modpackRegras.voceMudouEsteArquivo')
+          : t('p.modpackRegras.jaExisteUmArquivoSeu')
       })
   }
   for (const [caminho, hashAntigo] of Object.entries(antigos)) {
@@ -181,7 +182,7 @@ export function compararPack(
     else
       r.conflitos.push({
         caminho,
-        motivo: 'O pack novo não usa mais este arquivo, mas você mudou ele.'
+        motivo: t('p.modpackRegras.oPackNovoNaoUsa')
       })
   }
   return r

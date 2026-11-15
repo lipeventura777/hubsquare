@@ -1,5 +1,6 @@
 import { realpath } from 'fs/promises'
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'path'
+import { t } from '../shared/i18n'
 
 // Única porta da tela Arquivos para o disco (testada em tests/caminhoServidor.test.ts).
 // Recebe um caminho relativo à pasta do servidor, com "/" ou "\", e devolve o caminho absoluto.
@@ -30,21 +31,23 @@ async function realExistente(caminho: string): Promise<string> {
 
 export async function caminhoNoServidor(raiz: string, valor: unknown): Promise<string> {
   if (typeof valor !== 'string' || valor.includes('\0')) {
-    throw new CaminhoRecusado('caminho inválido')
+    throw new CaminhoRecusado(t('p.caminhoServidor.caminhoInvalido'))
   }
   const partes = valor.split(/[\\/]+/).filter(Boolean)
   if (isAbsolute(valor) || /^[a-z]:/i.test(valor)) throw new CaminhoRecusado('caminho absoluto')
   for (const p of partes) {
-    if (p === '..' || p === '.') throw new CaminhoRecusado(`"${p}" não é permitido`)
+    if (p === '..' || p === '.')
+      throw new CaminhoRecusado(t('p.caminhoServidor.naoEPermitido', { p }))
     if (p.includes(':') || RESERVADO.test(p) || /[<>"|?*]/.test(p) || /[. ]$/.test(p)) {
       throw new CaminhoRecusado(`nome inválido: ${p}`)
     }
   }
   const base = resolve(raiz)
   const alvo = partes.length ? join(base, ...partes) : base
-  if (!dentro(base, alvo)) throw new CaminhoRecusado('fora da pasta do servidor')
+  if (!dentro(base, alvo)) throw new CaminhoRecusado(t('p.caminhoServidor.foraDaPastaDoServidor'))
   const real = await realExistente(alvo)
-  if (!dentro(await realpath(base), real)) throw new CaminhoRecusado('atalho para fora da pasta')
+  if (!dentro(await realpath(base), real))
+    throw new CaminhoRecusado(t('p.caminhoServidor.atalhoParaForaDaPasta'))
   return alvo
 }
 

@@ -15,15 +15,23 @@ import { BarraProgresso } from '../componentes/movimento'
 import { Aviso, Botao, CaixaSelecao, Campo, Secao, Selecao } from '../componentes/ui'
 import { CamposDoJogo } from '../configuracoes/CamposDoJogo'
 import { ReceberServidor } from '../servidores/PassarServidor'
+import { t as tx } from '../../../shared/i18n'
 
-const ETAPAS = ['Tipo', 'Versão', 'Nome', 'Configurações', 'EULA', 'Pronto'] as const
+const ETAPAS = [
+  tx('assistente.tipo'),
+  tx('assistente.versao'),
+  tx('assistente.nome'),
+  tx('assistente.configuracoes'),
+  tx('assistente.eula'),
+  tx('assistente.pronto')
+] as const
 
 const DESCRICOES: Record<TipoId, string> = {
-  paper: 'Mais rápido e aceita plugins. Bom para a maioria dos servidores.',
-  vanilla: 'O servidor oficial, sem nenhuma mudança.',
-  fabric: 'Para mods leves. Cada amigo precisa dos mesmos mods no jogo.',
-  forge: 'Para mods grandes e modpacks antigos. Cada amigo precisa do Forge no jogo.',
-  neoforge: 'Sucessor do Forge, para mods das versões mais novas.'
+  paper: tx('assistente.maisRapidoEAceitaPlugins'),
+  vanilla: tx('assistente.oServidorOficialSemNenhuma'),
+  fabric: tx('assistente.paraModsLevesCadaAmigo'),
+  forge: tx('assistente.paraModsGrandesEModpacks'),
+  neoforge: tx('assistente.sucessorDoForgeParaMods')
 }
 
 // Assistente de primeira vez (DESIGN.md, seção 6.10). Só monta os pedidos; quem cria e valida é
@@ -40,7 +48,7 @@ export function Assistente({
   const [tipo, setTipo] = useState<TipoId>('paper')
   const [versoes, setVersoes] = useState<string[] | null>(null)
   const [versao, setVersao] = useState('')
-  const [nome, setNome] = useState('Meu servidor')
+  const [nome, setNome] = useState(tx('assistente.meuServidor'))
   const [meuNome, setMeuNome] = useState('')
   const [ram, setRam] = useState<LimitesRam | null>(null)
   const [config, setConfig] = useState<Configuracoes | null>(null)
@@ -60,7 +68,7 @@ export function Assistente({
         modoDeJogo: 'survival',
         dificuldade: 'easy',
         maxJogadores: 10,
-        motd: 'Servidor feito com o HubSquare',
+        motd: tx('assistente.servidorFeitoComOHubsquare'),
         pvp: true,
         ramGb: limites.sugerida
       })
@@ -124,15 +132,19 @@ export function Assistente({
   // Botão principal da barra de baixo: Próximo, depois "Criar servidor" e por fim "Ir para o painel".
   const principal =
     etapa < 4
-      ? { texto: 'Próximo', aoClicar: () => setEtapa((e) => e + 1), ativo: podeAvancar }
+      ? {
+          texto: tx('assistente.proximo'),
+          aoClicar: () => setEtapa((e) => e + 1),
+          ativo: podeAvancar
+        }
       : etapa === 4
         ? {
-            texto: criando ? 'Criando' : 'Criar servidor',
+            texto: criando ? tx('assistente.criando') : tx('assistente.criarServidor'),
             aoClicar: criar,
             ativo: eula && !criando
           }
         : {
-            texto: 'Ir para o painel',
+            texto: tx('assistente.irParaOPainel'),
             aoClicar: () => criado && aoConcluir(criado),
             ativo: !!criado
           }
@@ -143,10 +155,8 @@ export function Assistente({
         <div className="flex items-center gap-3">
           <IconeLogo className="h-8 w-8 text-accent" />
           <div>
-            <div className="texto-pixel text-[22px]">Bem-vindo ao ServSquare</div>
-            <div className="text-[13px] text-muted">
-              Vamos criar o seu servidor em poucos passos.
-            </div>
+            <div className="texto-pixel text-[22px]">{tx('assistente.bemVindoAoServsquare')}</div>
+            <div className="text-[13px] text-muted">{tx('assistente.vamosCriarOSeuServidor')}</div>
           </div>
         </div>
         <BarraDeEtapas etapa={etapa} />
@@ -155,7 +165,7 @@ export function Assistente({
       <div className="vidro-painel m-2.5 min-h-0 flex-1 overflow-auto">
         <div className="mx-auto flex w-full max-w-[720px] flex-col gap-10 p-10">
           {etapa === 0 && (
-            <Secao titulo="Que tipo de servidor?">
+            <Secao titulo={tx('assistente.queTipoDeServidor')}>
               <div className="grid grid-cols-2 gap-3">
                 {(Object.keys(NOMES_TIPOS) as TipoId[]).map((t) => (
                   <button
@@ -171,7 +181,7 @@ export function Assistente({
                       {NOMES_TIPOS[t]}
                       {t === 'paper' && (
                         <span className="ml-2 bg-accent px-1.5 py-0.5 text-xs text-accent-text">
-                          recomendado
+                          {tx('assistente.recomendado')}
                         </span>
                       )}
                     </span>
@@ -182,23 +192,21 @@ export function Assistente({
             </Secao>
           )}
           {etapa === 0 && (
-            <Secao titulo="Um amigo passou um servidor para você?">
+            <Secao titulo={tx('assistente.umAmigoPassouUmServidor')}>
               <ReceberServidor bloqueado={false} />
             </Secao>
           )}
 
           {etapa === 1 && (
-            <Secao titulo="Qual versão do jogo?">
-              <p className="text-[13px] text-muted">
-                Use a mesma versão que você e seus amigos jogam. A mais nova já vem escolhida.
-              </p>
+            <Secao titulo={tx('assistente.qualVersaoDoJogo')}>
+              <p className="text-[13px] text-muted">{tx('assistente.useAMesmaVersaoQue')}</p>
               <Selecao
                 value={versao}
                 disabled={!versoes}
                 onChange={(e) => setVersao(e.target.value)}
-                aria-label="Versão do jogo"
+                aria-label={tx('assistente.versaoDoJogo')}
               >
-                {!versoes && <option>Carregando versões...</option>}
+                {!versoes && <option>{tx('assistente.carregandoVersoes')}</option>}
                 {versoes?.map((v) => (
                   <option key={v} value={v}>
                     {v}
@@ -209,17 +217,14 @@ export function Assistente({
           )}
 
           {etapa === 2 && (
-            <Secao titulo="Qual o nome do servidor?">
+            <Secao titulo={tx('assistente.qualONomeDoServidor')}>
               <Campo
                 value={nome}
                 maxLength={32}
                 onChange={(e) => setNome(e.target.value)}
-                aria-label="Nome do servidor"
+                aria-label={tx('assistente.nomeDoServidor')}
               />
-              <p className="text-xs text-muted">
-                Até 32 letras, números, espaços, &quot;.&quot;, &quot;-&quot; ou &quot;_&quot;. Vira
-                o nome da pasta em Documentos\ServSquare\servidores.
-              </p>
+              <p className="text-xs text-muted">{tx('assistente.ate32LetrasNumerosEspacos')}</p>
             </Secao>
           )}
 
@@ -229,40 +234,35 @@ export function Assistente({
                 config={config}
                 ram={ram}
                 mudar={mudar}
-                nome={nome.trim() || 'Meu servidor'}
+                nome={nome.trim() || tx('assistente.meuServidor')}
               />
-              <Secao titulo="Whitelist">
+              <Secao titulo={tx('assistente.whitelist')}>
                 <label className="flex flex-col gap-1 text-[13px]">
-                  Seu nome no jogo (opcional)
+                  {tx('assistente.seuNomeNoJogoOpcional')}
                   <Campo
                     value={meuNome}
                     maxLength={16}
-                    placeholder="Para você já entrar na whitelist"
+                    placeholder={tx('assistente.paraVoceJaEntrarNa')}
                     onChange={(e) => setMeuNome(e.target.value)}
                   />
                 </label>
-                <p className="text-xs text-muted">
-                  O servidor só deixa entrar quem está na whitelist. Seus amigos você adiciona
-                  depois, na tela Configurações.
-                </p>
+                <p className="text-xs text-muted">{tx('assistente.oServidorSoDeixaEntrar')}</p>
               </Secao>
             </>
           )}
 
           {etapa === 4 && (
-            <Secao titulo="Termos de uso do jogo">
-              <p className="text-[13px] text-muted">
-                Para rodar um servidor, você precisa aceitar o EULA (contrato de uso) da Mojang.
-              </p>
+            <Secao titulo={tx('assistente.termosDeUsoDoJogo')}>
+              <p className="text-[13px] text-muted">{tx('assistente.paraRodarUmServidorVoce')}</p>
               <CaixaSelecao marcada={eula} disabled={criando} aoMudar={setEula}>
-                Li e aceito o{' '}
+                {tx('assistente.liEAceitoO')}{' '}
                 <a
                   href="https://aka.ms/MinecraftEULA"
                   target="_blank"
                   rel="noreferrer"
                   className="underline"
                 >
-                  EULA do Minecraft
+                  {tx('assistente.eulaDoMinecraft')}
                 </a>
               </CaixaSelecao>
               {criando && progresso && (
@@ -279,10 +279,13 @@ export function Assistente({
           )}
 
           {etapa === 5 && criado && (
-            <Secao titulo="Tudo pronto!">
+            <Secao titulo={tx('assistente.tudoPronto')}>
               <Aviso tipo="sucesso">
-                O servidor {criado.nome} ({NOMES_TIPOS[criado.tipo]} {criado.versao}) foi criado.
-                Agora é só ligar.
+                {tx('assistente.oServidorFoiCriadoAgora', {
+                  nome: criado.nome,
+                  v: NOMES_TIPOS[criado.tipo],
+                  versao: criado.versao
+                })}
               </Aviso>
               {avisoFinal && <MensagemErro erro={avisoFinal} />}
             </Secao>
@@ -296,10 +299,10 @@ export function Assistente({
         {etapa === 5 ? (
           <span />
         ) : etapa === 0 && aoCancelar ? (
-          <Botao onClick={aoCancelar}>Cancelar</Botao>
+          <Botao onClick={aoCancelar}>{tx('assistente.cancelar')}</Botao>
         ) : (
           <Botao onClick={() => setEtapa((e) => e - 1)} disabled={etapa === 0 || criando}>
-            Voltar
+            {tx('assistente.voltar')}
           </Botao>
         )}
         <button
@@ -324,7 +327,7 @@ export function BarraDeEtapas({
   etapas?: readonly string[]
 }): React.JSX.Element {
   return (
-    <ol className="flex items-start" aria-label="Etapas">
+    <ol className="flex items-start" aria-label={tx('assistente.etapas')}>
       {etapas.map((nome, i) => {
         const feita = i < etapa
         const atual = i === etapa

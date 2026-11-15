@@ -9,6 +9,7 @@ import { Botao, EstadoVazio } from '../componentes/ui'
 import { irPara } from '../estrutura/navegar'
 import { desatualizada, useJogar } from './useJogar'
 import { JogarEmBreve, precisaInstalar, rotuloInstalar, useAbrirLauncherLigado } from './Instalar'
+import { t } from '../../../shared/i18n'
 
 // PlaySquare › Servidores (Fase P5, DESIGN.md seção 6.1.6): os servidores das minhas instalações
 // (os meus, do ServSquare, e os de convites), com status, jogadores, recado do dono, versão do
@@ -58,16 +59,15 @@ export function TelaServidoresJogo(): React.JSX.Element {
   return (
     <div className="min-h-0 flex-1 overflow-auto">
       <div className="mx-auto flex max-w-[860px] flex-col gap-4 p-10">
-        <TituloPagina>Servidores</TituloPagina>
+        <TituloPagina>{t('telaServidoresJogo.servidores')}</TituloPagina>
         <p className="-mt-6 text-[13px] text-muted">
-          Os servidores das suas instalações: os seus (do ServSquare) e os dos convites dos amigos.
-          O status atualiza a cada 30 segundos.
+          {t('telaServidoresJogo.osServidoresDasSuasInstalacoes')}
         </p>
         {erro && <MensagemErro erro={erro} />}
         {fluxo.erro && <MensagemErro erro={fluxo.erro} />}
         {fluxo.ocupado && (
           <BarraProgresso
-            rotulo={fluxo.progresso?.etapa ?? 'Preparando...'}
+            rotulo={fluxo.progresso?.etapa ?? t('telaServidoresJogo.preparando')}
             valor={fluxo.progresso?.recebido ?? 0}
             maximo={fluxo.progresso?.total ?? 0}
           />
@@ -77,8 +77,8 @@ export function TelaServidoresJogo(): React.JSX.Element {
         ) : !lista.length ? (
           <EstadoVazio
             icone={<IconeServidor />}
-            titulo="Nenhum servidor ainda"
-            texto="Entre com um convite em Instalações, ou crie um servidor no ServSquare."
+            titulo={t('telaServidoresJogo.nenhumServidorAinda')}
+            texto={t('telaServidoresJogo.entreComUmConviteEm')}
           />
         ) : (
           <ul className="flex flex-col gap-3">
@@ -122,10 +122,13 @@ function LinhaServidor({
   const situacao = status?.ligando ? 'ligando' : status?.online ? 'ligado' : 'desligado'
   const pacote =
     i.convite && i.convite.versaoAplicada
-      ? `Pacote versão ${i.convite.versaoAplicada}${desatualizada(i) ? ` (nova: ${i.convite.versaoDisponivel})` : ''}`
+      ? t('telaServidoresJogo.pacoteVersao', {
+          versaoAplicada: i.convite.versaoAplicada,
+          v: desatualizada(i) ? ` (nova: ${i.convite.versaoDisponivel})` : ''
+        })
       : i.convite
-        ? 'Pacote ainda não instalado'
-        : 'Pacote igual ao do seu servidor'
+        ? t('telaServidoresJogo.pacoteAindaNaoInstalado')
+        : t('telaServidoresJogo.pacoteIgualAoDoSeu')
 
   async function gerenciar(): Promise<void> {
     if (i.origem.tipo !== 'servidor') return
@@ -133,7 +136,7 @@ function LinhaServidor({
     const r = await window.api.ativarServidor(i.origem.servidorId)
     if (!r.ok) {
       setErro(r.erro)
-      irPara({ area: 'serv', pagina: 'Servidores' })
+      irPara({ area: 'serv', pagina: t('telaServidoresJogo.servidores') })
       return
     }
     irPara({ area: 'serv', pagina: 'Painel' })
@@ -153,26 +156,28 @@ function LinhaServidor({
         <span className="flex items-center gap-2">
           <BolinhaStatus estado={situacao} />
           <b className="truncate">{status?.nome ?? i.nome}</b>
-          <span className="text-xs text-muted">{meu ? 'Seu servidor' : 'Convite'}</span>
+          <span className="text-xs text-muted">
+            {meu ? t('telaServidoresJogo.seuServidor') : t('telaServidoresJogo.convite')}
+          </span>
         </span>
         <span className="text-xs text-muted">
           {status === undefined
-            ? 'Conferindo...'
+            ? t('telaServidoresJogo.conferindo')
             : !status
-              ? 'Sem endereço'
+              ? t('telaServidoresJogo.semEndereco')
               : status.ligando
-                ? 'Ligando…'
+                ? t('telaServidoresJogo.ligando')
                 : status.online
                   ? status.contagem
                     ? `${status.contagem.online}/${status.contagem.max} online`
-                    : `${status.jogadores.length} online`
-                  : 'Servidor desligado'}
+                    : t('telaServidoresJogo.online', { length: status.jogadores.length })
+                  : t('telaServidoresJogo.servidorDesligado')}
           {' · '}
           {i.versao} · {pacote}
           {status?.endereco && <span className="font-mono"> · {status.endereco}</span>}
         </span>
         {status?.online && status.jogadores.length > 0 && (
-          <span className="flex gap-1" aria-label="Jogadores online">
+          <span className="flex gap-1" aria-label={t('telaServidoresJogo.jogadoresOnline')}>
             {status.jogadores.slice(0, 10).map((j) => (
               <span key={j.nome} title={j.nome}>
                 <CabecaJogador nome={j.nome} uuid={j.uuid ?? undefined} />
@@ -181,20 +186,22 @@ function LinhaServidor({
           </span>
         )}
         {!status?.online && status?.mensagem && (
-          <span className="text-xs">Recado do dono: “{status.mensagem}”</span>
+          <span className="text-xs">
+            {t('telaServidoresJogo.recadoDoDono', { mensagem: status.mensagem })}
+          </span>
         )}
         {erro && <MensagemErro erro={erro} />}
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {meu && (
           <Botao tamanho="pequeno" onClick={() => void gerenciar()}>
-            Gerenciar no ServSquare
+            {t('telaServidoresJogo.gerenciarNoServsquare')}
           </Botao>
         )}
         {!meu && (
           <BotaoDiagnostico
-            rotulo="Não consigo entrar"
-            titulo={`Não consigo entrar em ${i.nome}`}
+            rotulo={t('telaServidoresJogo.naoConsigoEntrar')}
+            titulo={t('telaServidoresJogo.naoConsigoEntrarEm', { nome: i.nome })}
             tamanho="pequeno"
             rodar={() => window.api.diagnosticarInstalacao(i.id)}
             aoConsertar={async () => {
@@ -206,7 +213,9 @@ function LinhaServidor({
         )}
         {abrirLigado ? (
           <Botao variante="primario" disabled={ocupado} onClick={aoJogar}>
-            {desatualizada(i) ? 'Atualizar e jogar' : 'Jogar'}
+            {desatualizada(i)
+              ? t('telaServidoresJogo.atualizarEJogar')
+              : t('telaServidoresJogo.jogar')}
           </Botao>
         ) : (
           <>
@@ -222,7 +231,7 @@ function LinhaServidor({
                     .then((r) => setErro(r.ok ? null : r.erro))
                 }
               >
-                Abrir pasta
+                {t('telaServidoresJogo.abrirPasta')}
               </Botao>
             )}
             <JogarEmBreve />

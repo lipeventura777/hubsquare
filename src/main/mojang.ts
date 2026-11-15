@@ -1,5 +1,6 @@
 import { ErroApp } from './erros'
 import { buscarJson } from './rede'
+import { t } from '../shared/i18n'
 
 const MANIFESTO = 'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json'
 
@@ -30,7 +31,7 @@ export async function versoesRelease(): Promise<string[]> {
 
 export async function detalhesVersao(id: string): Promise<VersaoMojang> {
   const versao = (await lerManifesto()).versions.find((v) => v.id === id)
-  if (!versao) throw new ErroApp(`Não encontrei a versão ${id}. Escolha outra versão da lista.`)
+  if (!versao) throw new ErroApp(t('p.mojang.naoEncontreiAVersaoEscolha', { id }))
   return buscarJson<VersaoMojang>(versao.url)
 }
 

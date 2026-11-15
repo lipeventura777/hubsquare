@@ -3,12 +3,13 @@ import { useEffect, useState } from 'react'
 import type { ErroTela, Instalacao } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { Aviso, Botao } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Correção P1: enquanto a abertura direta do jogo não funciona, o botão principal é INSTALAR
 // (monta a pasta da instalação) e o JOGAR aparece desativado como "Em breve". Nada aqui abre o
 // launcher, a Microsoft Store ou links externos.
 
-export const DICA_JOGAR = 'Em breve: abrir o jogo direto pelo HubSquare'
+export const DICA_JOGAR = t('instalar.emBreveAbrirOJogo')
 
 // Opção interna do processo principal (ABRIR_LAUNCHER_LIGADO). Desligada até eu religar.
 export function useAbrirLauncherLigado(): boolean {
@@ -25,8 +26,8 @@ export function precisaInstalar(i: Instalacao): boolean {
 }
 
 export function rotuloInstalar(i: Instalacao, ocupado: boolean): string {
-  if (ocupado) return i.instalada ? 'ATUALIZANDO' : 'INSTALANDO'
-  return i.instalada ? 'ATUALIZAR' : 'INSTALAR'
+  if (ocupado) return i.instalada ? t('instalar.atualizando') : t('instalar.instalando')
+  return i.instalada ? t('instalar.atualizar') : t('instalar.instalar')
 }
 
 // JOGAR visível e desativado, com a dica.
@@ -37,8 +38,8 @@ export function JogarEmBreve({
 }): React.JSX.Element {
   return (
     <span title={DICA_JOGAR}>
-      <Botao tamanho={tamanho} disabled aria-label={`Jogar. ${DICA_JOGAR}`}>
-        JOGAR
+      <Botao tamanho={tamanho} disabled aria-label={t('instalar.jogar2', { DICA_JOGAR })}>
+        {t('instalar.jogar')}
       </Botao>
     </span>
   )
@@ -64,7 +65,7 @@ export function AcoesDaInstalada({
             void window.api.abrirPastaInstalacao(i.id).then((r) => setErro(r.ok ? null : r.erro))
           }
         >
-          Abrir pasta da instalação
+          {t('instalar.abrirPastaDaInstalacao')}
         </Botao>
         <Botao
           tamanho={compacto ? 'pequeno' : 'normal'}
@@ -80,21 +81,11 @@ export function AcoesDaInstalada({
             if (r.valor) setSalvo(r.valor)
           }}
         >
-          {exportando ? 'Exportando...' : 'Exportar para Modrinth App / Prism Launcher'}
+          {exportando ? t('instalar.exportando') : t('instalar.exportarParaModrinthAppPrism')}
         </Botao>
       </div>
-      {!compacto && (
-        <p className="text-xs text-muted">
-          Abrir o jogo direto pelo HubSquare chega numa próxima versão. Por enquanto, importe o
-          arquivo exportado no Modrinth App ou no Prism Launcher e jogue por eles.
-        </p>
-      )}
-      {salvo && (
-        <Aviso tipo="sucesso">
-          Salvo em Downloads como {salvo}. No Modrinth App ou no Prism Launcher, importe esse
-          arquivo.
-        </Aviso>
-      )}
+      {!compacto && <p className="text-xs text-muted">{t('instalar.abrirOJogoDiretoPelo')}</p>}
+      {salvo && <Aviso tipo="sucesso">{t('instalar.salvoEmDownloadsComoNo', { salvo })}</Aviso>}
       {erro && <MensagemErro erro={erro} />}
     </div>
   )

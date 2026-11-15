@@ -8,6 +8,7 @@ import { texturasDaEntidade, texturasDoItem, type Idioma } from './dadosJogador'
 import { ErroApp, detalhar } from './erros'
 import { detalhesVersao } from './mojang'
 import { baixar, buscarJson, type AoProgredir } from './rede'
+import { idiomaAtual, t } from '../shared/i18n'
 
 // Ícones e nomes traduzidos de itens (DESIGN.md, seção 1): baixados só quando o usuário pede,
 // do client.jar oficial e do pt_br.json da versão, e guardados na pasta de dados do app.
@@ -15,7 +16,7 @@ import { baixar, buscarJson, type AoProgredir } from './rede'
 
 function pastaDaVersao(versao: string): string {
   if (!/^[\w.-]+$/.test(versao) || versao.includes('..')) {
-    throw new ErroApp('A versão deste servidor tem um nome estranho.', versao)
+    throw new ErroApp(t('p.itensDoJogo.aVersaoDesteServidorTem'), versao)
   }
   return join(app.getPath('userData'), 'jogo', versao)
 }
@@ -39,7 +40,7 @@ async function baixarAgora(versao: string, aoProgredir: AoProgredir): Promise<vo
   const pasta = pastaDaVersao(versao)
   const v = await detalhesVersao(versao)
   if (!v.downloads.client || !v.assetIndex) {
-    throw new ErroApp('Esta versão não tem ícones para baixar.')
+    throw new ErroApp(t('p.itensDoJogo.estaVersaoNaoTemIcones'))
   }
   await mkdir(pasta, { recursive: true })
   const jar = join(pasta, 'client.jar')
@@ -48,19 +49,25 @@ async function baixarAgora(versao: string, aoProgredir: AoProgredir): Promise<vo
       v.downloads.client.url,
       jar,
       { algoritmo: 'sha1', valor: v.downloads.client.sha1 },
-      'Baixando ícones dos itens',
+      t('p.itensDoJogo.baixandoIcones'),
       aoProgredir
     )
     // shortcut: só o formato da 1.13+ (textures/item e lang em .json); antes disso, falha aqui.
     const parte = (caminho: string): string => `assets/minecraft/${caminho}`
     await tar(
-      ['-x', '-f', jar, parte('textures/item'), parte('textures/block'), parte('models')],
+      [
+        '-x',
+        '-f',
+        jar,
+        parte('textures/item'),
+        parte('textures/block'),
+        parte('models'),
+        // Fase I1: nomes em inglês para o app em inglês.
+        parte('lang/en_us.json')
+      ],
       pasta
     ).catch((e) => {
-      throw new ErroApp(
-        'Não consegui separar os ícones desta versão. Eles funcionam a partir da versão 1.13.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.itensDoJogo.naoConseguiSepararOsIcones'), detalhar(e))
     })
     // A pasta "items" só existe a partir da 1.21.4.
     await tar(['-x', '-f', jar, parte('items')], pasta).catch(() => {})
@@ -75,12 +82,12 @@ async function baixarAgora(versao: string, aoProgredir: AoProgredir): Promise<vo
       `https://resources.download.minecraft.net/${hash.slice(0, 2)}/${hash}`,
       join(pasta, 'pt_br.json'),
       { algoritmo: 'sha1', valor: hash },
-      'Baixando nomes em português',
+      t('p.itensDoJogo.baixandoNomes'),
       aoProgredir
     )
   }
   await writeFile(join(pasta, 'pronto'), '')
-  recursos.delete(versao)
+  for (const k of [...recursos.keys()]) if (k.startsWith(`${versao}|`)) recursos.delete(k)
 }
 
 // Ícones são data URL, ou null para a tela usar o bloco "?".
@@ -93,10 +100,12 @@ export interface Recursos {
 const recursos = new Map<string, Promise<Recursos>>()
 
 export function recursosDaVersao(versao: string): Promise<Recursos> {
-  let pedido = recursos.get(versao)
+  // Um por versão e idioma: trocar de idioma lê os nomes do outro.
+  const chave = `${versao}|${idiomaAtual()}`
+  let pedido = recursos.get(chave)
   if (!pedido) {
     pedido = carregar(versao)
-    recursos.set(versao, pedido)
+    recursos.set(chave, pedido)
   }
   return pedido
 }
@@ -105,7 +114,11 @@ async function carregar(versao: string): Promise<Recursos> {
   if (!baixados(versao)) return { idioma: {}, iconeItem: () => null, iconeEntidade: () => null }
   const pasta = pastaDaVersao(versao)
   const assets = join(pasta, 'assets', 'minecraft')
-  const idioma: Idioma = await readFile(join(pasta, 'pt_br.json'), 'utf8')
+  const nomes =
+    idiomaAtual() === 'en-US'
+      ? join(pasta, 'assets', 'minecraft', 'lang', 'en_us.json')
+      : join(pasta, 'pt_br.json')
+  const idioma: Idioma = await readFile(nomes, 'utf8')
     .then((t) => JSON.parse(t) as Idioma)
     .catch(() => ({}))
   const ler = (caminho: string): unknown => {

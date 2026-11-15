@@ -13,6 +13,7 @@ import { metaDoJar } from './metaJar'
 import { escolherVersao } from './modsRegras'
 import { baixar } from './rede'
 import { eventos, servidorAtual } from './servidor'
+import { t } from '../shared/i18n'
 
 // O servidor não ligou porque faltam mods e o app não achou no modpack: cada mod é procurado no
 // Modrinth (o id do erro costuma ser o slug do projeto), para o Minecraft e o loader do servidor.
@@ -112,6 +113,6 @@ eventos.on('estado', (e) => {
 
 // Mod que o app não achou no Modrinth: abre a busca do Modrinth com o id.
 export async function buscarModFaltando(id: unknown): Promise<void> {
-  if (typeof id !== 'string' || !ID.test(id)) throw new ErroApp('Mod inválido.')
+  if (typeof id !== 'string' || !ID.test(id)) throw new ErroApp(t('p.modsQueFaltam.modInvalido'))
   await shell.openExternal(`https://modrinth.com/mods?q=${encodeURIComponent(id)}`)
 }

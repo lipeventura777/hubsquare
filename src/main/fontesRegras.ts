@@ -1,5 +1,6 @@
 // Regras do CurseForge e do Hangar sem rede (testadas em tests/fontesRegras.test.ts).
 import type { TipoId } from '../shared/tipos'
+import { t } from '../shared/i18n'
 
 // ---------- CurseForge ----------
 
@@ -28,9 +29,7 @@ export function loaderDoManifest(modLoaders: { id?: unknown; primary?: unknown }
   const m = id.match(/^(forge|neoforge|fabric)-([\w.+-]{1,60})$/i)
   if (!m) {
     throw new Error(
-      id
-        ? `O modpack usa o loader "${id}", que o app ainda não instala (só Forge, NeoForge e Fabric).`
-        : 'O modpack não diz qual loader usa.'
+      id ? t('p.fontesRegras.oModpackUsaOLoader', { id }) : t('p.fontesRegras.oModpackNaoDizQual')
     )
   }
   return { tipo: m[1].toLowerCase() as TipoId, versao: m[2] }

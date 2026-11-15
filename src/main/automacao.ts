@@ -13,13 +13,13 @@ import {
   reiniciar,
   servidorAtual
 } from './servidor'
+import { idiomaAtual, t } from '../shared/i18n'
 
 // Tela Automação (Fase 19): desligar quando vazio, reinício agendado e backup agendado.
 // Tudo roda neste processo, então só funciona com o app aberto (a bandeja conta).
 
 const INTERVALO = 15_000
 const MIN = 60_000
-const DIAS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
 
 let vazioDesde: number | null = null
 let ultimoBackup: number | null = null
@@ -68,12 +68,12 @@ function esperarLinha(ok: RegExp, erro: RegExp | null, ms: number): Promise<void
       else if (erro?.test(texto)) fim(() => falhar(new Error(texto)))
     }
     const limite = setTimeout(
-      () => fim(() => falhar(new Error('O servidor não respondeu a tempo.'))),
+      () => fim(() => falhar(new Error(t('p.automacao.oServidorNaoRespondeuATempo')))),
       ms
     )
     const parou = (estado: string): void => {
       if (estado !== 'ligado')
-        fim(() => falhar(new Error('O servidor desligou no meio do backup.')))
+        fim(() => falhar(new Error(t('p.automacao.oServidorDesligouNoMeio'))))
     }
     const fim = (acao: () => void): void => {
       clearTimeout(limite)
@@ -105,11 +105,14 @@ async function backupComServidorLigado(info: InfoServidor): Promise<void> {
     await registrarAcao(
       info,
       nome
-        ? `Backup agendado feito com o servidor ligado: ${nome}.`
-        : 'Backup agendado: ainda não há mundo.'
+        ? t('p.automacao.backupAgendadoFeitoComO', { nome })
+        : t('p.automacao.backupAgendadoAindaNaoHa')
     )
   } catch (e) {
-    await registrarAcao(info, `O backup agendado falhou: ${detalhar(e).split('\n')[0]}`)
+    await registrarAcao(
+      info,
+      t('p.automacao.oBackupAgendadoFalhou', { v: detalhar(e).split('\n')[0] })
+    )
     await marcarFalha(info, e)
   } finally {
     // Sempre volta a salvar, mesmo se algo falhou no meio.
@@ -143,7 +146,10 @@ async function verificar(): Promise<void> {
   ) {
     ocupado = true
     try {
-      await registrarAcao(info, `Desligado por ficar ${a.vazio.minutos} min vazio.`)
+      await registrarAcao(
+        info,
+        t('p.automacao.desligadoPorFicarMinVazio', { minutos: a.vazio.minutos })
+      )
       await desligar() // jeito normal: o backup de quando desliga acontece
     } finally {
       ocupado = false
@@ -159,11 +165,11 @@ async function verificar(): Promise<void> {
       const falta = alvoReinicio - agora
       if (falta <= 5 * MIN && falta > MIN && !avisou5) {
         avisou5 = true
-        avisarNoChat('O servidor vai reiniciar em 5 minutos.')
+        avisarNoChat(t('p.automacao.oServidorVaiReiniciarEm'))
       }
       if (falta <= MIN && avisou1 === null) {
         avisou1 = agora
-        avisarNoChat('O servidor vai reiniciar em 1 minuto. Volte em seguida!')
+        avisarNoChat(t('p.automacao.oServidorVaiReiniciarEm2'))
       }
       // Com gente online, só reinicia depois de dar ao menos 1 minuto de aviso.
       const avisado = jogadores === 0 || (avisou1 !== null && agora - avisou1 >= MIN - 5000)
@@ -174,11 +180,17 @@ async function verificar(): Promise<void> {
         try {
           await registrarAcao(
             info,
-            `Reiniciado pelo horário agendado (${DIAS[quando.getDay()]}, ${a.reinicio.hora}).`
+            t('p.automacao.reiniciadoPeloHorarioAgendado', {
+              v: quando.toLocaleDateString(idiomaAtual(), { weekday: 'long' }),
+              hora: a.reinicio.hora
+            })
           )
           await reiniciar()
         } catch (e) {
-          await registrarAcao(info, `O reinício agendado falhou: ${detalhar(e).split('\n')[0]}`)
+          await registrarAcao(
+            info,
+            t('p.automacao.oReinicioAgendadoFalhou', { v: detalhar(e).split('\n')[0] })
+          )
         } finally {
           ocupado = false
         }

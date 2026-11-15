@@ -1,4 +1,5 @@
 import { mascararIp } from '../shared/diagnosticoRegras'
+import { t } from '../shared/i18n'
 
 // Regras sem rede nem Electron do relatório de erro (Fase M8): a limpeza de tudo o que entra no
 // .zip (segredos, tokens, PIN, chaves, cookies, nome do usuário nos caminhos, IP público), o
@@ -73,7 +74,9 @@ export function limparObjeto(valor: unknown, l: Limpeza): unknown {
 export function fimDoTexto(texto: string, limite: number): string {
   if (texto.length <= limite) return texto
   const resto = texto.slice(-limite)
-  return `[HubSquare] Arquivo grande: só o final.\n${resto.slice(resto.indexOf('\n') + 1)}`
+  return t('p.relatorioRegras.hubsquareArquivoGrandeSoO', {
+    slice: resto.slice(resto.indexOf('\n') + 1)
+  })
 }
 
 // Última conferência antes de gravar: algum segredo conhecido sobrou? Devolve o nome do arquivo.
@@ -86,35 +89,58 @@ export function sobrouSegredo(arquivos: Record<string, string>, segredos: string
 }
 
 // Itens que a tela mostra, na ordem; o usuário pode tirar qualquer um (o LEIA-ME sempre vai).
-export const ITENS_RELATORIO = [
-  { id: 'erros', nome: 'Erros do app', descricao: 'logs/erros.log' },
-  { id: 'servidor', nome: 'Logs do servidor', descricao: 'O fim do latest.log e das ações do app' },
-  { id: 'jogo', nome: 'Logs do jogo', descricao: 'O fim do latest.log da instalação' },
-  {
-    id: 'travamentos',
-    nome: 'Relatórios de travamento',
-    descricao: 'Os 3 mais recentes de cada um'
-  },
-  { id: 'sistema', nome: 'Sistema', descricao: 'Versão do app e do Windows, memória e Javas' },
-  { id: 'config', nome: 'Configurações', descricao: 'Servidores e instalações, sem segredos' },
-  { id: 'mods', nome: 'Lista de mods', descricao: 'Nome, versão e hash (sem os arquivos)' },
-  {
-    id: 'manifesto',
-    nome: 'Versão do convite',
-    descricao: 'Do manifesto do servidor e da instalação'
-  },
-  {
-    id: 'diagnostico',
-    nome: 'Último diagnóstico',
-    descricao: 'O resultado do Testar tudo / Não consigo entrar'
-  }
-] as const
+export const ITENS_RELATORIO = () =>
+  [
+    { id: 'erros', nome: t('p.relatorioRegras.errosDoApp'), descricao: 'logs/erros.log' },
+    {
+      id: 'servidor',
+      nome: t('p.relatorioRegras.logsDoServidor'),
+      descricao: t('p.relatorioRegras.oFimDoLatestLog')
+    },
+    {
+      id: 'jogo',
+      nome: t('p.relatorioRegras.logsDoJogo'),
+      descricao: t('p.relatorioRegras.oFimDoLatestLog2')
+    },
+    {
+      id: 'travamentos',
+      nome: t('p.relatorioRegras.relatoriosDeTravamento'),
+      descricao: t('p.relatorioRegras.os3MaisRecentesDe')
+    },
+    {
+      id: 'sistema',
+      nome: t('p.relatorioRegras.sistema'),
+      descricao: t('p.relatorioRegras.versaoDoAppEDo')
+    },
+    {
+      id: 'config',
+      nome: t('p.relatorioRegras.configuracoes'),
+      descricao: t('p.relatorioRegras.servidoresEInstalacoesSemSegredos')
+    },
+    {
+      id: 'mods',
+      nome: t('p.relatorioRegras.listaDeMods'),
+      descricao: t('p.relatorioRegras.nomeVersaoEHashSem')
+    },
+    {
+      id: 'manifesto',
+      nome: t('p.relatorioRegras.versaoDoConvite'),
+      descricao: t('p.relatorioRegras.doManifestoDoServidorE')
+    },
+    {
+      id: 'diagnostico',
+      nome: t('p.relatorioRegras.ultimoDiagnostico'),
+      descricao: t('p.relatorioRegras.oResultadoDoTestarTudo')
+    }
+  ] as const
 
-export type ItemRelatorio = (typeof ITENS_RELATORIO)[number]['id']
+export type ItemRelatorio = ReturnType<typeof ITENS_RELATORIO>[number]['id']
 
 export function itensEscolhidos(tirar: unknown): ItemRelatorio[] {
   const fora = Array.isArray(tirar) ? tirar : []
-  return ITENS_RELATORIO.map((i) => i.id).filter((id) => !fora.includes(id))
+  return ITENS_RELATORIO()
+    .map((i) => i.id)
+    .filter((id) => !fora.includes(id))
 }
 
 // "HubSquare-relatorio-2026-11-13_15-40.zip" (data e hora locais).
@@ -134,27 +160,29 @@ export function leiaMe(r: {
   diagnostico: string | null
 }): string {
   return [
-    'RELATÓRIO DE ERRO DO HUBSQUARE',
+    t('p.relatorioRegras.relatorioDeErroDoHubsquare'),
     '',
     `Gerado em: ${r.geradoEm}`,
-    `Versão do app: ${r.versaoApp}`,
-    `Windows: ${r.windows}`,
+    t('p.relatorioRegras.versaoDoApp', { versaoApp: r.versaoApp }),
+    t('p.relatorioRegras.windows', { windows: r.windows }),
     `Servidor escolhido: ${r.servidor ?? '(nenhum)'}`,
-    `Instalação escolhida: ${r.instalacao ?? '(nenhuma)'}`,
+    t('p.relatorioRegras.instalacaoEscolhida', {
+      nome: r.instalacao ?? t('p.relatorioRegras.nenhuma')
+    }),
     '',
-    'Último erro do app:',
+    t('p.relatorioRegras.ultimoErroDoApp'),
     r.ultimoErro ?? '(nenhum)',
     '',
-    'Último diagnóstico de conexão:',
-    r.diagnostico ?? '(nenhum nesta sessão)',
+    t('p.relatorioRegras.ultimoDiagnosticoDeConexao'),
+    r.diagnostico ?? t('p.relatorioRegras.nenhumNestaSessao'),
     '',
-    'Arquivos neste relatório:',
+    t('p.relatorioRegras.arquivosNesteRelatorio'),
     ...r.arquivos.map((a) => `- ${a}`),
     '',
-    'Segredos, tokens, PIN, chaves e cookies foram removidos; o nome do usuário do Windows virou',
-    `${USUARIO} e o IP público aparece com os dois últimos números escondidos. Nenhum mundo nem`,
-    'arquivo de mod vai junto. Este arquivo só existe neste PC: o HubSquare não envia nada.',
-    'Como ler: docs/como-ler-relatorio.md no repositório do HubSquare.'
+    t('p.relatorioRegras.segredosTokensPinChavesE'),
+    t('p.relatorioRegras.eOIpPublicoAparece', { USUARIO }),
+    t('p.relatorioRegras.arquivoDeModVaiJunto'),
+    t('p.relatorioRegras.comoLerDocsComoLer')
   ].join('\n')
 }
 

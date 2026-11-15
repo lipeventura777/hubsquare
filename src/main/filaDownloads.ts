@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 // Fila de trabalhos (downloads de modpack): no máximo N ao mesmo tempo, nova tentativa limitada
 // com espera crescente e cancelamento. Uma falha não para as outras: no fim, devolve a lista do
 // que falhou (para "Tentar de novo só os que falharam"). Sem rede nem Electron: testada em
@@ -5,7 +6,7 @@
 
 export class Cancelado extends Error {
   constructor() {
-    super('Cancelado.')
+    super(t('p.filaDownloads.cancelado'))
   }
 }
 

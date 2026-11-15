@@ -3,6 +3,7 @@ import { readFile, rm } from 'fs/promises'
 import { join } from 'path'
 import { gravarComSeguranca } from './config'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // Chave da API do CurseForge (Fase 24): cada usuário pede a própria e cola em
 // Opções › Integrações. Fica só na pasta de dados do app, criptografada pelo Windows
@@ -31,17 +32,13 @@ export async function salvarChave(
 ): Promise<void> {
   const chave = typeof valor === 'string' ? valor.trim() : ''
   if (!/^[\x21-\x7e]{20,200}$/.test(chave)) {
-    throw new ErroApp('Essa chave não parece certa. Copie a chave inteira do e-mail do CurseForge.')
+    throw new ErroApp(t('p.chaveCurseForge.essaChaveNaoPareceCerta'))
   }
   if (!safeStorage.isEncryptionAvailable()) {
-    throw new ErroApp(
-      'O Windows não deixou criptografar a chave, então ela não foi guardada. Reinicie o PC e tente de novo.'
-    )
+    throw new ErroApp(t('p.chaveCurseForge.oWindowsNaoDeixouCriptografar'))
   }
   if (!(await testar(chave))) {
-    throw new ErroApp(
-      'O CurseForge recusou essa chave. Confira se copiou certo e se ela já foi aprovada.'
-    )
+    throw new ErroApp(t('p.chaveCurseForge.oCurseforgeRecusouEssaChave'))
   }
   const cifrada = safeStorage.encryptString(chave).toString('base64')
   await gravarComSeguranca(arquivo(), JSON.stringify({ chave: cifrada }))

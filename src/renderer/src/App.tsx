@@ -22,11 +22,14 @@ import { TelaConfiguracoes } from './configuracoes/TelaConfiguracoes'
 import { BarraLateral, type Pagina, type PaginaPlay } from './estrutura/BarraLateral'
 import { FundoDoApp } from './fundo/Fundo'
 import { BoasVindas } from './estrutura/BoasVindas'
+import { EscolherIdioma } from './estrutura/EscolherIdioma'
+import { voltouDoIdioma } from './idioma'
 import { Cabecalho } from './estrutura/Cabecalho'
 import {
   EVENTO_ABRIR,
   EVENTO_AREA,
   EVENTO_CRIAR_MODPACK,
+  EVENTO_FUNDO_SERVIDOR,
   irPara,
   EVENTO_MODO,
   guardarConviteParaColar,
@@ -54,6 +57,7 @@ import { TelaJogar } from './playsquare/TelaJogar'
 import { TelaServidoresJogo } from './playsquare/TelaServidoresJogo'
 import { TelaCapturas } from './playsquare/TelaCapturas'
 import { TelaAjustesJogo, TelaDoJogo } from './playsquare/ConteudoDoJogo'
+import { t } from '../../shared/i18n'
 
 // Título e abas de cada tela (DESIGN.md, seção 6.2). "inicial" é a aba que abre primeiro.
 const ABAS: Record<Pagina, { titulo: string; abas: readonly string[]; inicial?: string }> = {
@@ -95,7 +99,10 @@ const ABAS: Record<Pagina, { titulo: string; abas: readonly string[]; inicial?: 
     titulo: 'Conexão',
     abas: ['playit.gg', 'Radmin VPN', 'Rede local', 'Avançado', 'Convites']
   },
-  Aparência: { titulo: 'Aparência', abas: ['Tema', 'Fundo', 'Animações'] }
+  Aparência: {
+    titulo: 'Aparência',
+    abas: ['Tema', 'Fundo', 'Animações', 'Idioma / Language', 'Sobre']
+  }
 }
 
 // Telas do PlaySquare (seção 6.1.2): por enquanto vazias, com o ícone da barra lateral.
@@ -141,11 +148,17 @@ function lerRecolhida(): boolean {
 }
 
 function Janela(): React.JSX.Element {
-  const [pagina, setPagina] = useState<Pagina>('Painel')
-  const { area, setArea } = useAparencia()
+  // Fase I1: depois de trocar o idioma, a tela recarrega e volta para a aba Idioma / Language.
+  const [pagina, setPagina] = useState<Pagina>(voltouDoIdioma ? 'Aparência' : 'Painel')
+  const { area, setArea, definirFundoTela, vitrine, definirVitrine } = useAparencia()
   // O PlaySquare abre na tela Jogar e lembra a última tela enquanto o app está aberto.
-  const [paginaPlay, setPaginaPlay] = useState<PaginaPlay>('Jogar')
-  const [abaAparenciaPlay, setAbaAparenciaPlay] = useState(ABAS.Aparência.abas[0])
+  const [paginaPlay, setPaginaPlay] = useState<PaginaPlay>(voltouDoIdioma ? 'Aparência' : 'Jogar')
+  // Fase V11: modo vitrine, só no Jogar e no Painel. O título de cima recolhe e a barra lateral
+  // fica estreita (a escolha salva dela não muda); Esc ou trocar de tela traz o painel de volta.
+  const emVitrine = vitrine && (area === 'play' ? paginaPlay === 'Jogar' : pagina === 'Painel')
+  const [abaAparenciaPlay, setAbaAparenciaPlay] = useState(
+    voltouDoIdioma ? 'Idioma / Language' : ABAS.Aparência.abas[0]
+  )
   // A transição de área só roda depois da primeira troca, não ao abrir o app.
   const [animarArea, setAnimarArea] = useState(false)
   const [areaVista, setAreaVista] = useState<Area>(area)
@@ -156,12 +169,12 @@ function Janela(): React.JSX.Element {
     return () => clearTimeout(timer)
   }, [saindoArea, area])
   // Lembra a aba escolhida em cada tela enquanto o app está aberto.
-  const [abas, setAbas] = useState<Record<Pagina, string>>(
-    () =>
-      Object.fromEntries(
-        Object.entries(ABAS).map(([p, a]) => [p, a.inicial ?? a.abas[0] ?? ''])
-      ) as Record<Pagina, string>
-  )
+  const [abas, setAbas] = useState<Record<Pagina, string>>(() => ({
+    ...(Object.fromEntries(
+      Object.entries(ABAS).map(([p, a]) => [p, a.inicial ?? a.abas[0] ?? ''])
+    ) as Record<Pagina, string>),
+    ...(voltouDoIdioma && { Aparência: 'Idioma / Language' })
+  }))
   const [versao, setVersao] = useState('')
   // undefined: ainda verificando; null: primeira vez, mostra o assistente.
   const [info, setInfo] = useState<InfoServidor | null | undefined>(undefined)
@@ -269,6 +282,38 @@ function Janela(): React.JSX.Element {
     window.api.servidorAtual().then((r) => setInfo(r.ok ? r.valor : undefined))
   }, [])
 
+  // Fase V10: nas telas de um servidor, o fundo próprio dele (Servidores e Aparência são gerais:
+  // fica o do app). Relê ao trocar de servidor, de tela ou de área (a instalação pode ter mudado)
+  // e quando o Painel muda o fundo.
+  const telaDoServidor =
+    area === 'serv' && !!info && pagina !== 'Servidores' && pagina !== 'Aparência'
+  useEffect(() => {
+    if (!telaDoServidor) return definirFundoTela(null)
+    let vivo = true
+    const ler = (): void =>
+      void window.api
+        .fundoDoServidor()
+        .then((r) => vivo && definirFundoTela(r.ok ? r.valor.efetivo : null))
+    ler()
+    window.addEventListener(EVENTO_FUNDO_SERVIDOR, ler)
+    return () => {
+      vivo = false
+      window.removeEventListener(EVENTO_FUNDO_SERVIDOR, ler)
+    }
+  }, [telaDoServidor, info?.id, definirFundoTela])
+
+  useEffect(() => {
+    if (!emVitrine) return
+    const tecla = (e: KeyboardEvent): void => {
+      // Esc de um diálogo ou menu aberto é dele (fecha o diálogo), não da vitrine.
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      if (document.querySelector('dialog[open], :popover-open')) return
+      definirVitrine(false)
+    }
+    window.addEventListener('keydown', tecla)
+    return () => window.removeEventListener('keydown', tecla)
+  }, [emVitrine, definirVitrine])
+
   // Selo ⚠ em Cópias de segurança: o último backup falhou ou ainda não há nenhum (seção 6.1).
   useEffect(() => {
     const ver = (): void => {
@@ -304,6 +349,7 @@ function Janela(): React.JSX.Element {
     })
   }
 
+  if (window.api.idioma.perguntar) return <EscolherIdioma />
   if (modoApp === undefined) return <div className="h-screen" />
   if (modoApp.modo === null) {
     return (
@@ -377,7 +423,11 @@ function Janela(): React.JSX.Element {
         comErro={comErro}
         pagina={play ? paginaPlay : pagina}
         aba={aba}
-        aoEscolher={play ? setPaginaPlay : escolherPagina}
+        aoEscolher={(p, a) => {
+          definirVitrine(false) // trocar de tela pela barra lateral mostra o painel
+          if (play) setPaginaPlay(p)
+          else escolherPagina(p, a)
+        }}
         novidades={
           play
             ? {}
@@ -389,7 +439,7 @@ function Janela(): React.JSX.Element {
         }
         alertas={!play && alertaBackups ? { 'Cópias de segurança': alertaBackups } : {}}
         versao={versao}
-        recolhida={recolhida}
+        recolhida={recolhida || emVitrine}
         aoRecolher={alternarRecolhida}
         semTrocaDeArea={amigo}
       />
@@ -398,14 +448,20 @@ function Janela(): React.JSX.Element {
         key={`${areaVista}-${navegacao}`}
         className={`flex min-w-0 flex-1 flex-col ${animacaoArea}`}
       >
-        <Cabecalho
-          titulo={cabecalho.titulo}
-          abas={cabecalho.abas}
-          aba={aba}
-          aoEscolher={(nova) => (play ? setAbaAparenciaPlay(nova) : escolherPagina(pagina, nova))}
-          // A faixa de CPU e RAM do servidor é do ServSquare.
-          estado={play ? 'desligado' : estado}
-        />
+        <div
+          className="vitrine-titulo h-[90px] shrink-0"
+          data-escondido={emVitrine || undefined}
+          inert={emVitrine}
+        >
+          <Cabecalho
+            titulo={cabecalho.titulo}
+            abas={cabecalho.abas}
+            aba={aba}
+            aoEscolher={(nova) => (play ? setAbaAparenciaPlay(nova) : escolherPagina(pagina, nova))}
+            // A faixa de CPU e RAM do servidor é do ServSquare.
+            estado={play ? 'desligado' : estado}
+          />
+        </div>
         {play ? (
           <Conteudo
             pagina={paginaPlay}
@@ -521,11 +577,7 @@ function EmBreve({
 }): React.JSX.Element {
   return (
     <PaginaAjustes>
-      <EstadoVazio
-        icone={icone}
-        titulo={titulo}
-        texto="Em breve. Esta parte chega numa próxima versão do HubSquare."
-      >
+      <EstadoVazio icone={icone} titulo={titulo} texto={t('app.emBreveEstaParteChega')}>
         {children}
       </EstadoVazio>
     </PaginaAjustes>
@@ -555,7 +607,7 @@ function Tela({
           <IntegracaoCurseForge />
         </PaginaAjustes>
       ) : (
-        <EmBreve icone={<IconeConfiguracoes />} titulo="Opções avançadas" />
+        <EmBreve icone={<IconeConfiguracoes />} titulo={t('app.opcoesAvancadas')} />
       )
     case 'Console':
       return <TelaServidor aba="Console" />

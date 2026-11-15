@@ -30,6 +30,7 @@ import {
   servidorAtual
 } from './servidores'
 import { ehTipo, tiposDeServidor } from './tipos'
+import { t } from '../shared/i18n'
 
 export { pastaServidores, servidorAtual } from './servidores'
 
@@ -63,7 +64,7 @@ export const eventos = new EventEmitter<{
 
 export async function exigirServidor(): Promise<InfoServidor> {
   const info = await servidorAtual()
-  if (!info) throw new ErroApp('Nenhum servidor encontrado. Crie um servidor na tela Servidores.')
+  if (!info) throw new ErroApp(t('p.servidor.nenhumServidorEncontradoCrieUm'))
   return info
 }
 
@@ -107,13 +108,13 @@ export async function validarVersao(tipo: TipoId, versao: unknown): Promise<stri
     typeof versao !== 'string' ||
     !(await tiposDeServidor[tipo].listarVersoes()).includes(versao)
   ) {
-    throw new ErroApp('Essa versão não está na lista. Escolha uma versão da lista.')
+    throw new ErroApp(t('p.servidor.essaVersaoNaoEstaNa'))
   }
   return versao
 }
 
 export async function listarVersoes(tipo: unknown): Promise<string[]> {
-  if (!ehTipo(tipo)) throw new ErroApp('Tipo de servidor desconhecido. Escolha um tipo da lista.')
+  if (!ehTipo(tipo)) throw new ErroApp(t('p.servidor.tipoDeServidorDesconhecidoEscolha'))
   return tiposDeServidor[tipo].listarVersoes()
 }
 
@@ -121,12 +122,10 @@ export function validarNome(valor: unknown): string {
   const nome = typeof valor === 'string' ? valor.trim() : ''
   // Fase V3: pontos valem (ex.: "Cobbleverse 1.7.42"), só não no fim (o Windows não aceita).
   if (!/^[\p{L}\p{N}][\p{L}\p{N} ._-]{0,31}$/u.test(nome) || nome.endsWith('.')) {
-    throw new ErroApp(
-      'Nome inválido. Use até 32 letras, números, espaços, ".", "-" ou "_", começando com letra ou número e sem ponto no fim.'
-    )
+    throw new ErroApp(t('p.servidor.nomeInvalidoUseAte32'))
   }
   if (/^(con|prn|aux|nul|com\d|lpt\d)$/i.test(nome)) {
-    throw new ErroApp('Esse nome é reservado pelo Windows. Escolha outro nome.')
+    throw new ErroApp(t('p.servidor.esseNomeEReservadoPelo'))
   }
   return nome
 }
@@ -137,18 +136,18 @@ export async function criarServidor(
   pedido: unknown,
   aoProgredir: (p: Progresso) => void
 ): Promise<InfoServidor> {
-  if (criando) throw new ErroApp('O servidor já está sendo criado. Espere terminar.')
+  if (criando) throw new ErroApp(t('p.servidor.oServidorJaEstaSendo'))
   criando = true
   try {
     const { tipo, versao, nome: nomeBruto, aceitouEula } = (pedido ?? {}) as Record<string, unknown>
     if (aceitouEula !== true) {
-      throw new ErroApp('Você precisa marcar que aceita o EULA do Minecraft para criar o servidor.')
+      throw new ErroApp(t('p.servidor.vocePrecisaMarcarQueAceita'))
     }
-    if (!ehTipo(tipo)) throw new ErroApp('Tipo de servidor desconhecido. Escolha um tipo da lista.')
+    if (!ehTipo(tipo)) throw new ErroApp(t('p.servidor.tipoDeServidorDesconhecidoEscolha'))
     const nome = validarNome(nomeBruto)
     const pasta = join(pastaServidores(), nome)
     if (existsSync(join(pasta, ARQUIVO_INFO))) {
-      throw new ErroApp(`Já existe um servidor chamado "${nome}". Escolha outro nome.`)
+      throw new ErroApp(t('p.servidor.jaExisteUmServidorChamado', { nome }))
     }
     const versaoOk = await validarVersao(tipo, versao)
 
@@ -222,10 +221,10 @@ let tarefaAtual: Promise<unknown> = Promise.resolve()
 
 export function comServidorDesligado<T>(tarefa: () => Promise<T>): Promise<T> {
   if (estado !== 'desligado') {
-    return Promise.reject(new ErroApp('Desligue o servidor e tente de novo.'))
+    return Promise.reject(new ErroApp(t('p.servidor.desligueOServidorETente')))
   }
   if (ocupado) {
-    return Promise.reject(new ErroApp('Espere a tarefa atual terminar e tente de novo.'))
+    return Promise.reject(new ErroApp(t('p.servidor.espereATarefaAtualTerminar')))
   }
   // Trava na hora (sem esperar nada antes), para o backup que começa ao desligar
   // já segurar o servidor antes de alguém clicar em Ligar.
@@ -269,7 +268,7 @@ export function enviarSilencioso(comando: string): boolean {
 // Comando que o usuário pediu por um botão (ex.: "chunky start"): aparece no console.
 export function enviarDoApp(comando: string): void {
   if (!processo || estado !== 'ligado') {
-    throw new ErroApp('Ligue o servidor e espere ele terminar de ligar.')
+    throw new ErroApp(t('p.servidor.ligueOServidorEEspere'))
   }
   escrever(comando)
 }
@@ -325,7 +324,7 @@ async function consertarELigar(info: InfoServidor, linhas: string[]): Promise<vo
     feitos.push(
       ...(await c(info, linhas).catch((e) => {
         registrar(
-          `[ServSquare] Não deu para consertar sozinho: ${e instanceof Error ? e.message : e}`
+          t('p.servidor.servsquareNaoDeuParaConsertar', { v: e instanceof Error ? e.message : e })
         )
         return []
       }))
@@ -333,10 +332,10 @@ async function consertarELigar(info: InfoServidor, linhas: string[]): Promise<vo
   }
   if (!feitos.length) return void eventos.emit('naoLigou', { info, linhas })
   for (const f of feitos) registrar(`[ServSquare] ${f}`)
-  registrar('[ServSquare] Ligando de novo...')
+  registrar(t('p.servidor.servsquareLigandoDeNovo'))
   await esperarTarefas()
   await ligar(true).catch((e) =>
-    registrar(`[ServSquare] Não ligou de novo: ${e instanceof Error ? e.message : e}`)
+    registrar(t('p.servidor.servsquareNaoLigouDeNovo', { v: e instanceof Error ? e.message : e }))
   )
 }
 
@@ -344,7 +343,7 @@ aoFalharAoLigar(async (info, linhas) => {
   const n = javaExigido(linhas)
   if (!n || n === javaDoServidor(info)) return []
   await atualizarInfo(info, { javaDosMods: n === info.java ? undefined : n })
-  return [`Os mods deste servidor precisam do Java ${n}. O servidor passa a usar o Java ${n}.`]
+  return [t('p.servidor.osModsDesteServidorPrecisam', { n, n2: n })]
 })
 
 // Fase M7: o "Ligar mesmo assim" de um servidor passado a um amigo libera só o próximo ligar.
@@ -359,9 +358,9 @@ export async function ligarMesmoEmprestado(): Promise<void> {
 }
 
 export async function ligar(depoisDeConsertar = false): Promise<void> {
-  if (estado !== 'desligado') throw new ErroApp('O servidor já está ligado.')
-  if (ocupado) throw new ErroApp('Espere a tarefa atual terminar e tente de novo.')
-  if (encerrando) throw new ErroApp('O HubSquare está fechando.')
+  if (estado !== 'desligado') throw new ErroApp(t('p.servidor.oServidorJaEstaLigado'))
+  if (ocupado) throw new ErroApp(t('p.servidor.espereATarefaAtualTerminar'))
+  if (encerrando) throw new ErroApp(t('p.servidor.oHubsquareEstaFechando'))
   // Muda o estado antes de qualquer espera, para dois cliques não abrirem dois servidores.
   mudarEstado('ligando')
   let info: InfoServidor | null
@@ -369,20 +368,20 @@ export async function ligar(depoisDeConsertar = false): Promise<void> {
   let argumentosDoLoader: string[]
   try {
     info = await servidorAtual()
-    if (!info) throw new ErroApp('Nenhum servidor encontrado. Crie um servidor primeiro.')
+    if (!info) throw new ErroApp(t('p.servidor.nenhumServidorEncontradoCrieUm2'))
     // Fase M7: passado a um amigo. Só liga depois do "Ligar mesmo assim" (vale uma vez).
     if (info.emprestado && !liberadoEmprestado) {
       throw new ErroApp(
-        `Este servidor está ${textoEmprestado(info.emprestado).replace(/^Com/, 'com')}. Enquanto seu amigo hospeda, não ligue este servidor aqui, ou os dois mundos vão se separar. Ligue só se ele parou de hospedar.`,
+        t('p.servidor.esteServidorEstaEnquantoSeu', {
+          replace: textoEmprestado(info.emprestado).replace(/^./, (c) => c.toLowerCase())
+        }),
         '',
         { emprestado: true }
       )
     }
     liberadoEmprestado = false
     if (!(await portaLivre(PORTA))) {
-      throw new ErroApp(
-        `A porta ${PORTA} já está em uso. Feche outro servidor de Minecraft aberto no PC e tente de novo.`
-      )
+      throw new ErroApp(t('p.servidor.aPortaJaEstaEm', { PORTA }))
     }
     java = await garantirJava(javaDoServidor(info), (p) => enviar('download:progresso', p))
     for (const tarefa of antesDeLigar) await tarefa(info)
@@ -399,7 +398,11 @@ export async function ligar(depoisDeConsertar = false): Promise<void> {
   const ram = ramDoServidor(info)
   const otimizado = info.javaOtimizado === true
   registrar(
-    `[ServSquare] Ligando ${info.nome} com ${ram} GB de RAM${otimizado ? ' e a configuração otimizada do Java' : ''}...`
+    t('p.servidor.servsquareLigandoComGbDe', {
+      nome: info.nome,
+      ram,
+      v: otimizado ? t('p.servidor.eAConfiguracaoOtimizadaDo') : ''
+    })
   )
   const filho = spawn(
     java,
@@ -441,17 +444,17 @@ export async function ligar(depoisDeConsertar = false): Promise<void> {
     let erro: ErroTela | undefined
     if (falha) {
       erro = {
-        mensagem: 'O Java não iniciou. Tente ligar de novo ou reinicie o PC.',
+        mensagem: t('p.servidor.oJavaNaoIniciouTente'),
         detalhes: String(falha)
       }
     } else if (codigo !== 0 && estado !== 'desligando') {
       erro = {
         mensagem:
           estado === 'ligando'
-            ? 'O servidor fechou sozinho enquanto ligava. Veja o console para entender o motivo.'
-            : 'O servidor desligou sozinho. Veja o console para entender o motivo.',
+            ? t('p.servidor.oServidorFechouSozinhoEnquanto')
+            : t('p.servidor.oServidorDesligouSozinhoVeja'),
         detalhes:
-          `Código de saída: ${codigo}\n\n` +
+          t('p.servidor.codigoDeSaida', { codigo }) +
           historico
             .slice(-30)
             .map((l) => l.texto)
@@ -459,7 +462,11 @@ export async function ligar(depoisDeConsertar = false): Promise<void> {
       }
     }
     const falhouAoLigar = !falha && codigo !== 0 && estado === 'ligando'
-    registrar(`[ServSquare] Servidor desligado (código ${codigo ?? 'encerrado à força'}).`)
+    registrar(
+      t('p.servidor.servsquareServidorDesligadoCodigo', {
+        v: codigo ?? t('p.servidor.encerradoAForca')
+      })
+    )
     mudarEstado('desligado', erro)
     eventos.emit('desligou', { normal: !erro, info })
     avisarFim()
@@ -479,7 +486,7 @@ export async function desligar(): Promise<void> {
     filho.stdin?.write('stop\n')
   }
   const forcar = setTimeout(() => {
-    registrar('[ServSquare] O servidor demorou mais de 30 s para desligar. Encerrando à força.')
+    registrar(t('p.servidor.servsquareOServidorDemorouMais'))
     filho.kill()
   }, TEMPO_PARA_DESLIGAR)
   await terminou
@@ -494,7 +501,7 @@ export async function reiniciar(): Promise<void> {
 
 export function enviarComando(valor: unknown): void {
   if (!processo || estado === 'desligando') {
-    throw new ErroApp('O servidor está desligado. Ligue o servidor para enviar comandos.')
+    throw new ErroApp(t('p.servidor.oServidorEstaDesligadoLigue'))
   }
   const comando =
     typeof valor === 'string'

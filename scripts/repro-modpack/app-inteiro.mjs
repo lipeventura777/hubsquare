@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type -- JavaScript puro, sem tipos */
 // Abre o HubSquare de verdade (out/, depois do npm run build), com janela e tela, mas com todas
 // as pastas (dados, Documentos, Downloads, temporários) na pasta de testes. Faz o mesmo que a
 // tela faz ao importar e criar o servidor do modpack, recarrega (como "Ir para o painel") e

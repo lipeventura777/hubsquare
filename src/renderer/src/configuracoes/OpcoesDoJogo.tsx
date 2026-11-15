@@ -5,6 +5,7 @@ import { Esqueleto } from '../componentes/movimento'
 import { Aviso, Botao } from '../componentes/ui'
 import { useIconeAtivo } from '../componentes/useIconeAtivo'
 import { CamposDoJogo } from './CamposDoJogo'
+import { t } from '../../../shared/i18n'
 
 export function OpcoesDoJogo({
   estado,
@@ -64,14 +65,16 @@ export function OpcoesDoJogo({
 
       <div className="flex flex-col gap-3">
         <Botao type="submit" variante="primario" disabled={salvando} className="self-start">
-          {salvando ? 'Salvando...' : 'Salvar'}
+          {salvando ? t('opcoesDoJogo.salvando') : t('opcoesDoJogo.salvar')}
         </Botao>
-        {salvo && !reiniciarPendente && <Aviso tipo="sucesso">Configurações salvas.</Aviso>}
+        {salvo && !reiniciarPendente && (
+          <Aviso tipo="sucesso">{t('opcoesDoJogo.configuracoesSalvas')}</Aviso>
+        )}
         {reiniciarPendente && (estado !== 'desligado' || reiniciando) && (
           <Aviso tipo="atencao">
-            <span className="flex-1">As mudanças valem quando você reiniciar o servidor.</span>
+            <span className="flex-1">{t('opcoesDoJogo.asMudancasValemQuandoVoce')}</span>
             <Botao variante="atencao" onClick={reiniciar} disabled={reiniciando}>
-              {reiniciando ? 'Reiniciando...' : 'Reiniciar agora'}
+              {reiniciando ? t('opcoesDoJogo.reiniciando') : t('opcoesDoJogo.reiniciarAgora')}
             </Botao>
           </Aviso>
         )}

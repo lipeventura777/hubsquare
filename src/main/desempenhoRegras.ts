@@ -1,4 +1,5 @@
 import { gunzipSync } from 'zlib'
+import { t } from '../shared/i18n'
 
 // Regras da tela Desempenho sem rede nem arquivos. Testadas em tests/desempenhoRegras.test.ts.
 
@@ -85,39 +86,42 @@ export function dicas(d: DadosDicas): string[] {
     const nova = Math.min(d.ramMaxPc, d.ramGb + 2)
     r.push(
       nova > d.ramGb
-        ? `RAM quase cheia: aumente para ${nova} GB em Opções.`
-        : 'RAM quase cheia, e o PC não tem mais para dar. Tire mods pesados ou feche outros programas.'
+        ? t('p.desempenhoRegras.ramQuaseCheiaAumentePara', { nova })
+        : t('p.desempenhoRegras.ramQuaseCheiaEO')
     )
   }
   if (d.tps !== null && d.tps < 18) {
     r.push(
-      `O servidor está atrasando (TPS ${d.tps.toFixed(1).replace('.', ',')} de 20). Use a aba Diagnóstico para achar o culpado.`
+      t('p.desempenhoRegras.oServidorEstaAtrasandoTps', {
+        replace: d.tps.toFixed(1).replace('.', ',')
+      })
     )
   }
   if (d.distanciaVisao !== null && d.distanciaVisao > 10 && d.jogadores >= 5) {
     r.push(
-      `Distância de visão alta (${d.distanciaVisao}) para ${d.jogadores} jogadores: baixe para 8 no server.properties (tela Arquivos).`
+      t('p.desempenhoRegras.distanciaDeVisaoAltaPara', {
+        distanciaVisao: d.distanciaVisao,
+        jogadores: d.jogadores
+      })
     )
   } else if (d.distanciaVisao !== null && d.distanciaVisao > 16) {
-    r.push(
-      `Distância de visão muito alta (${d.distanciaVisao}): 10 a 12 já fica bonito e pesa bem menos.`
-    )
+    r.push(t('p.desempenhoRegras.distanciaDeVisaoMuitoAlta', { distanciaVisao: d.distanciaVisao }))
   }
   if (d.distanciaSimulacao !== null && d.distanciaSimulacao > 10) {
     r.push(
-      `Distância de simulação alta (${d.distanciaSimulacao}): baixar para 6 a 8 deixa o servidor mais leve.`
+      t('p.desempenhoRegras.distanciaDeSimulacaoAltaBaixar', {
+        distanciaSimulacao: d.distanciaSimulacao
+      })
     )
   }
   if (d.cpu !== null && d.cpu > 85) {
-    r.push('O processador está quase no limite. Pré-gerar o mundo e fechar outros programas ajuda.')
+    r.push(t('p.desempenhoRegras.oProcessadorEstaQuaseNo'))
   }
   if (d.mods > 100 && d.ramGb < 6) {
-    r.push(
-      `São ${d.mods} mods para ${d.ramGb} GB de RAM: packs grandes costumam pedir 6 GB ou mais.`
-    )
+    r.push(t('p.desempenhoRegras.saoModsParaGbDe', { mods: d.mods, ramGb: d.ramGb }))
   }
   if (!d.javaOtimizado) {
-    r.push('Ligue "Usar configuração otimizada do Java" para pausas menores na memória.')
+    r.push(t('p.desempenhoRegras.ligueUsarConfiguracaoOtimizadaDo'))
   }
   return r
 }
@@ -156,7 +160,7 @@ export function lerChunky(linha: string): EventoChunky | null {
     return {
       tipo: 'pergunta',
       motivo: 'tarefa-antiga',
-      texto: 'Já existe uma geração começada neste mundo.'
+      texto: t('p.desempenhoRegras.jaExisteUmaGeracaoComecada')
     }
   }
   if (
@@ -167,7 +171,7 @@ export function lerChunky(linha: string): EventoChunky | null {
     return {
       tipo: 'pergunta',
       motivo: 'pouco-espaco',
-      texto: `O disco tem só ${m[1]} livres, e a geração precisa de uns ${m[2]}.`
+      texto: t('p.desempenhoRegras.oDiscoTemSoLivres', { v: m[1], v2: m[2] })
     }
   }
   return null
@@ -350,14 +354,13 @@ export function culpadosDoSpark(dados: Uint8Array): Culpado[] {
 }
 
 export function resumoDosCulpados(culpados: Culpado[]): string {
-  if (!culpados.length)
-    return 'Não deu para identificar os culpados. Abra o relatório para ver os detalhes.'
+  if (!culpados.length) return t('p.desempenhoRegras.naoDeuParaIdentificarOs')
   const [maior] = culpados
   if (maior.nome === 'minecraft') {
-    return 'A maior parte do tempo vai para o próprio jogo (entidades, redstone, geração de mundo). Pré-gerar o mundo e baixar a distância de simulação costumam ajudar.'
+    return t('p.desempenhoRegras.aMaiorParteDoTempo')
   }
   if (maior.nome === 'loader' || maior.nome === 'outros') {
-    return 'Nenhum mod ou plugin se destacou. Abra o relatório para ver os detalhes.'
+    return t('p.desempenhoRegras.nenhumModOuPluginSe')
   }
-  return `"${maior.nome}" é o que mais pesa. Se o lag for grande, tente atualizar ou desativar esse mod na tela Mods.`
+  return t('p.desempenhoRegras.eOQueMaisPesa', { nome: maior.nome })
 }

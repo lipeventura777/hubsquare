@@ -20,6 +20,7 @@ import { lerJogadores } from './jogadores'
 import { javaDaVersao } from './mojang'
 import * as playit from './playit'
 import { javaDoServidor, lerEstado, ligar, PORTA, servidorAtual } from './servidor'
+import { t } from '../shared/i18n'
 
 // Diagnóstico do dono (Fase M5), em Conexão e no Painel: confere em ordem o que os amigos
 // precisam para entrar e para no primeiro problema (diagnosticoRegras.ts). Só lê: nada muda
@@ -27,14 +28,14 @@ import { javaDoServidor, lerEstado, ligar, PORTA, servidorAtual } from './servid
 
 const NOMES_MODO = {
   playit: 'playit.gg',
-  radmin: 'Radmin VPN',
+  radmin: t('p.diagnostico.radminVpn'),
   lan: 'rede local',
   porta: 'porta aberta'
 }
 
 export async function diagnosticarDono(): Promise<LinhaDiagnostico[]> {
   const info = await servidorAtual()
-  if (!info) throw new ErroApp('Crie um servidor primeiro.')
+  if (!info) throw new ErroApp(t('p.diagnostico.crieUmServidorPrimeiro'))
   const props = await lerArquivoPropriedades(info.pasta)
   const porta = Number(props.get('server-port')) || PORTA
   const { modo, enderecoPlayit } = await lerPreferencias()
@@ -43,58 +44,61 @@ export async function diagnosticarDono(): Promise<LinhaDiagnostico[]> {
   const checagens: Checagem[] = [
     {
       id: 'servidor',
-      nome: 'Servidor ligado',
+      nome: t('p.diagnostico.servidorLigado'),
       essencial: true,
       async rodar() {
         const estado = lerEstado()
         if (estado === 'ligando') {
           return {
             resultado: 'falhou',
-            frase: 'O servidor ainda está ligando. Espere e teste de novo.'
+            frase: t('p.diagnostico.oServidorAindaEstaLigando')
           }
         }
         if (estado !== 'ligado') {
           return {
             resultado: 'falhou',
-            frase: 'O servidor está desligado. Ligue-o para os amigos entrarem.',
+            frase: t('p.diagnostico.oServidorEstaDesligadoLigue'),
             conserto: 'ligarServidor'
           }
         }
         return (await pingMinecraft('127.0.0.1', porta))
-          ? { resultado: 'ok', frase: `Ligado e respondendo na porta ${porta}.` }
+          ? { resultado: 'ok', frase: t('p.diagnostico.ligadoERespondendoNaPorta', { porta }) }
           : {
               resultado: 'falhou',
-              frase: `O servidor está ligado, mas não responde na porta ${porta}. Desligue e ligue de novo.`
+              frase: t('p.diagnostico.oServidorEstaLigadoMas', { porta })
             }
       }
     },
     {
       id: 'metodo',
-      nome: `Conexão (${NOMES_MODO[modo]})`,
+      nome: t('p.diagnostico.conexao', { v: NOMES_MODO[modo] }),
       essencial: true,
       async rodar() {
         if (modo === 'playit') {
           if (!playit.vinculado()) {
             return {
               resultado: 'falhou',
-              frase: 'O playit.gg ainda não foi vinculado. Vincule em Conexão › playit.gg.'
+              frase: t('p.diagnostico.oPlayitGgAindaNao')
             }
           }
           if (!enderecoPlayit) {
             return {
               resultado: 'falhou',
-              frase: 'Falta colar o endereço do túnel em Conexão › playit.gg.'
+              frase: t('p.diagnostico.faltaColarOEnderecoDo')
             }
           }
           if (!playit.agenteLigado()) {
             return {
               resultado: 'falhou',
-              frase: 'O agente do playit.gg não está rodando, então o túnel está caído.',
+              frase: t('p.diagnostico.oAgenteDoPlayitGg'),
               conserto: 'religarTunel'
             }
           }
           enderecoDeFora = enderecoPlayit
-          return { resultado: 'ok', frase: `Agente do playit.gg rodando, túnel ${enderecoPlayit}.` }
+          return {
+            resultado: 'ok',
+            frase: t('p.diagnostico.agenteDoPlayitGgRodando', { enderecoPlayit })
+          }
         }
         const ip =
           modo === 'radmin' ? ipRadmin() : modo === 'lan' ? ipLocal() : await lerIpPublico()
@@ -103,17 +107,16 @@ export async function diagnosticarDono(): Promise<LinhaDiagnostico[]> {
             resultado: 'falhou',
             frase:
               modo === 'radmin'
-                ? 'O Radmin VPN está fechado ou desconectado. Abra o Radmin VPN e entre na rede dos seus amigos.'
+                ? t('p.diagnostico.oRadminVpnEstaFechado')
                 : modo === 'lan'
-                  ? 'Este PC não está em nenhuma rede local. Confira o Wi-Fi ou o cabo.'
-                  : 'Não consegui descobrir o IP público. Confira a internet.'
+                  ? t('p.diagnostico.estePcNaoEstaEm')
+                  : t('p.diagnostico.naoConseguiDescobrirOIp')
           }
         }
         if (!(await regraExiste(info))) {
           return {
             resultado: 'falhou',
-            frase:
-              'O Firewall do Windows pode bloquear seus amigos: o Java do servidor não está liberado.',
+            frase: t('p.diagnostico.oFirewallDoWindowsPode'),
             conserto: 'recriarFirewall'
           }
         }
@@ -122,28 +125,27 @@ export async function diagnosticarDono(): Promise<LinhaDiagnostico[]> {
           resultado: 'ok',
           frase:
             modo === 'radmin'
-              ? `Radmin VPN conectado (${ip}) e Java liberado no Firewall.`
+              ? t('p.diagnostico.radminVpnConectadoEJava', { ip })
               : modo === 'lan'
-                ? `Rede local ${ip} e Java liberado no Firewall.`
-                : 'Java liberado no Firewall.'
+                ? t('p.diagnostico.redeLocalEJavaLiberado', { ip })
+                : t('p.diagnostico.javaLiberadoNoFirewall')
         }
       }
     },
     {
       id: 'fora',
-      nome: 'Acesso de fora',
+      nome: t('p.diagnostico.acessoDeFora'),
       essencial: true,
       async rodar() {
         const endereco = enderecoDeFora!
         const { host, porta: p } = await resolverEndereco(endereco)
         if (await pingMinecraft(host, p)) {
-          return { resultado: 'ok', frase: `O servidor responde em ${endereco}.` }
+          return { resultado: 'ok', frase: t('p.diagnostico.oServidorRespondeEm', { endereco }) }
         }
         if (modo === 'playit') {
           return {
             resultado: 'falhou',
-            frase:
-              'O túnel do playit.gg não respondeu. No site do playit.gg, confira se o túnel é "Minecraft Java" e aponta para a porta do servidor; logo depois de ligar, espere uns 30 segundos.',
+            frase: t('p.diagnostico.oTunelDoPlayitGg'),
             conserto: 'religarTunel'
           }
         }
@@ -151,14 +153,14 @@ export async function diagnosticarDono(): Promise<LinhaDiagnostico[]> {
           resultado: 'falhou',
           frase:
             modo === 'porta'
-              ? 'Não respondeu pelo IP público: confira o redirecionamento da porta no roteador (ou a operadora usa CGNAT). Alguns roteadores não deixam testar de dentro de casa.'
-              : `Não respondeu em ${endereco}. Desligue e ligue o servidor de novo.`
+              ? t('p.diagnostico.naoRespondeuPeloIpPublico')
+              : t('p.diagnostico.naoRespondeuEmDesligueE', { endereco })
         }
       }
     },
     {
       id: 'java',
-      nome: 'Java',
+      nome: t('p.diagnostico.java'),
       essencial: false,
       async rodar() {
         const usado = javaDoServidor(info)
@@ -166,39 +168,44 @@ export async function diagnosticarDono(): Promise<LinhaDiagnostico[]> {
         if (!existsSync(exe)) {
           return {
             resultado: 'aviso',
-            frase: `O Java ${usado} não está instalado. Ele é baixado ao ligar o servidor.`
+            frase: t('p.diagnostico.oJavaNaoEstaInstalado', { usado })
           }
         }
         const pedido = await javaDaVersao(info.versao)
         return usado >= pedido
           ? {
               resultado: 'ok',
-              frase: `Java ${usado} (o Minecraft ${info.versao} pede o ${pedido}).`
+              frase: t('p.diagnostico.javaOMinecraftPedeO', { usado, versao: info.versao, pedido })
             }
           : {
               resultado: 'aviso',
-              frase: `O servidor usa o Java ${usado}, mas o Minecraft ${info.versao} pede o ${pedido}.`
+              frase: t('p.diagnostico.oServidorUsaOJava', { usado, versao: info.versao, pedido })
             }
       }
     },
     {
       id: 'pedidos',
-      nome: 'Pedidos para entrar',
+      nome: t('p.diagnostico.pedidosParaEntrar'),
       essencial: false,
       async rodar() {
         const n = (await listarPedidos(info)).length
         return n
           ? {
               resultado: 'aviso',
-              frase: `${n === 1 ? '1 amigo espera' : `${n} amigos esperam`} você aprovar a entrada na whitelist.`,
+              frase: t('p.diagnostico.voceAprovarAEntradaNa', {
+                v:
+                  n === 1
+                    ? t('p.diagnostico.n1AmigoEspera')
+                    : t('p.diagnostico.amigosEsperam', { n })
+              }),
               conserto: 'abrirPedidos'
             }
-          : { resultado: 'ok', frase: 'Nenhum amigo esperando aprovação.' }
+          : { resultado: 'ok', frase: t('p.diagnostico.nenhumAmigoEsperandoAprovacao') }
       }
     },
     {
       id: 'cheio',
-      nome: 'Vagas no servidor',
+      nome: t('p.diagnostico.vagasNoServidor'),
       essencial: false,
       async rodar() {
         const max = Number(props.get('max-players')) || 20
@@ -206,9 +213,9 @@ export async function diagnosticarDono(): Promise<LinhaDiagnostico[]> {
         return online >= max
           ? {
               resultado: 'aviso',
-              frase: `O servidor está cheio (${online}/${max}). Aumente o máximo de jogadores em Opções.`
+              frase: t('p.diagnostico.oServidorEstaCheioAumente', { online, max })
             }
-          : { resultado: 'ok', frase: `${online} de ${max} jogadores online.` }
+          : { resultado: 'ok', frase: t('p.diagnostico.deJogadoresOnline', { online, max }) }
       }
     }
   ]
@@ -220,5 +227,5 @@ export async function consertarDono(conserto: unknown): Promise<void> {
   if (conserto === 'ligarServidor') return ligar()
   if (conserto === 'religarTunel') return religarTunel()
   if (conserto === 'recriarFirewall') return liberarFirewall()
-  throw new ErroApp('Esse conserto não existe.')
+  throw new ErroApp(t('p.diagnostico.esseConsertoNaoExiste'))
 }

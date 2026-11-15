@@ -21,9 +21,17 @@ import type { Fonte } from '../../../shared/fontes'
 import { BarraDePaginas, TopoDaLista } from '../componentes/Paginas'
 import { usePreferencia } from '../mods/partesExplorar'
 import { tamanhoValido } from '../../../shared/paginaRegras'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
-const ETAPAS = ['Modpack', 'Confirmar', 'Pronto'] as const
-const numero = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })
+const ETAPAS = [
+  t('criarModpack.modpack'),
+  t('criarModpack.confirmar'),
+  t('criarModpack.pronto')
+] as const
+const numero = new Intl.NumberFormat(idiomaAtual(), {
+  notation: 'compact',
+  maximumFractionDigits: 1
+})
 
 function megas(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1024 / 1024))} MB`
@@ -139,12 +147,12 @@ export function CriarModpack({
   const principal =
     etapa === 1
       ? {
-          texto: criando ? 'Criando' : 'Criar servidor',
+          texto: criando ? t('criarModpack.criando') : t('criarModpack.criarServidor'),
           aoClicar: criar,
           ativo: eula && !!nome.trim() && !criando
         }
       : etapa === 2
-        ? { texto: 'Ir para o painel', aoClicar: aoConcluir, ativo: true }
+        ? { texto: t('criarModpack.irParaOPainel'), aoClicar: aoConcluir, ativo: true }
         : null
 
   return (
@@ -153,10 +161,8 @@ export function CriarModpack({
         <div className="flex items-center gap-3">
           <IconeMods className="h-8 w-8 text-accent" />
           <div>
-            <div className="texto-pixel text-[22px]">Servidor a partir de um modpack</div>
-            <div className="text-[13px] text-muted">
-              O app instala o loader, os mods e as configurações do pack.
-            </div>
+            <div className="texto-pixel text-[22px]">{t('criarModpack.servidorAPartirDeUm')}</div>
+            <div className="text-[13px] text-muted">{t('criarModpack.oAppInstalaOLoader')}</div>
           </div>
         </div>
         <BarraDeEtapas etapa={etapa} etapas={ETAPAS} />
@@ -167,7 +173,7 @@ export function CriarModpack({
           className={`mx-auto flex w-full flex-col gap-10 p-10 ${etapa === 0 ? 'max-w-[1200px]' : 'max-w-[720px]'}`}
         >
           {etapa === 0 && (
-            <Secao titulo="Escolha o modpack">
+            <Secao titulo={t('criarModpack.escolhaOModpack')}>
               <div className="flex flex-wrap gap-2">
                 <form
                   className="flex min-w-[320px] flex-1 gap-2"
@@ -177,19 +183,21 @@ export function CriarModpack({
                   }}
                 >
                   <Campo
-                    aria-label="Procurar modpacks"
-                    placeholder="Procurar modpacks no Modrinth"
+                    aria-label={t('criarModpack.procurarModpacks')}
+                    placeholder={t('criarModpack.procurarModpacksNoModrinth')}
                     value={termo}
                     maxLength={100}
                     onChange={(e) => setTermo(e.target.value)}
                     className="flex-1"
                   />
                   <Botao variante="primario" type="submit" disabled={buscando}>
-                    Procurar
+                    {t('criarModpack.procurar')}
                   </Botao>
                 </form>
                 <Botao onClick={abrirArquivo} disabled={!!abrindo}>
-                  {abrindo === 'arquivo' ? 'Abrindo...' : 'Abrir arquivo .mrpack'}
+                  {abrindo === 'arquivo'
+                    ? t('criarModpack.abrindo')
+                    : t('criarModpack.abrirArquivoMrpack')}
                 </Botao>
               </div>
               {abrindo && <Andamento progresso={progresso} />}
@@ -210,8 +218,8 @@ export function CriarModpack({
               ) : !itens.length ? (
                 <EstadoVazio
                   icone={<IconeMods />}
-                  titulo="Nenhum modpack encontrado"
-                  texto="Tente outro nome, como está no Modrinth."
+                  titulo={t('criarModpack.nenhumModpackEncontrado')}
+                  texto={t('criarModpack.tenteOutroNomeComoEsta')}
                 />
               ) : (
                 <ul className="grid grid-cols-1 gap-3 min-[900px]:grid-cols-2 min-[1300px]:grid-cols-3">
@@ -226,9 +234,11 @@ export function CriarModpack({
                           {p.titulo}
                         </p>
                         <p className="truncate text-xs text-muted">
-                          {p.versaoJogo ? `Minecraft ${p.versaoJogo}` : 'Minecraft'} ·{' '}
-                          {p.loaders.map((l) => NOMES_TIPOS[l]).join(', ')} ·{' '}
-                          {numero.format(p.downloads)} downloads
+                          {p.versaoJogo
+                            ? t('criarModpack.minecraft', { versaoJogo: p.versaoJogo })
+                            : t('criarModpack.minecraft2')}{' '}
+                          · {p.loaders.map((l) => NOMES_TIPOS[l]).join(', ')}{' '}
+                          {t('criarModpack.downloads', { format: numero.format(p.downloads) })}
                         </p>
                         <p className="line-clamp-2 text-[13px]">{p.descricao}</p>
                         <Botao
@@ -238,7 +248,9 @@ export function CriarModpack({
                           disabled={!!abrindo}
                           onClick={() => abrirDoModrinth(p.id)}
                         >
-                          {abrindo === p.id ? 'Baixando...' : 'Escolher'}
+                          {abrindo === p.id
+                            ? t('criarModpack.baixando')
+                            : t('criarModpack.escolher')}
                         </Botao>
                       </div>
                     </li>
@@ -261,21 +273,24 @@ export function CriarModpack({
 
           {etapa === 1 && analise && (
             <>
-              <Secao titulo="Modpack">
+              <Secao titulo={t('criarModpack.modpack')}>
                 <CardPainel titulo={`${analise.nome} ${analise.versaoPack}`}>
                   <div className="flex gap-4">
                     <IconeProjeto url={analise.icone} titulo={analise.nome} tam={72} />
                     <dl className="grid flex-1 grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
-                      <dt className="text-muted">Jogo</dt>
-                      <dd>Minecraft {analise.versaoJogo}</dd>
-                      <dt className="text-muted">Loader</dt>
+                      <dt className="text-muted">{t('criarModpack.jogo')}</dt>
+                      <dd>{t('criarModpack.minecraft', { versaoJogo: analise.versaoJogo })}</dd>
+                      <dt className="text-muted">{t('criarModpack.loader')}</dt>
                       <dd>
                         {NOMES_TIPOS[analise.tipo]} {analise.versaoLoader}
                       </dd>
-                      <dt className="text-muted">Mods</dt>
+                      <dt className="text-muted">{t('criarModpack.mods')}</dt>
                       <dd>
-                        {analise.mods} no servidor ({analise.arquivos} arquivos,{' '}
-                        {megas(analise.tamanho)} para baixar)
+                        {t('criarModpack.noServidorArquivosParaBaixar', {
+                          mods: analise.mods,
+                          arquivos: analise.arquivos,
+                          megas: megas(analise.tamanho)
+                        })}
                       </dd>
                     </dl>
                   </div>
@@ -284,39 +299,39 @@ export function CriarModpack({
                   )}
                 </CardPainel>
                 <Aviso tipo={analise.ram.explicacao.includes('lento') ? 'atencao' : 'sucesso'}>
-                  {analise.ram.explicacao} Dá para mudar depois em Opções.
+                  {t('criarModpack.daParaMudarDepoisEm', { explicacao: analise.ram.explicacao })}
                 </Aviso>
                 <ListaManuais
                   itens={separarManuais(analise.manuais).comAssistente}
-                  texto="Os autores destes mods não deixam outros apps baixarem. Depois de criar, a janela Downloads necessários abre a página de cada um; baixe pelo navegador e o app põe na pasta mods sozinho:"
+                  texto={t('criarModpack.osAutoresDestesModsNao')}
                 />
                 <ListaManuais
                   itens={separarManuais(analise.manuais).soLink}
-                  texto="Os autores destes mods não deixam outros apps baixarem. Baixe cada um pelo site e coloque na pasta mods do servidor antes de ligar:"
+                  texto={t('criarModpack.osAutoresDestesModsNao2')}
                 />
               </Secao>
-              <Secao titulo="Nome do servidor">
+              <Secao titulo={t('criarModpack.nomeDoServidor')}>
                 <Campo
-                  aria-label="Nome do servidor"
+                  aria-label={t('criarModpack.nomeDoServidor')}
                   value={nome}
                   maxLength={32}
                   disabled={criando}
                   onChange={(e) => setNome(e.target.value)}
                 />
               </Secao>
-              <Secao titulo="Termos de uso do jogo">
+              <Secao titulo={t('criarModpack.termosDeUsoDoJogo')}>
                 <p className="text-[13px] text-muted">
-                  Para rodar um servidor, você precisa aceitar o EULA (contrato de uso) da Mojang.
+                  {t('criarModpack.paraRodarUmServidorVoce')}
                 </p>
                 <CaixaSelecao marcada={eula} disabled={criando} aoMudar={setEula}>
-                  Li e aceito o{' '}
+                  {t('criarModpack.liEAceitoO')}{' '}
                   <a
                     href="https://aka.ms/MinecraftEULA"
                     target="_blank"
                     rel="noreferrer"
                     className="underline"
                   >
-                    EULA do Minecraft
+                    {t('criarModpack.eulaDoMinecraft')}
                   </a>
                 </CaixaSelecao>
                 {criando && <Andamento progresso={progresso} />}
@@ -331,16 +346,19 @@ export function CriarModpack({
           )}
 
           {etapa === 2 && criado && (
-            <Secao titulo="Tudo pronto!">
+            <Secao titulo={t('criarModpack.tudoPronto')}>
               <Aviso tipo="sucesso">
-                O servidor {criado.nome} ({analise?.nome}, {NOMES_TIPOS[criado.tipo]}{' '}
-                {criado.versao}) foi criado. Agora é só ligar. Para seus amigos entrarem, gere o
-                &quot;Pacote pros amigos&quot; na tela Mods.
+                {t('criarModpack.oServidorFoiCriadoAgora', {
+                  nome: criado.nome,
+                  nome2: analise?.nome,
+                  v: NOMES_TIPOS[criado.tipo],
+                  versao: criado.versao
+                })}
               </Aviso>
               {analise && (
                 <ListaManuais
                   itens={separarManuais(analise.manuais).soLink}
-                  texto="Falta baixar pelo site e colocar na pasta mods do servidor (Arquivos › mods) antes de ligar:"
+                  texto={t('criarModpack.faltaBaixarPeloSiteE')}
                 />
               )}
             </Secao>
@@ -353,7 +371,7 @@ export function CriarModpack({
           <span />
         ) : etapa === 0 ? (
           <Botao onClick={aoCancelar} disabled={!!abrindo}>
-            Cancelar
+            {t('criarModpack.cancelar')}
           </Botao>
         ) : (
           <Botao
@@ -365,7 +383,7 @@ export function CriarModpack({
             }}
             disabled={criando}
           >
-            Voltar
+            {t('criarModpack.voltar')}
           </Botao>
         )}
         {principal && (

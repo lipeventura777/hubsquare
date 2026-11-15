@@ -1,13 +1,14 @@
 import { isIPv4 } from 'net'
 import { MODOS, type AcaoJogador } from '../shared/tipos'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // Tudo que vira comando do servidor passa por aqui antes: nada de texto solto do usuário.
 
 export function validarJogador(valor: unknown): string {
   const nome = typeof valor === 'string' ? valor.trim() : ''
   if (!/^[A-Za-z0-9_]{3,16}$/.test(nome)) {
-    throw new ErroApp('Nome inválido. Nomes do Minecraft têm de 3 a 16 letras, números ou "_".')
+    throw new ErroApp(t('p.comandosJogador.nomeInvalidoNomesDoMinecraft'))
   }
   return nome
 }
@@ -15,13 +16,13 @@ export function validarJogador(valor: unknown): string {
 // O ban-ip do Minecraft só aceita IPv4.
 export function validarIp(valor: unknown): string {
   const ip = typeof valor === 'string' ? valor.trim() : ''
-  if (!isIPv4(ip)) throw new ErroApp('Endereço inválido. Use o formato 123.45.67.89.')
+  if (!isIPv4(ip)) throw new ErroApp(t('p.comandosJogador.enderecoInvalidoUseOFormato'))
   return ip
 }
 
 function coordenada(v: unknown): string {
   if (typeof v !== 'number' || !Number.isFinite(v) || Math.abs(v) > 30_000_000) {
-    throw new ErroApp('Local inválido para teleportar.')
+    throw new ErroApp(t('p.comandosJogador.localInvalidoParaTeleportar'))
   }
   return v.toFixed(3) // nunca vira "1e-7", que o comando não entende
 }
@@ -47,11 +48,11 @@ export function comandoDaAcao(nome: string, valor: unknown): string {
         typeof l.dimensao !== 'string' ||
         !/^[a-z0-9_.-]+:[a-z0-9_./-]+$/.test(l.dimensao)
       ) {
-        throw new ErroApp('Local inválido para teleportar.')
+        throw new ErroApp(t('p.comandosJogador.localInvalidoParaTeleportar'))
       }
       const xyz = [l.x, l.y, l.z].map(coordenada).join(' ')
       return `execute in ${l.dimensao} run tp ${nome} ${xyz}`
     }
   }
-  throw new ErroApp('Ação desconhecida.', JSON.stringify(valor))
+  throw new ErroApp(t('p.comandosJogador.acaoDesconhecida'), JSON.stringify(valor))
 }

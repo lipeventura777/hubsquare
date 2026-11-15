@@ -10,6 +10,7 @@ import { vencido } from './instaladosRegras'
 import { dentroDe } from './mundo'
 import { pastaLivre } from './pastaLivre'
 import { aoLigar, esperarTarefas, eventos, lerEstado, registrarNoConsole } from './servidor'
+import { t } from '../shared/i18n'
 
 // "Removidos recentemente" (Fase 23.2): o que sai pela aba Instalados vem para cá por 7 dias,
 // dentro da pasta de backups do servidor. Cada item é uma pasta com item.json e o arquivo.
@@ -46,7 +47,7 @@ export async function guardarArquivo(
 ): Promise<string> {
   const caminho = join(info.pasta, origem)
   if (!dentroDe(info.pasta, caminho) || caminho === info.pasta) {
-    throw new ErroApp('Caminho fora da pasta do servidor. Nada foi removido.')
+    throw new ErroApp(t('p.removidos.caminhoForaDaPastaDo'))
   }
   const id = `${Date.now()}-${randomUUID().slice(0, 8)}`
   const pasta = join(pastaRemovidos(info), id)
@@ -101,27 +102,22 @@ export async function lerEntrada(info: InfoServidor, id: unknown): Promise<Entra
     const e = (await listarEntradas(info)).find((x) => x.id === id)
     if (e) return e
   }
-  throw new ErroApp('Esse item não está mais em Removidos recentemente (passou de 7 dias?).')
+  throw new ErroApp(t('p.removidos.esseItemNaoEstaMais'))
 }
 
 // Devolve o arquivo para onde estava. Não sobrescreve nada que esteja lá agora.
 export async function devolverArquivo(info: InfoServidor, e: Entrada): Promise<void> {
   if (!e.origem) return
   const destino = join(info.pasta, e.origem)
-  if (!dentroDe(info.pasta, destino)) throw new ErroApp('Caminho fora da pasta do servidor.')
+  if (!dentroDe(info.pasta, destino)) throw new ErroApp(t('p.removidos.caminhoForaDaPastaDo2'))
   if (existsSync(destino)) {
-    throw new ErroApp(
-      `Já existe "${basename(destino)}" no lugar. Remova ou renomeie esse arquivo e tente de novo.`
-    )
+    throw new ErroApp(t('p.removidos.jaExisteNoLugarRemova', { basename: basename(destino) }))
   }
   const origem = join(pastaRemovidos(info), e.id, 'conteudo', basename(e.origem))
   try {
     await mover(origem, destino)
   } catch (erro) {
-    throw new ErroApp(
-      'Não consegui devolver o arquivo. Feche programas usando a pasta e tente de novo.',
-      detalhar(erro)
-    )
+    throw new ErroApp(t('p.removidos.naoConseguiDevolverOArquivo'), detalhar(erro))
   }
 }
 
@@ -198,7 +194,9 @@ function aplicarAgenda(info: InfoServidor): Promise<void> {
     for (const a of lista) {
       if (!existsSync(join(info.pasta, a.origem))) continue // já saiu por outro caminho
       await guardarArquivo(info, a.origem, a).catch((e) =>
-        registrarNoConsole(`[ServSquare] Não consegui remover ${a.origem}: ${detalhar(e)}`)
+        registrarNoConsole(
+          t('p.removidos.servsquareNaoConseguiRemover', { origem: a.origem, detalhar: detalhar(e) })
+        )
       )
     }
     await rm(join(info.pasta, AGENDA), { force: true })

@@ -1,3 +1,4 @@
+import { t } from '../../../shared/i18n'
 // Textos da Central de comandos (Fase 26).
 
 // Descrição das regras mais usadas. Os nomes mudaram na 1.21.11 (camelCase → snake_case):
@@ -5,137 +6,177 @@
 const REGRAS: [string[], string, string][] = [
   [
     ['keep_inventory', 'keepInventory'],
-    'Manter inventário',
-    'Quem morre não perde os itens nem o XP.'
+    t('textosComandos.manterInventario'),
+    t('textosComandos.quemMorreNaoPerdeOs')
   ],
   [
     ['advance_time', 'doDaylightCycle'],
-    'Ciclo do dia',
-    'O sol e a lua andam. Desligado, a hora fica parada.'
+    t('textosComandos.cicloDoDia'),
+    t('textosComandos.oSolEALua')
   ],
-  [['advance_weather', 'doWeatherCycle'], 'Clima muda sozinho', 'Chuva e sol vêm e vão sozinhos.'],
-  [['doFireTick'], 'Propagação do fogo', 'O fogo se espalha e queima blocos.'],
+  [
+    ['advance_weather', 'doWeatherCycle'],
+    t('textosComandos.climaMudaSozinho'),
+    t('textosComandos.chuvaESolVemE')
+  ],
+  [['doFireTick'], t('textosComandos.propagacaoDoFogo'), t('textosComandos.oFogoSeEspalhaE')],
   [
     ['fire_spread_radius_around_player'],
-    'Propagação do fogo',
-    'Até quantos blocos perto de um jogador o fogo se espalha (0 desliga; -1 sem limite).'
+    t('textosComandos.propagacaoDoFogo'),
+    t('textosComandos.ateQuantosBlocosPertoDe')
   ],
   [
     ['mob_griefing', 'mobGriefing'],
-    'Mobs destroem blocos',
-    'Creepers explodem blocos, endermen pegam blocos, aldeões colhem.'
+    t('textosComandos.mobsDestroemBlocos'),
+    t('textosComandos.creepersExplodemBlocosEndermenPegam')
   ],
   [
     ['players_sleeping_percentage', 'playersSleepingPercentage'],
-    'Dormir para pular a noite',
-    'Quantos % dos jogadores precisam dormir para virar dia (100 = todos).'
+    t('textosComandos.dormirParaPularANoite'),
+    t('textosComandos.quantosDosJogadoresPrecisamDormir')
   ],
   [
     ['spawn_mobs', 'doMobSpawning'],
-    'Mobs nascem sozinhos',
-    'Animais e monstros aparecem naturalmente.'
+    t('textosComandos.mobsNascemSozinhos'),
+    t('textosComandos.animaisEMonstrosAparecemNaturalmente')
   ],
-  [['spawn_monsters'], 'Monstros nascem', 'Monstros aparecem no escuro.'],
+  [
+    ['spawn_monsters'],
+    t('textosComandos.monstrosNascem'),
+    t('textosComandos.monstrosAparecemNoEscuro')
+  ],
   [
     ['natural_health_regeneration', 'naturalRegeneration'],
-    'Vida volta sozinha',
-    'A vida recupera com a barra de fome cheia.'
+    t('textosComandos.vidaVoltaSozinha'),
+    t('textosComandos.aVidaRecuperaComA')
   ],
-  [['pvp'], 'PvP', 'Jogadores podem machucar uns aos outros.'],
+  [['pvp'], 'PvP', t('textosComandos.jogadoresPodemMachucarUnsAos')],
   [
     ['show_death_messages', 'showDeathMessages'],
-    'Mensagens de morte',
-    'Avisa no chat quando alguém morre.'
+    t('textosComandos.mensagensDeMorte'),
+    t('textosComandos.avisaNoChatQuandoAlguem')
   ],
   [
     ['show_advancement_messages', 'announceAdvancements'],
-    'Avisar conquistas',
-    'Avisa no chat as conquistas dos jogadores.'
+    t('textosComandos.avisarConquistas'),
+    t('textosComandos.avisaNoChatAsConquistas')
   ],
-  [['immediate_respawn', 'doImmediateRespawn'], 'Renascer na hora', 'Sem a tela de "Você morreu".'],
+  [
+    ['immediate_respawn', 'doImmediateRespawn'],
+    t('textosComandos.renascerNaHora'),
+    t('textosComandos.semATelaDeVoce')
+  ],
   [
     ['spawn_phantoms', 'doInsomnia'],
-    'Phantoms',
-    'Phantoms aparecem para quem passa noites sem dormir.'
+    t('textosComandos.phantoms'),
+    t('textosComandos.phantomsAparecemParaQuemPassa')
   ],
-  [['block_drops', 'doTileDrops'], 'Blocos soltam itens', 'Quebrar um bloco solta o item.'],
-  [['mob_drops', 'doMobLoot'], 'Mobs soltam itens', 'Mobs soltam itens e XP ao morrer.'],
+  [
+    ['block_drops', 'doTileDrops'],
+    t('textosComandos.blocosSoltamItens'),
+    t('textosComandos.quebrarUmBlocoSoltaO')
+  ],
+  [
+    ['mob_drops', 'doMobLoot'],
+    t('textosComandos.mobsSoltamItens'),
+    t('textosComandos.mobsSoltamItensEXp')
+  ],
   [
     ['entity_drops', 'doEntityDrops'],
-    'Entidades soltam itens',
-    'Carrinhos, molduras e afins soltam o item ao quebrar.'
+    t('textosComandos.entidadesSoltamItens'),
+    t('textosComandos.carrinhosMoldurasEAfinsSoltam')
   ],
-  [['tnt_explodes', 'tntExplodes'], 'TNT explode', 'TNT acesa explode.'],
-  [['fall_damage', 'fallDamage'], 'Dano de queda', 'Cair de alto machuca.'],
-  [['fire_damage', 'fireDamage'], 'Dano de fogo', 'Fogo e lava machucam.'],
-  [['drowning_damage', 'drowningDamage'], 'Afogamento', 'Ficar sem ar debaixo d’água machuca.'],
-  [['freeze_damage', 'freezeDamage'], 'Congelamento', 'Neve fofa congela e machuca.'],
+  [
+    ['tnt_explodes', 'tntExplodes'],
+    t('textosComandos.tntExplode'),
+    t('textosComandos.tntAcesaExplode')
+  ],
+  [
+    ['fall_damage', 'fallDamage'],
+    t('textosComandos.danoDeQueda'),
+    t('textosComandos.cairDeAltoMachuca')
+  ],
+  [
+    ['fire_damage', 'fireDamage'],
+    t('textosComandos.danoDeFogo'),
+    t('textosComandos.fogoELavaMachucam')
+  ],
+  [
+    ['drowning_damage', 'drowningDamage'],
+    t('textosComandos.afogamento'),
+    t('textosComandos.ficarSemArDebaixoD')
+  ],
+  [
+    ['freeze_damage', 'freezeDamage'],
+    t('textosComandos.congelamento'),
+    t('textosComandos.neveFofaCongelaEMachuca')
+  ],
   [
     ['random_tick_speed', 'randomTickSpeed'],
-    'Velocidade do crescimento',
-    'Quão rápido plantas crescem e folhas caem (padrão 3).'
+    t('textosComandos.velocidadeDoCrescimento'),
+    t('textosComandos.quaoRapidoPlantasCrescemE')
   ],
   [
     ['respawn_radius', 'spawnRadius'],
-    'Raio do spawn',
-    'Em quantos blocos em volta do spawn os jogadores aparecem.'
+    t('textosComandos.raioDoSpawn'),
+    t('textosComandos.emQuantosBlocosEmVolta')
   ],
   [
     ['max_entity_cramming', 'maxEntityCramming'],
-    'Mobs empilhados',
-    'Quantos mobs cabem no mesmo bloco antes de se machucarem.'
+    t('textosComandos.mobsEmpilhados'),
+    t('textosComandos.quantosMobsCabemNoMesmo')
   ],
   [
     ['spawn_patrols', 'doPatrolSpawning'],
-    'Patrulhas de saqueadores',
-    'Patrulhas de saqueadores aparecem.'
+    t('textosComandos.patrulhasDeSaqueadores'),
+    t('textosComandos.patrulhasDeSaqueadoresAparecem')
   ],
   [
     ['spawn_wandering_traders', 'doTraderSpawning'],
-    'Vendedor ambulante',
-    'O vendedor ambulante aparece.'
+    t('textosComandos.vendedorAmbulante'),
+    t('textosComandos.oVendedorAmbulanteAparece')
   ],
   [
     ['spawn_wardens', 'doWardenSpawning'],
-    'Warden',
-    'O Warden pode aparecer na Escuridão Profunda.'
+    t('textosComandos.warden'),
+    t('textosComandos.oWardenPodeAparecerNa')
   ],
-  [['raids'], 'Invasões', 'Invasões de saqueadores acontecem.'],
-  [['disableRaids'], 'Sem invasões', 'Ligado, não há invasões de saqueadores.'],
+  [['raids'], t('textosComandos.invasoes'), t('textosComandos.invasoesDeSaqueadoresAcontecem')],
+  [['disableRaids'], t('textosComandos.semInvasoes'), t('textosComandos.ligadoNaoHaInvasoesDe')],
   [
     ['send_command_feedback', 'sendCommandFeedback'],
-    'Respostas de comandos no chat',
-    'Mostra no chat o resultado dos comandos.'
+    t('textosComandos.respostasDeComandosNoChat'),
+    t('textosComandos.mostraNoChatOResultado')
   ],
   [
     ['command_block_output', 'commandBlockOutput'],
-    'Avisos dos blocos de comando',
-    'Blocos de comando avisam os operadores no chat.'
+    t('textosComandos.avisosDosBlocosDeComando'),
+    t('textosComandos.blocosDeComandoAvisamOs')
   ],
   [
     ['locator_bar', 'locatorBar'],
-    'Barra de localização',
-    'Mostra na tela a direção dos outros jogadores.'
+    t('textosComandos.barraDeLocalizacao'),
+    t('textosComandos.mostraNaTelaADirecao')
   ],
   [
     ['reduced_debug_info', 'reducedDebugInfo'],
-    'Menos informações no F3',
-    'Esconde coordenadas e outras informações do F3.'
+    t('textosComandos.menosInformacoesNoF3'),
+    t('textosComandos.escondeCoordenadasEOutrasInformacoes')
   ],
   [
     ['universal_anger', 'universalAnger'],
-    'Raiva para todos',
-    'Mobs neutros irritados atacam qualquer jogador por perto.'
+    t('textosComandos.raivaParaTodos'),
+    t('textosComandos.mobsNeutrosIrritadosAtacamQualquer')
   ],
   [
     ['ender_pearls_vanish_on_death', 'enderPearlsVanishOnDeath'],
-    'Pérolas somem ao morrer',
-    'Pérolas do Ender lançadas somem quando o jogador morre.'
+    t('textosComandos.perolasSomemAoMorrer'),
+    t('textosComandos.perolasDoEnderLancadasSomem')
   ],
   [
     ['limited_crafting', 'doLimitedCrafting'],
-    'Só receitas desbloqueadas',
-    'Só dá para fabricar o que já está no livro de receitas.'
+    t('textosComandos.soReceitasDesbloqueadas'),
+    t('textosComandos.soDaParaFabricarO')
   ]
 ]
 
@@ -197,20 +238,20 @@ export function corDoEfeito(id: string): string {
 
 // Cores do texto do chat/título: nome usado no comando e a cor para a prévia.
 export const CORES_DO_TEXTO: Record<string, { nome: string; hex: string }> = {
-  white: { nome: 'Branco', hex: '#ffffff' },
-  gray: { nome: 'Cinza', hex: '#aaaaaa' },
+  white: { nome: t('textosComandos.branco'), hex: '#ffffff' },
+  gray: { nome: t('textosComandos.cinza'), hex: '#aaaaaa' },
   dark_gray: { nome: 'Cinza-escuro', hex: '#555555' },
-  black: { nome: 'Preto', hex: '#000000' },
-  red: { nome: 'Vermelho', hex: '#ff5555' },
+  black: { nome: t('textosComandos.preto'), hex: '#000000' },
+  red: { nome: t('textosComandos.vermelho'), hex: '#ff5555' },
   dark_red: { nome: 'Vermelho-escuro', hex: '#aa0000' },
-  gold: { nome: 'Dourado', hex: '#ffaa00' },
-  yellow: { nome: 'Amarelo', hex: '#ffff55' },
-  green: { nome: 'Verde', hex: '#55ff55' },
+  gold: { nome: t('textosComandos.dourado'), hex: '#ffaa00' },
+  yellow: { nome: t('textosComandos.amarelo'), hex: '#ffff55' },
+  green: { nome: t('textosComandos.verde'), hex: '#55ff55' },
   dark_green: { nome: 'Verde-escuro', hex: '#00aa00' },
-  aqua: { nome: 'Ciano', hex: '#55ffff' },
+  aqua: { nome: t('textosComandos.ciano'), hex: '#55ffff' },
   dark_aqua: { nome: 'Ciano-escuro', hex: '#00aaaa' },
-  blue: { nome: 'Azul', hex: '#5555ff' },
+  blue: { nome: t('textosComandos.azul'), hex: '#5555ff' },
   dark_blue: { nome: 'Azul-escuro', hex: '#0000aa' },
-  light_purple: { nome: 'Rosa', hex: '#ff55ff' },
-  dark_purple: { nome: 'Roxo', hex: '#aa00aa' }
+  light_purple: { nome: t('textosComandos.rosa'), hex: '#ff55ff' },
+  dark_purple: { nome: t('textosComandos.roxo'), hex: '#aa00aa' }
 }

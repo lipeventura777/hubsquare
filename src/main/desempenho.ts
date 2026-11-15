@@ -38,6 +38,7 @@ import { LOADERS, estadoDoProjeto } from './mods'
 import { lerPropriedades } from './propriedades'
 import { buscarBytes } from './rede'
 import { atualizarInfo, enviarDoApp, enviarSilencioso, eventos, lerEstado } from './servidor'
+import { t } from '../shared/i18n'
 
 // Tela Desempenho (Fase 18): números do servidor, flags do Java, pré-geração (Chunky),
 // diagnóstico (spark) e mapa (BlueMap ou Dynmap). As ferramentas são instaladas pela mesma
@@ -136,7 +137,7 @@ async function ferramenta(
       projetoId: null,
       nome,
       estado: 'indisponivel',
-      motivo: `O ${NOMES_TIPOS[info.tipo]} não aceita mods nem plugins. Troque o software na tela Software.`
+      motivo: t('p.desempenho.oNaoAceitaModsNem', { v: NOMES_TIPOS[info.tipo] })
     }
   }
   return { projetoId: id, nome, estado: await estadoDoProjeto(info, id, arquivo), motivo: null }
@@ -220,10 +221,10 @@ export async function estadoPregeracao(info: InfoServidor): Promise<EstadoPreger
 
 export async function iniciarPregeracao(info: InfoServidor, raio: unknown): Promise<void> {
   if (!Number.isInteger(raio) || (raio as number) < 16 || (raio as number) > 50_000) {
-    throw new ErroApp('Escolha um raio entre 16 e 50.000 blocos.')
+    throw new ErroApp(t('p.desempenho.escolhaUmRaioEntre16'))
   }
   if ((await estadoDoProjeto(info, CHUNKY, /^chunky/i)) !== 'instalado') {
-    throw new ErroApp('Instale o Chunky e reinicie o servidor antes de pré-gerar.')
+    throw new ErroApp(t('p.desempenho.instaleOChunkyEReinicie'))
   }
   // Do ponto de nascimento, num quadrado com o raio escolhido.
   enviarDoApp('chunky spawn')
@@ -241,7 +242,7 @@ export function controlarPregeracao(acao: unknown): void {
     confirmar: ['chunky confirm']
   }
   const lista = typeof acao === 'string' ? comandos[acao] : undefined
-  if (!lista) throw new ErroApp('Ação desconhecida.')
+  if (!lista) throw new ErroApp(t('p.desempenho.acaoDesconhecida'))
   for (const c of lista) enviarDoApp(c)
   if (acao === 'cancelar') tarefa = { ...TAREFA_PARADA }
 }
@@ -257,7 +258,7 @@ async function ferramentaSpark(info: InfoServidor): Promise<Ferramenta> {
           projetoId: null,
           nome: 'spark',
           estado: 'indisponivel',
-          motivo: 'O diagnóstico precisa do Paper 1.21 ou mais novo, que já vem com o spark.'
+          motivo: t('p.desempenho.oDiagnosticoPrecisaDoPaper')
         }
   }
   return ferramenta(info, SPARK, 'spark', /^spark/i)
@@ -270,15 +271,15 @@ export async function estadoDiagnostico(info: InfoServidor): Promise<EstadoDiagn
 export async function diagnosticar(info: InfoServidor): Promise<ResultadoDiagnostico> {
   const f = await ferramentaSpark(info)
   if (f.estado !== 'instalado' && f.estado !== 'embutido') {
-    throw new ErroApp(f.motivo ?? 'Instale o spark e reinicie o servidor antes de diagnosticar.')
+    throw new ErroApp(f.motivo ?? t('p.desempenho.instaleOSparkEReinicie'))
   }
-  if (diagnosticoDesde) throw new ErroApp('Já tem um diagnóstico rodando. Espere ele terminar.')
+  if (diagnosticoDesde) throw new ErroApp(t('p.desempenho.jaTemUmDiagnosticoRodando'))
   diagnosticoDesde = Date.now()
   try {
     const codigo = await new Promise<string>((resolver, falhar) => {
       const limite = setTimeout(() => {
         aoLinkDoSpark = null
-        falhar(new ErroApp('O spark não devolveu o relatório. Veja o console e tente de novo.'))
+        falhar(new ErroApp(t('p.desempenho.oSparkNaoDevolveuO')))
       }, 150_000)
       aoLinkDoSpark = (c) => {
         clearTimeout(limite)
@@ -301,11 +302,11 @@ export async function diagnosticar(info: InfoServidor): Promise<ResultadoDiagnos
       culpados = brutos.map((c) => ({
         nome:
           c.nome === 'minecraft'
-            ? 'O próprio jogo'
+            ? t('p.desempenho.oProprioJogo')
             : c.nome === 'loader'
-              ? 'O loader'
+              ? t('p.desempenho.oLoader')
               : c.nome === 'outros'
-                ? 'Outros'
+                ? t('p.desempenho.outros')
                 : c.nome,
         porcentagem: Math.round(c.parte * 100)
       }))
@@ -314,7 +315,7 @@ export async function diagnosticar(info: InfoServidor): Promise<ResultadoDiagnos
       return {
         link,
         culpados,
-        resumo: `Não deu para ler o relatório aqui; abra o link para ver os detalhes. (${detalhar(e).slice(0, 80)})`
+        resumo: t('p.desempenho.naoDeuParaLerO', { slice: detalhar(e).slice(0, 80) })
       }
     }
   } finally {
@@ -374,11 +375,11 @@ export async function estadoMapa(info: InfoServidor): Promise<EstadoMapa> {
     return {
       ferramenta: {
         projetoId: null,
-        nome: 'Mapa',
+        nome: t('p.desempenho.mapa'),
         estado: 'indisponivel',
         motivo: EXTRAS_TIPOS[info.tipo]
-          ? `Nem o BlueMap nem o Dynmap têm versão para ${NOMES_TIPOS[info.tipo]} ${info.versao}.`
-          : `O ${NOMES_TIPOS[info.tipo]} não aceita plugins de mapa. Troque o software na tela Software.`
+          ? t('p.desempenho.nemOBluemapNemO', { v: NOMES_TIPOS[info.tipo], versao: info.versao })
+          : t('p.desempenho.oNaoAceitaPluginsDe', { v: NOMES_TIPOS[info.tipo] })
       },
       precisaAceitar: false,
       configCriada: false,
@@ -429,9 +430,7 @@ export async function aceitarTermosDoMapa(info: InfoServidor): Promise<void> {
   const { principal } = configDoMapa(info, m)
   const texto = await readFile(principal, 'utf8').catch(() => null)
   if (texto === null) {
-    throw new ErroApp(
-      'O BlueMap ainda não criou a configuração. Ligue o servidor uma vez e tente de novo.'
-    )
+    throw new ErroApp(t('p.desempenho.oBluemapAindaNaoCriou'))
   }
   if (precisaAceitarBlueMap(texto)) await writeFile(principal, aceitarBlueMap(texto))
   if (lerEstado() === 'ligado') enviarDoApp('bluemap reload')
@@ -439,6 +438,6 @@ export async function aceitarTermosDoMapa(info: InfoServidor): Promise<void> {
 
 export async function abrirMapa(info: InfoServidor): Promise<void> {
   const { porta } = await estadoMapa(info)
-  if (!porta) throw new ErroApp('O mapa ainda não está pronto.')
+  if (!porta) throw new ErroApp(t('p.desempenho.oMapaAindaNaoEsta'))
   await shell.openExternal(`http://localhost:${porta}/`)
 }

@@ -13,6 +13,7 @@ import { baixar, buscarBytes, buscarJson, type AoProgredir } from './rede'
 import { maisNovaEstavel } from './tipos/fabric'
 import { versoesForge } from './tipos/forge'
 import { versoesNeoForge } from './tipos/neoforge'
+import { t } from '../shared/i18n'
 
 // Loaders em modo cliente para o launcher oficial (Fase P1), só de fontes oficiais. O resultado
 // fica em .minecraft/versions e libraries (onde o launcher procura). O jogo em si o launcher baixa.
@@ -37,7 +38,10 @@ export async function versaoDoLoader(
   const numero = mapa.get(versao)
   if (!numero) {
     throw new ErroApp(
-      `O ${loader === 'forge' ? 'Forge' : 'NeoForge'} ainda não tem o Minecraft ${versao}. Escolha outra versão.`
+      t('p.clienteLoader.oAindaNaoTemO', {
+        v: loader === 'forge' ? t('p.clienteLoader.forge') : t('p.clienteLoader.neoforge'),
+        versao
+      })
     )
   }
   return numero
@@ -55,14 +59,18 @@ export async function garantirVersaoCliente(
 
   if (loader === 'fabric') {
     const id = `fabric-loader-${numero}-${versao}`
-    if (!idSeguro(id)) throw new ErroApp('Versão do Fabric inválida.')
+    if (!idSeguro(id)) throw new ErroApp(t('p.clienteLoader.versaoDoFabricInvalida'))
     if (temVersao(id)) return id
-    aoProgredir({ etapa: `Preparando o Fabric ${numero}`, recebido: 0, total: 0 })
+    aoProgredir({
+      etapa: t('p.clienteLoader.preparandoOFabric', { numero }),
+      recebido: 0,
+      total: 0
+    })
     // Perfil oficial do Fabric para o launcher; ele baixa as bibliotecas sozinho ao abrir.
     const perfil = await buscarJson<{ id: string }>(
       `${FABRIC}/versions/loader/${encodeURIComponent(versao)}/${encodeURIComponent(numero)}/profile/json`
     )
-    if (perfil.id !== id) throw new ErroApp('O Fabric respondeu uma versão diferente da pedida.')
+    if (perfil.id !== id) throw new ErroApp(t('p.clienteLoader.oFabricRespondeuUmaVersao'))
     const pasta = join(MINECRAFT(), 'versions', id)
     await mkdir(pasta, { recursive: true })
     await writeFile(join(pasta, `${id}.json`), JSON.stringify(perfil, null, 2))
@@ -71,9 +79,9 @@ export async function garantirVersaoCliente(
     return id
   }
 
-  const nome = loader === 'forge' ? 'Forge' : 'NeoForge'
+  const nome = loader === 'forge' ? t('p.clienteLoader.forge') : 'NeoForge'
   const id = loader === 'forge' ? `${versao}-forge-${numero}` : `neoforge-${numero}`
-  if (!idSeguro(id)) throw new ErroApp(`Versão do ${nome} inválida.`)
+  if (!idSeguro(id)) throw new ErroApp(t('p.clienteLoader.versaoDoInvalida', { nome }))
   if (temVersao(id)) return id
   exigirPerfis() // o instalador do Forge/NeoForge recusa uma pasta sem launcher_profiles.json
 
@@ -92,7 +100,7 @@ export async function garantirVersaoCliente(
       url,
       jar,
       { algoritmo: 'sha1', valor: sha1 },
-      `Baixando o instalador do ${nome}`,
+      t('p.clienteLoader.baixandoOInstaladorDo', { nome }),
       aoProgredir
     )
     const java = await garantirJava(await javaDaVersao(versao), aoProgredir)
@@ -114,9 +122,7 @@ export async function garantirVersaoCliente(
     (v) => !antes.has(v) && idSeguro(v) && v.includes(numero) && temVersao(v)
   )
   if (novas.length !== 1) {
-    throw new ErroApp(
-      `O instalador do ${nome} terminou, mas a versão ${id} não apareceu. Tente de novo.`
-    )
+    throw new ErroApp(t('p.clienteLoader.oInstaladorDoTerminouMas', { nome, id }))
   }
   return novas[0]
 }
@@ -128,7 +134,7 @@ function executar(
   nome: string,
   aoProgredir: AoProgredir
 ): Promise<void> {
-  const etapa = `Instalando o ${nome} (pode levar alguns minutos)`
+  const etapa = t('p.clienteLoader.instalandoOPodeLevarAlguns', { nome })
   aoProgredir({ etapa, recebido: 0, total: 0 })
   return new Promise((resolver, falhar) => {
     const filho = spawn(java, args, { cwd, windowsHide: true })
@@ -147,15 +153,15 @@ function executar(
     filho.stdout.on('data', linha)
     filho.stderr.on('data', linha)
     filho.on('error', (e) =>
-      falhar(new ErroApp(`O instalador do ${nome} não abriu. Tente de novo.`, String(e)))
+      falhar(new ErroApp(t('p.clienteLoader.oInstaladorDoNaoAbriu', { nome }), String(e)))
     )
     filho.on('close', (codigo) =>
       codigo === 0
         ? resolver()
         : falhar(
             new ErroApp(
-              `Não consegui instalar o ${nome}. Confira sua internet e tente de novo.`,
-              `O instalador saiu com código ${codigo}\n\n${ultimas.join('\n')}`
+              t('p.clienteLoader.naoConseguiInstalarOConfira', { nome }),
+              t('p.clienteLoader.oInstaladorSaiuComCodigo', { codigo, join: ultimas.join('\n') })
             )
           )
     )

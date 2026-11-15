@@ -1,6 +1,8 @@
 import type { ArquivoManual, TipoId } from '../shared/tipos'
+import { validarFundoServidor, type FundoServidor } from '../shared/fundoRegras'
 import { reconhecivel } from './downloadsRegras'
 import { caminhoDoPack, downloadPermitido, type ArquivoIndice } from './modpackRegras'
+import { t, idiomaAtual } from '../shared/i18n'
 
 // Regras sem rede nem Electron do "Passar o servidor" (Fase M7): o que entra no .hubserver, o
 // que fica no PC, como o server.properties sai sem segredos, como o pacote é conferido ao abrir e
@@ -9,6 +11,8 @@ import { caminhoDoPack, downloadPermitido, type ArquivoIndice } from './modpackR
 
 export const FORMATO_HUBSERVER = 1
 export const INDICE_HUBSERVER = 'hubserver.json'
+// Fase V10: a imagem do fundo do servidor (quando é uma imagem) vai nesta pasta do zip.
+export const PASTA_FUNDO_HUBSERVER = 'hubserver-fundo'
 
 // O que vai dentro do hubserver.json (o resto do zip são os arquivos do servidor, na raiz).
 export interface PacoteServidor {
@@ -26,6 +30,18 @@ export interface PacoteServidor {
   manuais: ArquivoManual[] // baixados à mão (CurseForge): só página oficial + hash
   semLink: string[] // .jar sem link oficial: o novo dono põe à mão
   geradoEm: string
+  // Fase V10 (opcional; versões antigas ignoram): a escolha de fundo do servidor. Se for uma
+  // imagem, ela vai em hubserver-fundo/<nome>; sem a imagem, quem recebe fica "Igual ao app".
+  fundo?: FundoServidor
+}
+
+// A escolha de fundo do pacote, ou nada se veio estragada (não impede de receber o servidor).
+export function fundoDoPacote(v: unknown): FundoServidor | undefined {
+  try {
+    return validarFundoServidor(v) ?? undefined
+  } catch {
+    return undefined
+  }
 }
 
 // Arquivos soltos da pasta do servidor que vão no pacote.
@@ -93,16 +109,17 @@ export function motivoParaFicar(
   texto: string | null,
   caminhos: string[]
 ): string | null {
-  if (EXECUTAVEL.test(relativo)) return 'programa ou mod (.jar): nunca vai no pacote'
+  if (EXECUTAVEL.test(relativo)) return t('p.passarRegras.programaOuModJarNunca')
   if (texto === null) return null
   const minusculo = texto.toLowerCase()
   for (const c of caminhos.filter((x) => x.length > 3)) {
     const variantes = [c, c.replace(/\\/g, '/'), c.replace(/\\/g, '\\\\')].map((v) =>
       v.toLowerCase()
     )
-    if (variantes.some((v) => minusculo.includes(v))) return 'tem caminhos de pastas deste PC'
+    if (variantes.some((v) => minusculo.includes(v)))
+      return t('p.passarRegras.temCaminhosDePastasDeste')
   }
-  if (temSegredo(texto)) return 'parece ter senha, token ou chave'
+  if (temSegredo(texto)) return t('p.passarRegras.pareceTerSenhaTokenOu')
   return null
 }
 
@@ -121,17 +138,17 @@ const hex = (v: unknown, n: number): v is string =>
 export function validarPacote(dado: unknown): PacoteServidor {
   const p = dado as Partial<PacoteServidor> | null
   const erro = (o: string): never => {
-    throw new Error(`Esse arquivo .hubserver veio com problema (${o}). Peça um arquivo novo.`)
+    throw new Error(t('p.passarRegras.hubserverComProblema', { o }))
   }
   if (!p || typeof p !== 'object' || p.formato !== FORMATO_HUBSERVER) erro('formato')
   if (typeof p!.idFixo !== 'string' || !UUID.test(p!.idFixo)) erro('id')
   if (!TIPOS.includes(p!.tipo as TipoId)) erro('tipo')
-  if (typeof p!.versao !== 'string' || !VERSAO.test(p!.versao)) erro('versão')
+  if (typeof p!.versao !== 'string' || !VERSAO.test(p!.versao)) erro(t('p.passarRegras.versao'))
   if (
     p!.versaoLoader != null &&
     !(typeof p!.versaoLoader === 'string' && VERSAO.test(p!.versaoLoader))
   )
-    erro('versão do loader')
+    erro(t('p.passarRegras.versaoDoLoader'))
   if (!Array.isArray(p!.mods) || p!.mods.length > 2000) erro('mods')
   const mods = p!.mods!.map((f) => {
     if (!caminhoDoPack(f?.path) || !/^(mods|plugins)\/[^/]+\.jar$/i.test(f.path)) erro('caminho')
@@ -145,7 +162,8 @@ export function validarPacote(dado: unknown): PacoteServidor {
       fileSize: Number.isFinite(f.fileSize) ? Math.max(0, f.fileSize) : 0
     }
   })
-  const nome = typeof p!.nome === 'string' ? p!.nome.slice(0, 32) : 'Servidor recebido'
+  const nome =
+    typeof p!.nome === 'string' ? p!.nome.slice(0, 32) : t('p.passarRegras.servidorRecebido')
   const num = (v: unknown, min: number, max: number): number | undefined =>
     Number.isInteger(v) && (v as number) >= min && (v as number) <= max ? (v as number) : undefined
   return {
@@ -167,7 +185,8 @@ export function validarPacote(dado: unknown): PacoteServidor {
           .map((x) => x.slice(0, 200))
           .slice(0, 500)
       : [],
-    geradoEm: typeof p!.geradoEm === 'string' ? p!.geradoEm : ''
+    geradoEm: typeof p!.geradoEm === 'string' ? p!.geradoEm : '',
+    fundo: fundoDoPacote(p!.fundo)
   }
 }
 
@@ -183,7 +202,12 @@ export function motivoSemAtualizar(
   pacote: { tipo: TipoId; versao: string }
 ): string | null {
   if (local.tipo !== pacote.tipo || local.versao !== pacote.versao) {
-    return `O arquivo é de ${pacote.tipo} ${pacote.versao} e o seu servidor é ${local.tipo} ${local.versao}. Troque a versão na tela Software antes, ou crie uma cópia.`
+    return t('p.passarRegras.oArquivoEDeE', {
+      tipo: pacote.tipo,
+      versao: pacote.versao,
+      tipo2: local.tipo,
+      versao2: local.versao
+    })
   }
   return null
 }
@@ -191,14 +215,16 @@ export function motivoSemAtualizar(
 // "Com Bia desde 13/11/2026"
 export function textoEmprestado(e: { com: string; desde: string }): string {
   const d = new Date(e.desde)
-  const data = Number.isNaN(d.getTime()) ? '' : ` desde ${d.toLocaleDateString('pt-BR')}`
-  return `Com ${e.com}${data}`
+  const data = Number.isNaN(d.getTime())
+    ? ''
+    : t('p.passarRegras.desde', { data: d.toLocaleDateString(idiomaAtual()) })
+  return t('p.passarRegras.com', { com: e.com, data })
 }
 
 export function nomeDoAmigo(valor: unknown): string {
   const nome = typeof valor === 'string' ? valor.trim() : ''
   if (!nome || [...nome].length > 32 || /\p{C}/u.test(nome)) {
-    throw new Error('Escreva o nome de quem vai hospedar (até 32 letras, numa linha só).')
+    throw new Error(t('p.passarRegras.escrevaONome'))
   }
   return nome
 }

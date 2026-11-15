@@ -26,6 +26,7 @@ import * as hangar from './hangar'
 import * as modrinth from './modrinth'
 import { registrosDoApp } from './mods'
 import { arquivoCF } from './modsFontes'
+import { t as tx } from '../shared/i18n'
 
 // Explorar no CurseForge e no Hangar (Fase 24). O resto (Modrinth) fica no explorar.ts.
 // Nada do CurseForge é guardado: tudo vem da API na hora (termos da API).
@@ -55,7 +56,7 @@ const ORDEM_HANGAR: Record<string, string> = {
 
 const classeCF = (t: TipoConteudo): number => {
   if (t === 'mod' || t === 'modpack' || t === 'plugin' || t === 'datapack') return cf.CLASSES[t]
-  throw new ErroApp('O CurseForge, aqui no app, só tem mods, plugins, modpacks e datapacks.')
+  throw new ErroApp(tx('p.explorarFontes.oCurseforgeAquiNoApp'))
 }
 
 // ---------- Opções e busca ----------
@@ -132,7 +133,7 @@ export async function buscarHangar(
   pedidos: { offset: number; limit: number }[],
   signal: AbortSignal
 ): Promise<ResultadoExplorar> {
-  if (f.tipo !== 'plugin') throw new ErroApp('O Hangar só tem plugins para Paper.')
+  if (f.tipo !== 'plugin') throw new ErroApp(tx('p.explorarFontes.oHangarSoTemPlugins'))
   const partes = await Promise.all(
     pedidos.map((p) =>
       hangar.buscar({
@@ -216,8 +217,7 @@ export async function detalhesCF(
   // O Pacote pros amigos (.mrpack) só aceita links do Modrinth.
   if (destino === 'amigos') {
     destino = 'incompativel'
-    motivo =
-      'É só do jogador, e o Pacote pros amigos só aceita arquivos do Modrinth. Baixe pelo site e mande para os amigos.'
+    motivo = tx('p.explorarFontes.eSoDoJogadorE')
   }
 
   let situacao: EstadoInstalacao = 'instalar'
@@ -255,14 +255,14 @@ export async function detalhesCF(
     // A API do CurseForge não informa a licença.
     licenca: {
       id: '',
-      nome: 'Veja na página do projeto',
+      nome: tx('p.explorarFontes.vejaNaPaginaDoProjeto'),
       url: https(m.links.websiteUrl) ? m.links.websiteUrl : null
     },
     links: [
-      ['sourceUrl', 'Código-fonte'],
-      ['wikiUrl', 'Wiki'],
-      ['issuesUrl', 'Relatar problemas'],
-      ['websiteUrl', 'Página no CurseForge']
+      ['sourceUrl', tx('p.explorarFontes.codigoFonte')],
+      ['wikiUrl', tx('p.explorarFontes.wiki')],
+      ['issuesUrl', tx('p.explorarFontes.relatarProblemas')],
+      ['websiteUrl', tx('p.explorarFontes.paginaNoCurseforge')]
     ].flatMap(([campo, rotulo]) => {
       const url = m.links[campo as keyof cf.ModCF['links']]
       return https(url) ? [{ rotulo, url }] : []
@@ -343,14 +343,14 @@ export async function detalhesHangar(
     galeria: [],
     licenca: {
       id: licenca?.type ?? '',
-      nome: licenca?.name || licenca?.type || 'Não informada',
+      nome: licenca?.name || licenca?.type || tx('p.explorarFontes.naoInformada'),
       url: https(licenca?.url) ? licenca!.url : null
     },
     links: [
       ...(p.settings?.links ?? [])
         .flatMap((g) => g.links ?? [])
         .flatMap((l) => (https(l.url) ? [{ rotulo: l.name, url: l.url }] : [])),
-      { rotulo: 'Página no Hangar', url: hangar.linkDoProjeto(p) }
+      { rotulo: tx('p.explorarFontes.paginaNoHangar'), url: hangar.linkDoProjeto(p) }
     ],
     downloads: p.stats.downloads,
     seguidores: p.stats.stars,
@@ -396,10 +396,13 @@ export async function datapackCF(
 ): Promise<{ m: cf.ModCF; a: cf.ArquivoCF }> {
   const [m, lista] = await Promise.all([cf.mod(id), cf.arquivos(id, info.versao, null)])
   const a = escolherArquivoCF(lista, [info.versao], null)
-  if (!a) throw new ErroApp(`"${m.name}" não tem versão para o Minecraft ${info.versao}.`)
+  if (!a)
+    throw new ErroApp(
+      tx('p.explorarFontes.naoTemVersaoParaO', { name: m.name, versao: info.versao })
+    )
   if (!cf.podeBaixar(m, a)) {
     throw new ErroApp(
-      `O autor de "${m.name}" não deixa outros apps baixarem esse arquivo. Baixe pelo site e coloque na pasta datapacks do mundo.`,
+      tx('p.explorarFontes.oAutorDeNaoDeixa', { name: m.name }),
       cf.paginaDoArquivo(m, a.id) ?? undefined
     )
   }

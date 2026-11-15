@@ -30,6 +30,7 @@ import { BotaoDownloadsPendentes } from '../mods/DownloadsNecessarios'
 import { AjusteVersaoApp } from '../configuracoes/AjusteAtualizacoes'
 import { ModoDoApp } from './ModoDoApp'
 import { BotaoRelatorio } from '../componentes/RelatorioErro'
+import { t } from '../../../shared/i18n'
 
 // PlaySquare (Fase P3, DESIGN.md seção 6.1.5): Explorar e Conteúdo são os MESMOS componentes da
 // tela Mods do ServSquare, só que apontados para a instalação escolhida (ApiDaInstalacao).
@@ -116,9 +117,9 @@ function Seletor({
 }): React.JSX.Element {
   return (
     <div className="flex flex-wrap items-center gap-3 border border-linha bg-panel p-4">
-      <span className="text-[13px] font-bold">Instalação</span>
+      <span className="text-[13px] font-bold">{t('conteudoDoJogo.instalacao')}</span>
       <Selecao
-        aria-label="Instalação"
+        aria-label={t('conteudoDoJogo.instalacao')}
         value={escolhida.id}
         onChange={(e) => aoEscolher(e.target.value)}
         className="min-w-[240px]"
@@ -129,9 +130,7 @@ function Seletor({
           </option>
         ))}
       </Selecao>
-      <span className="text-xs text-muted">
-        Tudo o que você instalar aqui é seu: a sincronização com o servidor nunca tira.
-      </span>
+      <span className="text-xs text-muted">{t('conteudoDoJogo.tudoOQueVoceInstalar')}</span>
     </div>
   )
 }
@@ -140,8 +139,8 @@ function SemInstalacao(): React.JSX.Element {
   return (
     <EstadoVazio
       icone={<IconeInstalacoes />}
-      titulo="Nenhuma instalação ainda"
-      texto="Crie uma instalação (ou entre com um convite) na tela Instalações."
+      titulo={t('conteudoDoJogo.nenhumaInstalacaoAinda')}
+      texto={t('conteudoDoJogo.crieUmaInstalacaoOuEntre')}
     />
   )
 }
@@ -208,11 +207,11 @@ function Recomendados({
   const mudou = opcionais.some((o) => o.recusado !== recusados.has(o.path))
   return (
     <Secao
-      titulo={`Recomendados pelo servidor ${i.origem.tipo === 'convite' ? i.origem.servidor : ''}`}
+      titulo={t('conteudoDoJogo.recomendadosPeloServidor', {
+        v: i.origem.tipo === 'convite' ? i.origem.servidor : ''
+      })}
     >
-      <p className="text-[13px] text-muted">
-        O servidor sugere estes itens, mas você escolhe. Os obrigatórios não aparecem aqui.
-      </p>
+      <p className="text-[13px] text-muted">{t('conteudoDoJogo.oServidorSugereEstesItens')}</p>
       {opcionais.map((o) => (
         <CaixaSelecao
           key={o.path}
@@ -243,7 +242,7 @@ function Recomendados({
           await aoMudar()
         }}
       >
-        {ocupado ? 'Aplicando...' : 'Salvar escolha'}
+        {ocupado ? t('conteudoDoJogo.aplicando') : t('conteudoDoJogo.salvarEscolha')}
       </Botao>
       {ocupado && progresso && (
         <BarraProgresso
@@ -305,16 +304,16 @@ export function TelaAjustesJogo(): React.JSX.Element {
   return (
     <PaginaAjustes>
       {erro && <MensagemErro erro={erro} />}
-      <Secao titulo="Memória padrão">
+      <Secao titulo={t('conteudoDoJogo.memoriaPadrao')}>
         <CaixaSelecao
           marcada={ajustes.memoriaPadrao === null}
           aoMudar={(v) => void salvar({ memoriaPadrao: v ? null : Math.min(4, limites.max) })}
         >
-          Usar a sugestão do app (pelo número de mods e pela memória do PC)
+          {t('conteudoDoJogo.usarASugestaoDoApp')}
         </CaixaSelecao>
         {ajustes.memoriaPadrao !== null && (
           <Slider
-            rotulo="Memória das instalações novas"
+            rotulo={t('conteudoDoJogo.memoriaDasInstalacoesNovas')}
             valor={ajustes.memoriaPadrao}
             min={limites.min}
             max={limites.max}
@@ -324,25 +323,23 @@ export function TelaAjustesJogo(): React.JSX.Element {
         )}
         {ajustes.memoriaPadrao !== null && (
           <Botao className="self-start" onClick={() => void salvar({})}>
-            Salvar memória
+            {t('conteudoDoJogo.salvarMemoria')}
           </Botao>
         )}
-        <p className="text-xs text-muted">
-          Vale para instalações novas. Cada instalação tem a própria memória na tela Jogar.
-        </p>
+        <p className="text-xs text-muted">{t('conteudoDoJogo.valeParaInstalacoesNovasCada')}</p>
       </Secao>
 
-      <Secao titulo="Janela do jogo">
+      <Secao titulo={t('conteudoDoJogo.janelaDoJogo')}>
         <CaixaSelecao
           marcada={ajustes.resolucao === null}
           aoMudar={(v) => void salvar({ resolucao: v ? null : { largura: 1280, altura: 720 } })}
         >
-          Deixar o Minecraft Launcher decidir o tamanho
+          {t('conteudoDoJogo.deixarOMinecraftLauncherDecidir')}
         </CaixaSelecao>
         {ajustes.resolucao !== null && (
           <div className="flex flex-wrap items-end gap-2">
             <label className="flex flex-col gap-1 text-[13px]">
-              Largura
+              {t('conteudoDoJogo.largura')}
               <Campo
                 inputMode="numeric"
                 className="w-28"
@@ -350,9 +347,9 @@ export function TelaAjustesJogo(): React.JSX.Element {
                 onChange={(e) => setLargura(e.target.value.replace(/D/g, '').slice(0, 4))}
               />
             </label>
-            <span className="pb-2">×</span>
+            <span className="pb-2">{t('conteudoDoJogo.texto')}</span>
             <label className="flex flex-col gap-1 text-[13px]">
-              Altura
+              {t('conteudoDoJogo.altura')}
               <Campo
                 inputMode="numeric"
                 className="w-28"
@@ -365,38 +362,33 @@ export function TelaAjustesJogo(): React.JSX.Element {
                 void salvar({ resolucao: { largura: Number(largura), altura: Number(altura) } })
               }
             >
-              Salvar tamanho
+              {t('conteudoDoJogo.salvarTamanho')}
             </Botao>
           </div>
         )}
-        <p className="text-xs text-muted">Vale da próxima vez que você clicar em Jogar.</p>
+        <p className="text-xs text-muted">{t('conteudoDoJogo.valeDaProximaVezQue')}</p>
       </Secao>
 
-      <Secao titulo="Launcher">
+      <Secao titulo={t('conteudoDoJogo.launcher')}>
         <p className="text-[13px]">
-          O PlaySquare abre o jogo pelo <b>Minecraft Launcher oficial</b>, com a sua conta. O app
-          nunca faz login nem abre o jogo sem a conta original.
+          {t('conteudoDoJogo.oPlaysquareAbreOJogo')}{' '}
+          <b>{t('conteudoDoJogo.minecraftLauncherOficial')}</b>
+          {t('conteudoDoJogo.comASuaContaO')}
         </p>
-        <p className="text-xs text-muted">
-          Modrinth App e Prism Launcher não têm um jeito oficial de receber instalações de fora,
-          então não estão disponíveis por enquanto.
-        </p>
+        <p className="text-xs text-muted">{t('conteudoDoJogo.modrinthAppEPrismLauncher')}</p>
       </Secao>
 
-      <Secao titulo="Avisos de compatibilidade">
-        <p className="text-[13px] text-muted">
-          Avisos que você pediu para não mostrar de novo no Explorar e em Conteúdo. Os que impedem a
-          instalação (loader e versão) aparecem sempre.
-        </p>
+      <Secao titulo={t('conteudoDoJogo.avisosDeCompatibilidade')}>
+        <p className="text-[13px] text-muted">{t('conteudoDoJogo.avisosQueVocePediuPara')}</p>
         {!ocultos.length ? (
-          <Aviso tipo="sucesso">Todos os avisos estão aparecendo.</Aviso>
+          <Aviso tipo="sucesso">{t('conteudoDoJogo.todosOsAvisosEstaoAparecendo')}</Aviso>
         ) : (
           <ul className="flex flex-col divide-y divide-linha">
             {AVISOS.filter((a) => ocultos.includes(a)).map((a) => (
               <li key={a} className="flex items-center gap-3 py-2">
                 <span className="flex-1 text-[13px]">{NOMES_AVISOS[a]}</span>
                 <Botao tamanho="pequeno" onClick={() => mudar(a, false)}>
-                  Mostrar de novo
+                  {t('conteudoDoJogo.mostrarDeNovo')}
                 </Botao>
               </li>
             ))}
@@ -404,10 +396,12 @@ export function TelaAjustesJogo(): React.JSX.Element {
         )}
       </Secao>
 
-      <Secao titulo="Pasta das instalações">
+      <Secao titulo={t('conteudoDoJogo.pastaDasInstalacoes')}>
         <p className="font-mono text-[13px] break-all">{pasta}</p>
         <div className="flex flex-wrap gap-2">
-          <Botao onClick={() => void window.api.abrirPastaDasInstalacoes()}>Abrir pasta</Botao>
+          <Botao onClick={() => void window.api.abrirPastaDasInstalacoes()}>
+            {t('conteudoDoJogo.abrirPasta')}
+          </Botao>
           <Botao
             onClick={async () => {
               const r = await window.api.escolherPastaInstalacoes(false)
@@ -415,7 +409,7 @@ export function TelaAjustesJogo(): React.JSX.Element {
               else setErro(r.erro)
             }}
           >
-            Escolher outra pasta
+            {t('conteudoDoJogo.escolherOutraPasta')}
           </Botao>
           {ajustes.pastaInstalacoes && (
             <Botao
@@ -425,21 +419,15 @@ export function TelaAjustesJogo(): React.JSX.Element {
                 else setErro(r.erro)
               }}
             >
-              Voltar ao padrão
+              {t('conteudoDoJogo.voltarAoPadrao')}
             </Botao>
           )}
         </div>
-        <p className="text-xs text-muted">
-          Vale para as instalações novas. As que já existem continuam onde estão (nada é movido).
-        </p>
+        <p className="text-xs text-muted">{t('conteudoDoJogo.valeParaAsInstalacoesNovas')}</p>
       </Secao>
 
-      <Secao titulo="Downloads manuais">
-        <p className="text-[13px] text-muted">
-          Quando um mod precisa ser baixado pela página oficial, o app procura o arquivo na pasta
-          Downloads do Windows. Se o seu navegador salva em outro lugar, adicione a pasta aqui. Só
-          sai de lá o arquivo que bate com o esperado (o hash é conferido).
-        </p>
+      <Secao titulo={t('conteudoDoJogo.downloadsManuais')}>
+        <p className="text-[13px] text-muted">{t('conteudoDoJogo.quandoUmModPrecisaSer')}</p>
         {ajustes.pastasDownloads.length > 0 && (
           <ul className="flex flex-col gap-1">
             {ajustes.pastasDownloads.map((p) => (
@@ -453,7 +441,7 @@ export function TelaAjustesJogo(): React.JSX.Element {
                     else setErro(r.erro)
                   }}
                 >
-                  Tirar
+                  {t('conteudoDoJogo.tirar')}
                 </Botao>
               </li>
             ))}
@@ -467,24 +455,21 @@ export function TelaAjustesJogo(): React.JSX.Element {
               else setErro(r.erro)
             }}
           >
-            Adicionar pasta
+            {t('conteudoDoJogo.adicionarPasta')}
           </Botao>
         </div>
       </Secao>
       <ModoDoApp />
-      <Secao titulo="Ajuda">
-        <p className="text-[13px] text-muted">
-          Algo deu errado? O relatório junta os logs e as configurações, sem segredos, para quem for
-          ajudar.
-        </p>
+      <Secao titulo={t('conteudoDoJogo.ajuda')}>
+        <p className="text-[13px] text-muted">{t('conteudoDoJogo.algoDeuErradoORelatorio')}</p>
         <div>
           <BotaoRelatorio />
         </div>
       </Secao>
-      <Secao titulo="Versão do HubSquare">
+      <Secao titulo={t('conteudoDoJogo.versaoDoHubsquare')}>
         <AjusteVersaoApp />
       </Secao>
-      {salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
+      {salvo && <Aviso tipo="sucesso">{t('conteudoDoJogo.salvo')}</Aviso>}
     </PaginaAjustes>
   )
 }

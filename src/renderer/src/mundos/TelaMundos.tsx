@@ -15,6 +15,7 @@ import {
   Secao
 } from '../componentes/ui'
 import { useEstadoServidor } from '../servidor/comandos'
+import { t } from '../../../shared/i18n'
 
 type Pedido = { tipo: 'apagar'; mundo: MundoServidor } | { tipo: 'gerar' }
 
@@ -62,26 +63,26 @@ export function TelaMundos(): React.JSX.Element {
       const alvo = pedido.mundo.nome
       void executar(
         () => window.api.apagarMundo(alvo),
-        () => `Mundo "${alvo}" apagado. O backup dele está em Cópias de segurança.`
+        () => t('telaMundos.mundoApagadoOBackupDele', { alvo })
       )
     } else if (pedido?.tipo === 'gerar') {
       const novo = nome.trim()
       void executar(
         () => window.api.gerarMundo(novo, seed),
-        () => `Mundo "${novo}" escolhido. Ele é criado na próxima vez que o servidor ligar.`
+        () => t('telaMundos.mundoEscolhidoEleECriado', { novo })
       )
     }
   }
 
   const importado = (n: string | null): string | null =>
-    n && `Mundo "${n}" importado. Use "Tornar ativo" para jogar nele.`
+    n && t('telaMundos.mundoImportadoUseTornarAtivo', { n })
 
   return (
     <PaginaAjustes largo>
-      <Secao titulo="Mundos">
+      <Secao titulo={t('telaMundos.mundos')}>
         <p className="text-[13px] text-muted">
-          O mundo ativo é o que abre quando o servidor liga.
-          {!desligado && ' Desligue o servidor para mexer nos mundos.'}
+          {t('telaMundos.oMundoAtivoEO')}
+          {!desligado && t('telaMundos.desligueOServidorParaMexer')}
         </p>
         <div className="flex flex-wrap gap-2">
           <Botao
@@ -93,19 +94,19 @@ export function TelaMundos(): React.JSX.Element {
               setPedido({ tipo: 'gerar' })
             }}
           >
-            Gerar mundo novo
+            {t('telaMundos.gerarMundoNovo')}
           </Botao>
           <Botao
             disabled={!desligado || ocupado}
             onClick={() => void executar(() => window.api.importarMundoDePasta(), importado)}
           >
-            Importar pasta…
+            {t('telaMundos.importarPasta')}
           </Botao>
           <Botao
             disabled={!desligado || ocupado}
             onClick={() => void executar(() => window.api.importarMundoDeZip(), importado)}
           >
-            Importar .zip…
+            {t('telaMundos.importarZip')}
           </Botao>
         </div>
         {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}
@@ -116,8 +117,8 @@ export function TelaMundos(): React.JSX.Element {
         ) : mundos.length === 0 ? (
           <EstadoVazio
             icone={<IconeMundos />}
-            titulo="Nenhum mundo ainda"
-            texto="O servidor cria o primeiro mundo na primeira vez que liga."
+            titulo={t('telaMundos.nenhumMundoAinda')}
+            texto={t('telaMundos.oServidorCriaOPrimeiro')}
           />
         ) : (
           <div className="flex flex-wrap gap-4">
@@ -125,11 +126,15 @@ export function TelaMundos(): React.JSX.Element {
               <CardImagem
                 key={m.nome}
                 ordem={i}
-                etiqueta={m.ativo ? 'Mundo atual' : 'Mundo'}
+                etiqueta={m.ativo ? t('telaMundos.mundoAtual') : t('telaMundos.mundo')}
                 titulo={m.nome}
                 info={`${dataHora(m.data)} · ${tamanho(m.tamanho)}`}
               >
-                {m.versao && <p className="text-xs text-muted">Versão {m.versao}</p>}
+                {m.versao && (
+                  <p className="text-xs text-muted">
+                    {t('telaMundos.versao', { versao: m.versao })}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {!m.ativo && (
                     <Botao
@@ -139,11 +144,11 @@ export function TelaMundos(): React.JSX.Element {
                       onClick={() =>
                         void executar(
                           () => window.api.ativarMundo(m.nome),
-                          () => `"${m.nome}" agora é o mundo ativo.`
+                          () => t('telaMundos.agoraEOMundoAtivo', { nome: m.nome })
                         )
                       }
                     >
-                      Tornar ativo
+                      {t('telaMundos.tornarAtivo')}
                     </Botao>
                   )}
                   <Botao
@@ -152,11 +157,11 @@ export function TelaMundos(): React.JSX.Element {
                     onClick={() =>
                       void executar(
                         () => window.api.exportarMundo(m.nome),
-                        (salvo) => (salvo ? `Mundo "${m.nome}" exportado.` : null)
+                        (salvo) => (salvo ? t('telaMundos.mundoExportado', { nome: m.nome }) : null)
                       )
                     }
                   >
-                    Exportar .zip
+                    {t('telaMundos.exportarZip')}
                   </Botao>
                   {!m.ativo && (
                     <Botao
@@ -165,7 +170,7 @@ export function TelaMundos(): React.JSX.Element {
                       disabled={!desligado || ocupado}
                       onClick={() => setPedido({ tipo: 'apagar', mundo: m })}
                     >
-                      Apagar
+                      {t('telaMundos.apagar')}
                     </Botao>
                   )}
                 </div>
@@ -177,10 +182,14 @@ export function TelaMundos(): React.JSX.Element {
 
       <Dialogo
         aberto={!!pedido}
-        titulo={pedido?.tipo === 'apagar' ? `Apagar "${pedido.mundo.nome}"?` : 'Gerar mundo novo'}
+        titulo={
+          pedido?.tipo === 'apagar'
+            ? t('telaMundos.apagar2', { nome: pedido.mundo.nome })
+            : t('telaMundos.gerarMundoNovo')
+        }
         aoCancelar={() => setPedido(null)}
         acao={{
-          rotulo: pedido?.tipo === 'apagar' ? 'Apagar' : 'Gerar',
+          rotulo: pedido?.tipo === 'apagar' ? t('telaMundos.apagar') : t('telaMundos.gerar'),
           variante: pedido?.tipo === 'apagar' ? 'perigo' : 'primario',
           aoClicar: confirmar,
           ocupado,
@@ -188,28 +197,22 @@ export function TelaMundos(): React.JSX.Element {
         }}
       >
         {pedido?.tipo === 'apagar' ? (
-          <p>
-            O mundo e o Nether e o End dele vão ser apagados. Antes, o app faz um backup, que fica
-            em Cópias de segurança.
-          </p>
+          <p>{t('telaMundos.oMundoEONether')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             <label className="flex flex-col gap-1 text-[13px]">
-              Nome da pasta do mundo
+              {t('telaMundos.nomeDaPastaDoMundo')}
               <Campo autoFocus value={nome} onChange={(e) => setNome(e.target.value)} />
             </label>
             <label className="flex flex-col gap-1 text-[13px]">
-              Seed (opcional)
+              {t('telaMundos.seedOpcional')}
               <Campo
                 value={seed}
-                placeholder="Deixe vazio para uma seed aleatória"
+                placeholder={t('telaMundos.deixeVazioParaUmaSeed')}
                 onChange={(e) => setSeed(e.target.value)}
               />
             </label>
-            <p className="text-xs text-muted">
-              Antes, o app faz um backup do mundo ativo. O mundo novo é criado quando o servidor
-              ligar.
-            </p>
+            <p className="text-xs text-muted">{t('telaMundos.antesOAppFazUm')}</p>
           </div>
         )}
       </Dialogo>

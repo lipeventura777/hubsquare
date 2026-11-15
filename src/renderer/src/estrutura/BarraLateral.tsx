@@ -38,6 +38,7 @@ import { IconeDoServidor } from '../componentes/IconeDoServidor'
 import { useIconeAtivo } from '../componentes/useIconeAtivo'
 import type { Area } from '../aparencia/useAparencia'
 import { TrocaDeArea } from './TrocaDeArea'
+import { t, tNome } from '../../../shared/i18n'
 
 export type Pagina =
   | 'Servidores'
@@ -105,11 +106,11 @@ const ITENS: { pagina: Pagina; Icone: Icone; submenu?: string[] }[] = [
 ]
 
 const TEXTO_STATUS: Record<EstadoServidor | 'erro', string> = {
-  desligado: 'Desligado',
-  ligando: 'Ligando…',
-  ligado: 'Online',
-  desligando: 'Desligando…',
-  erro: 'Erro'
+  desligado: t('barraLateral.desligado'),
+  ligando: t('barraLateral.ligando'),
+  ligado: t('barraLateral.online'),
+  desligando: t('barraLateral.desligando'),
+  erro: t('barraLateral.erro')
 }
 
 // Rótulos somem antes de recolher e aparecem depois de expandir (seção 8).
@@ -163,7 +164,7 @@ export function BarraLateral({
 
   return (
     <nav
-      aria-label="Seções"
+      aria-label={t('barraLateral.secoes')}
       className={`m-2.5 mr-0 flex shrink-0 flex-col overflow-hidden bg-sidebar transition-[width] duration-(--dur-base) ease-(--ease-out) ${
         recolhida ? 'w-14' : 'w-[180px]'
       }`}
@@ -204,7 +205,7 @@ export function BarraLateral({
                   type="button"
                   data-indicador={p}
                   aria-current={ativa ? 'page' : undefined}
-                  title={recolhida ? p : undefined}
+                  title={recolhida ? tNome(p) : undefined}
                   aria-expanded={submenu ? submenuAberto : undefined}
                   onClick={() => {
                     aoEscolher(p as Pagina & PaginaPlay)
@@ -218,7 +219,7 @@ export function BarraLateral({
                   <span
                     className={`min-w-0 flex-1 line-clamp-2 leading-[1.15] ${classeRotulo(recolhida)}`}
                   >
-                    {p}
+                    {tNome(p)}
                   </span>
                   <Selos
                     alerta={alertas[p as Pagina]}
@@ -247,7 +248,7 @@ export function BarraLateral({
                               subAtiva ? 'font-bold' : 'text-muted'
                             }`}
                           >
-                            {sub}
+                            {tNome(sub)}
                           </button>
                         </li>
                       )
@@ -270,9 +271,9 @@ export function BarraLateral({
           <button
             type="button"
             onClick={() => aoEscolher('Aparência')}
-            aria-label="Aparência"
+            aria-label={t('barraLateral.aparencia')}
             aria-current={pagina === 'Aparência' ? 'page' : undefined}
-            title="Aparência"
+            title={t('barraLateral.aparencia')}
             className={`flex h-11 w-14 items-center justify-center transition-colors duration-(--dur-fast) hover:bg-tile-active ${
               pagina === 'Aparência' ? 'bg-tile-active text-accent' : ''
             }`}
@@ -282,8 +283,12 @@ export function BarraLateral({
           <button
             type="button"
             onClick={aoRecolher}
-            aria-label={recolhida ? 'Expandir a barra lateral' : 'Recolher a barra lateral'}
-            title={recolhida ? 'Expandir' : 'Recolher'}
+            aria-label={
+              recolhida
+                ? t('barraLateral.expandirABarraLateral')
+                : t('barraLateral.recolherABarraLateral')
+            }
+            title={recolhida ? t('barraLateral.expandir') : t('barraLateral.recolher')}
             className="flex h-11 w-14 items-center justify-center transition-colors duration-(--dur-fast) hover:bg-tile-active"
           >
             <IconeRecolher
@@ -292,7 +297,7 @@ export function BarraLateral({
           </button>
         </div>
         <div className={`px-3 pb-2 text-[11px] text-muted ${classeRotulo(recolhida)}`}>
-          {recolhida ? '' : `Versão ${versao}`}
+          {recolhida ? '' : t('barraLateral.versao', { versao })}
         </div>
       </div>
     </nav>
@@ -319,7 +324,7 @@ function Selos({
       )}
       {novidade && (
         <span className="anim-estalo inline-block h-1.5 w-1.5 bg-accent">
-          <span className="sr-only">(novidade)</span>
+          <span className="sr-only">{t('barraLateral.novidade')}</span>
         </span>
       )}
     </span>
@@ -361,13 +366,19 @@ function CartaoServidor({
       <button
         type="button"
         onClick={aoAbrirServidores}
-        title={info ? `${info.nome} · Ver todos os servidores` : 'Ver todos os servidores'}
+        title={
+          info
+            ? t('barraLateral.verTodosOsServidores', { nome: info.nome })
+            : t('barraLateral.verTodosOsServidores2')
+        }
         className={`flex min-w-0 flex-1 items-center gap-2 text-left ${classeRotulo(recolhida)}`}
         tabIndex={recolhida ? -1 : 0}
       >
         {info && <IconeDoServidor icone={icone} nome={info.nome} tam={32} />}
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-base">{info?.nome ?? 'Servidor'}</span>
+          <span className="block truncate text-base">
+            {info?.nome ?? t('barraLateral.servidor')}
+          </span>
           <span className="block truncate text-xs text-muted">
             {info ? `${NOMES_TIPOS[info.tipo]} ${info.versao}` : ''} · {TEXTO_STATUS[status]}
           </span>
@@ -377,8 +388,14 @@ function CartaoServidor({
         type="button"
         onClick={ligarOuDesligar}
         disabled={!info || ocupado}
-        aria-label={ligado ? 'Desligar servidor' : 'Ligar servidor'}
-        title={ocupado ? TEXTO_STATUS[status] : ligado ? 'Desligar servidor' : 'Ligar servidor'}
+        aria-label={ligado ? t('barraLateral.desligarServidor') : t('barraLateral.ligarServidor')}
+        title={
+          ocupado
+            ? TEXTO_STATUS[status]
+            : ligado
+              ? t('barraLateral.desligarServidor')
+              : t('barraLateral.ligarServidor')
+        }
         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-b-2 shadow-[inset_0_1px_0_var(--relevo-brilho)] transition-colors duration-(--dur-base) enabled:active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${
           ligado || estado === 'desligando'
             ? 'border-danger-shadow bg-danger text-on-dark'
@@ -394,9 +411,9 @@ function CartaoServidor({
 
       <Dialogo
         aberto={!!erro}
-        titulo="Não deu certo"
+        titulo={t('barraLateral.naoDeuCerto')}
         aoCancelar={() => setErro(null)}
-        acao={{ rotulo: 'OK', aoClicar: () => setErro(null) }}
+        acao={{ rotulo: t('barraLateral.ok'), aoClicar: () => setErro(null) }}
       >
         {erro && <MensagemErro erro={erro} />}
       </Dialogo>

@@ -4,6 +4,7 @@ import { ErroApp } from '../erros'
 import { versoesRelease } from '../mojang'
 import { baixar, buscarJson } from '../rede'
 import type { TipoServidor } from '.'
+import { t } from '../../shared/i18n'
 
 // API oficial do Fabric (meta.fabricmc.net). O "server jar" é um lançador pequeno que,
 // na primeira vez que liga, baixa o servidor oficial e as bibliotecas do Fabric.
@@ -17,7 +18,7 @@ interface ItemMeta {
 
 export async function maisNovaEstavel(caminho: 'loader' | 'installer' | 'game'): Promise<string> {
   const item = (await buscarJson<ItemMeta[]>(`${META}/versions/${caminho}`)).find((i) => i.stable)
-  if (!item) throw new ErroApp('O Fabric não tem uma versão estável agora. Tente mais tarde.')
+  if (!item) throw new ErroApp(t('tipos.fabric.oFabricNaoTemUma'))
   return item.version
 }
 
@@ -45,7 +46,7 @@ export const fabric: TipoServidor = {
       `${META}/versions/loader/${encodeURIComponent(versao)}/${loader}/${instalador}/server/jar`,
       join(pasta, JAR),
       undefined,
-      `Baixando o Fabric ${loader} para o ${versao}`,
+      t('tipos.fabric.baixandoOFabric', { loader, versao }),
       aoProgredir
     )
     return loader

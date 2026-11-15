@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
+import { t } from '../../../shared/i18n'
 
 interface Endereco {
   endereco: string | null
   aviso: string
 }
 
-const DESLIGADO: Endereco = { endereco: null, aviso: 'Ligue o servidor para gerar o endereço.' }
+const DESLIGADO: Endereco = { endereco: null, aviso: t('useEnderecoAtivo.ligueOServidorParaGerar') }
 
 // Endereço que os amigos usam, conforme o método "em uso" na tela Conexão.
 // Sem endereço, devolve um aviso curto do que falta.
@@ -19,25 +20,27 @@ export function useEnderecoAtivo(ligado: boolean): Endereco {
       if (ativo) setResultado({ endereco, aviso })
     }
     window.api.lerConexao().then(async (r) => {
-      if (!r.ok) return definir(null, 'Não consegui ler a conexão. Abra a tela Conexão.')
+      if (!r.ok) return definir(null, t('useEnderecoAtivo.naoConseguiLerAConexao'))
       const { modo, porta, playit, radminIp, lanIp } = r.valor
       if (modo === 'playit') {
         return playit.endereco
           ? definir(playit.endereco)
-          : definir(null, 'Configure o playit.gg na tela Conexão.')
+          : definir(null, t('useEnderecoAtivo.configureOPlayitGgNa'))
       }
       if (modo === 'radmin') {
         return radminIp
           ? definir(`${radminIp}:${porta}`)
-          : definir(null, 'Radmin VPN fechado ou desconectado.')
+          : definir(null, t('useEnderecoAtivo.radminVpnFechadoOuDesconectado'))
       }
       if (modo === 'lan') {
-        return lanIp ? definir(`${lanIp}:${porta}`) : definir(null, 'Rede local não encontrada.')
+        return lanIp
+          ? definir(`${lanIp}:${porta}`)
+          : definir(null, t('useEnderecoAtivo.redeLocalNaoEncontrada'))
       }
       const ip = await window.api.lerIpPublico()
       return ip.ok && ip.valor
         ? definir(`${ip.valor}:${porta}`)
-        : definir(null, 'Não consegui descobrir o IP público.')
+        : definir(null, t('useEnderecoAtivo.naoConseguiDescobrirOIp'))
     })
     return () => {
       ativo = false

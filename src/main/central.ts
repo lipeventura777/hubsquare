@@ -33,6 +33,7 @@ import { ErroApp } from './erros'
 import { tar } from './importarZip'
 import { estadoIcones, recursosDaVersao } from './itensDoJogo'
 import { enviarDoApp, eventos, lerEstado } from './servidor'
+import { idiomaAtual, t } from '../shared/i18n'
 
 // Central de comandos (Fase 26): monta o comando a partir da ação (validada no módulo
 // compartilhado), manda pelo console e mostra a resposta do servidor em português.
@@ -55,6 +56,12 @@ async function dados(info: InfoServidor): Promise<DadosComandos & { modelos: Mod
   if (!modelos.has(info.versao)) modelos.set(info.versao, compilarModelos(d.en))
   return { ...d, modelos: modelos.get(info.versao)! }
 }
+
+// Fase I1: nomes e respostas no idioma do app (en_us do próprio jogo ou o pt_br oficial).
+const nomesDoIdioma = (d: {
+  en: Record<string, string>
+  pt: Record<string, string>
+}): Record<string, string> => (idiomaAtual() === 'en-US' ? d.en : d.pt)
 
 const nomeDe = (pt: Record<string, string>, id: string, tipos: string[]): string => {
   const [ns, caminho] = id.split(':')
@@ -120,11 +127,19 @@ export async function dadosCentral(info: InfoServidor): Promise<DadosCentral> {
     capacidades: capacidades(d.arvore),
     arvore: d.arvore,
     itens: [
-      ...d.itens.map((id) => ({ id, nome: nomeDe(d.pt, id, ['item', 'block']), mod: false })),
+      ...d.itens.map((id) => ({
+        id,
+        nome: nomeDe(nomesDoIdioma(d), id, ['item', 'block']),
+        mod: false
+      })),
       ...mods.itens
     ],
     efeitos: [
-      ...d.efeitos.map((id) => ({ id, nome: nomeDe(d.pt, id, ['effect']), mod: false })),
+      ...d.efeitos.map((id) => ({
+        id,
+        nome: nomeDe(nomesDoIdioma(d), id, ['effect']),
+        mod: false
+      })),
       ...mods.efeitos
     ],
     iconesBaixados: (await estadoIcones(info)).baixados
@@ -167,7 +182,7 @@ async function rodar(
   return emFila(async () => {
     const saida: RespostaComando[] = []
     for (const [n, comando] of comandos.entries()) {
-      if (lerEstado() !== 'ligado') throw new ErroApp('Ligue o servidor para usar comandos.')
+      if (lerEstado() !== 'ligado') throw new ErroApp(t('p.central.ligueOServidorParaUsar'))
       const linhas: { t: string; quando: number }[] = []
       const ouvir = (t: string): void => {
         linhas.push({ t, quando: Date.now() })
@@ -180,20 +195,22 @@ async function rodar(
         for (;;) {
           await esperar(100)
           const agora = Date.now()
-          const conhecida = linhas.some((l) => traduzirResposta(l.t, d.modelos, d.pt))
+          const conhecida = linhas.some((l) => traduzirResposta(l.t, d.modelos, nomesDoIdioma(d)))
           const ultima = linhas.at(-1)?.quando ?? inicio
           if (agora - inicio > 1500 || (conhecida && agora - ultima > 250)) break
         }
       } finally {
         eventos.off('linha', ouvir)
       }
-      const traduzidas = linhas.flatMap((l) => traduzirResposta(l.t, d.modelos, d.pt) ?? [])
+      const traduzidas = linhas.flatMap(
+        (l) => traduzirResposta(l.t, d.modelos, nomesDoIdioma(d)) ?? []
+      )
       saida.push({
         comando,
         ok: traduzidas.length ? traduzidas.every((t) => t.ok) : null,
         texto: traduzidas.length
           ? [...new Set(traduzidas.map((t) => t.texto))].join(' ')
-          : 'Comando enviado. O servidor não respondeu nada que o app reconheça; confira no Console.'
+          : t('p.central.comandoEnviadoOServidorNao')
       })
       if (intervaloMs && n < comandos.length - 1) await esperar(intervaloMs)
     }
@@ -220,7 +237,7 @@ export async function executarAcao(
   const ctx = await contexto(info)
   const comandos = erroApp(() => montarComandos(acao, ctx))
   if (acaoDestrutiva(acao as never) && confirmado !== true) {
-    throw new ErroApp('Essa ação precisa de confirmação.')
+    throw new ErroApp(t('p.central.essaAcaoPrecisaDeConfirmacao'))
   }
   return rodar(info, comandos)
 }
@@ -230,9 +247,9 @@ export async function lerGamerules(info: InfoServidor): Promise<Record<string, s
   const d = await dados(info)
   const regras = capacidades(d.arvore).gamerules
   const modelo = d.modelos.find((m) => m.chave === 'commands.gamerule.query')
-  if (!modelo) throw new ErroApp('Não sei ler as regras nesta versão. Use o Console.')
+  if (!modelo) throw new ErroApp(t('p.central.naoSeiLerAsRegras'))
   return emFila(async () => {
-    if (lerEstado() !== 'ligado') throw new ErroApp('Ligue o servidor para ler as regras.')
+    if (lerEstado() !== 'ligado') throw new ErroApp(t('p.central.ligueOServidorParaLer'))
     const valores: Record<string, string> = {}
     const nomes = new Set(regras.map((r) => r.nome))
     // "Game rule keep_inventory is currently set to false" (o texto exato vem da versão).
@@ -259,10 +276,10 @@ export async function lerGamerules(info: InfoServidor): Promise<Record<string, s
 const arquivoAtalhos = (): string => join(app.getPath('userData'), 'atalhos.json')
 
 // Os 4 botões que o Painel tinha antes (Fase 6) viram atalhos com estrela.
-const PADRAO: Atalho[] = [
+const PADRAO = (): Atalho[] => [
   {
     id: 'dia',
-    nome: 'Dia',
+    nome: t('p.central.dia'),
     icone: 'mundo',
     cor: 'amarelo',
     comandos: ['time set 1000'],
@@ -271,7 +288,7 @@ const PADRAO: Atalho[] = [
   },
   {
     id: 'noite',
-    nome: 'Noite',
+    nome: t('p.central.noite'),
     icone: 'mundo',
     cor: 'azul',
     comandos: ['time set 13000'],
@@ -280,7 +297,7 @@ const PADRAO: Atalho[] = [
   },
   {
     id: 'limpo',
-    nome: 'Tempo limpo',
+    nome: t('p.central.tempoLimpo'),
     icone: 'automacao',
     cor: 'amarelo',
     comandos: ['weather clear'],
@@ -289,7 +306,7 @@ const PADRAO: Atalho[] = [
   },
   {
     id: 'chuva',
-    nome: 'Chuva',
+    nome: t('p.central.chuva'),
     icone: 'automacao',
     cor: 'azul',
     comandos: ['weather rain'],
@@ -301,13 +318,12 @@ const PADRAO: Atalho[] = [
 function validarAtalho(v: unknown): Atalho {
   const a = (v ?? {}) as Record<string, unknown>
   const nome = typeof a.nome === 'string' ? a.nome.trim() : ''
-  if (!nome || nome.length > 24) throw new ErroApp('Dê um nome de até 24 letras ao atalho.')
+  if (!nome || nome.length > 24) throw new ErroApp(t('p.central.deUmNomeDeAte'))
   const comandos = Array.isArray(a.comandos) ? a.comandos : []
-  if (!comandos.length || comandos.length > 20)
-    throw new ErroApp('Use de 1 a 20 comandos no atalho.')
+  if (!comandos.length || comandos.length > 20) throw new ErroApp(t('p.central.useDe1A20'))
   const intervalo = Number(a.intervalo ?? 0)
   if (!Number.isFinite(intervalo) || intervalo < 0 || intervalo > 60) {
-    throw new ErroApp('O intervalo entre os comandos vai de 0 a 60 segundos.')
+    throw new ErroApp(t('p.central.oIntervaloEntreOsComandos'))
   }
   return {
     id: typeof a.id === 'string' && /^[\w-]{1,40}$/.test(a.id) ? a.id : randomUUID(),
@@ -325,9 +341,9 @@ export async function listarAtalhos(): Promise<Atalho[]> {
     const d = JSON.parse(await readFile(arquivoAtalhos(), 'utf8'))
     return Array.isArray(d)
       ? d.flatMap((a) => (a && typeof a === 'object' ? [a as Atalho] : []))
-      : PADRAO
+      : PADRAO()
   } catch {
-    return PADRAO
+    return PADRAO()
   }
 }
 
@@ -336,8 +352,7 @@ export async function salvarAtalho(v: unknown): Promise<Atalho[]> {
   const lista = await listarAtalhos()
   const i = lista.findIndex((a) => a.id === novo.id)
   if (i >= 0) lista[i] = novo
-  else if (lista.length >= 60)
-    throw new ErroApp('Já são 60 atalhos. Apague algum para criar outro.')
+  else if (lista.length >= 60) throw new ErroApp(t('p.central.jaSao60AtalhosApague'))
   else lista.push(novo)
   await gravarComSeguranca(arquivoAtalhos(), JSON.stringify(lista, null, 2))
   return lista
@@ -356,9 +371,9 @@ export async function executarAtalho(
   jogador: unknown,
   confirmado: unknown
 ): Promise<RespostaComando[]> {
-  if (lerEstado() !== 'ligado') throw new ErroApp('Ligue o servidor para usar atalhos.')
+  if (lerEstado() !== 'ligado') throw new ErroApp(t('p.central.ligueOServidorParaUsar2'))
   const atalho = (await listarAtalhos()).find((a) => a.id === id)
-  if (!atalho) throw new ErroApp('Esse atalho não existe mais.')
+  if (!atalho) throw new ErroApp(t('p.central.esseAtalhoNaoExisteMais'))
   const comandos = erroApp(() =>
     expandirAtalho(
       atalho.comandos.map((c) => comandoDeAtalho(c)),
@@ -366,7 +381,7 @@ export async function executarAtalho(
     )
   )
   if (comandos.some(comandoDestrutivo) && confirmado !== true) {
-    throw new ErroApp('Esse atalho apaga coisas ou tira jogadores: confirme antes.')
+    throw new ErroApp(t('p.central.esseAtalhoApagaCoisasOu'))
   }
   return rodar(info, comandos, atalho.intervalo * 1000)
 }
@@ -394,7 +409,7 @@ const linhaDeComando = (v: unknown): string => {
           .trim()
           .slice(0, 1000)
       : ''
-  if (!c) throw new ErroApp('Comando vazio.')
+  if (!c) throw new ErroApp(t('p.central.comandoVazio'))
   return c
 }
 

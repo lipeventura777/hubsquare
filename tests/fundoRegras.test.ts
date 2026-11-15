@@ -5,7 +5,9 @@ import {
   arquivoDoProtocolo,
   camadaDeLuz,
   fundoAppAntigo,
+  fundoDoServidor,
   fundoEfetivo,
+  validarFundoServidor,
   fundoInstalacaoAntigo,
   LIMITE_IMAGEM,
   motivoRecusa,
@@ -114,4 +116,43 @@ test('migração: o que já valia continua valendo', () => {
   assert.equal(fundoInstalacaoAntigo({ imagemPropria: 'sumiu', padraoAntigo: true }), 'sumiu')
   assert.equal(fundoInstalacaoAntigo({ imagemPropria: null, padraoAntigo: true }), 'padrao')
   assert.equal(fundoInstalacaoAntigo({ imagemPropria: null, padraoAntigo: false }), 'igual')
+})
+
+// Fase V10: fundo próprio de cada servidor do ServSquare.
+test('servidor: fundo do servidor > fundo do app > bioma padrão', () => {
+  const app = { tipo: 'bioma' as const, bioma: 'noite' as const }
+  const imagem = { tipo: 'imagem' as const, imagem: 'a'.repeat(64) + '.png', ajuste: AJUSTE_PADRAO }
+  // Sem escolha (igual ao app): vale o app; sem app, o bioma padrão.
+  assert.deepEqual(fundoEfetivo(fundoDoServidor(null, undefined), app, 'dia'), app)
+  assert.deepEqual(fundoEfetivo(fundoDoServidor(undefined, null), null, 'dia'), {
+    tipo: 'bioma',
+    bioma: 'dia'
+  })
+  // Escolha própria vence o app.
+  assert.deepEqual(fundoEfetivo(fundoDoServidor(imagem, undefined), app, 'dia'), imagem)
+})
+
+test('servidor: "Igual à instalação" segue a regra da instalação', () => {
+  const app = { tipo: 'bioma' as const, bioma: 'noite' as const }
+  const mar = { tipo: 'bioma' as const, bioma: 'mar' as const }
+  const igual = { tipo: 'instalacao' as const }
+  assert.deepEqual(fundoDoServidor(igual, mar), mar) // a instalação tem fundo próprio
+  // A instalação muda: o servidor acompanha.
+  assert.deepEqual(fundoDoServidor(igual, { tipo: 'bioma', bioma: 'nether' }), {
+    tipo: 'bioma',
+    bioma: 'nether'
+  })
+  // Instalação "igual ao app" ou sem instalação: vale o app.
+  assert.deepEqual(fundoEfetivo(fundoDoServidor(igual, null), app, 'dia'), app)
+  assert.deepEqual(fundoEfetivo(fundoDoServidor(igual, undefined), app, 'dia'), app)
+})
+
+test('servidor: escolha guardada é validada', () => {
+  assert.deepEqual(validarFundoServidor({ tipo: 'instalacao', lixo: 1 }), { tipo: 'instalacao' })
+  assert.equal(validarFundoServidor(null), null)
+  assert.deepEqual(validarFundoServidor({ tipo: 'bioma', bioma: 'mar' }), {
+    tipo: 'bioma',
+    bioma: 'mar'
+  })
+  assert.throws(() => validarFundoServidor({ tipo: 'bioma', bioma: 'lua' }))
 })

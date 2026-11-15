@@ -40,6 +40,7 @@ import {
   listarEntradas,
   removerArquivo
 } from './removidos'
+import { t } from '../shared/i18n'
 
 // Aba Instalados da tela Mods (Fase 23.2): tudo o que o servidor tem de adicional, numa lista só.
 // Remover manda o arquivo para Removidos recentemente (7 dias); com o servidor ligado, espera
@@ -132,7 +133,9 @@ async function extras(
         cor: nota?.cor ?? null,
         nota: nota?.nota ?? '',
         travado: org.travados.includes(idMod),
-        anterior: org.anteriores[idMod] ? (org.anteriores[idMod].versao ?? 'a anterior') : null,
+        anterior: org.anteriores[idMod]
+          ? (org.anteriores[idMod].versao ?? t('p.instalados.aAnterior'))
+          : null,
         categorias: m.categorias
       }
     })
@@ -422,7 +425,7 @@ function caminhoDatapack(info: InfoServidor, resto: string): string {
     dentroDe(info.pasta, join(info.pasta, caminho))
   )
     return caminho
-  throw new ErroApp('Não encontrei esse datapack. Atualize a lista.')
+  throw new ErroApp(t('p.instalados.naoEncontreiEsseDatapackAtualize'))
 }
 
 // A tela confirma antes de chamar (e já incluiu os dependentes, se o usuário quis).
@@ -431,7 +434,7 @@ export async function removerInstalados(
   pedidos: unknown
 ): Promise<ResultadoRemocao> {
   const lista = Array.isArray(pedidos) ? pedidos.slice(0, 200) : []
-  if (!lista.length) throw new ErroApp('Escolha pelo menos um item para remover.')
+  if (!lista.length) throw new ErroApp(t('p.instalados.escolhaPeloMenosUmItem'))
   const inicio = new Date().toISOString()
   const feitos: Feito[] = []
   let agendados = 0
@@ -443,9 +446,7 @@ export async function removerInstalados(
     if (info.jogador) {
       const caminho = tipo === 'extras' ? `${EXTRAS_TIPOS[info.tipo]}/${resto}` : resto
       if (tipo === 'servidor' || info.jogador.obrigatorios.includes(caminho)) {
-        throw new ErroApp(
-          `"${titulo}" veio do servidor e é obrigatório para entrar nele. Não dá para tirar por aqui.`
-        )
+        throw new ErroApp(t('p.instalados.veioDoServidorEE', { titulo }))
       }
     }
     if (tipo === 'extras') {
@@ -467,7 +468,7 @@ export async function removerInstalados(
         feitos.push({ tipo: 'dados', id })
       }
     } else {
-      throw new ErroApp('Esse item não pode ser removido por aqui.')
+      throw new ErroApp(t('p.instalados.esseItemNaoPodeSer'))
     }
   }
   const lote = randomUUID()
@@ -479,7 +480,7 @@ export async function removerInstalados(
 export async function desfazerRemocao(info: InfoServidor, lote: unknown): Promise<void> {
   const l = typeof lote === 'string' ? lotes.get(lote) : undefined
   if (!l || l.pasta !== info.pasta) {
-    throw new ErroApp('Não dá mais para desfazer por aqui. Use Removidos recentemente.')
+    throw new ErroApp(t('p.instalados.naoDaMaisParaDesfazer'))
   }
   const entradas = (await listarEntradas(info)).filter((e) => e.quando >= l.inicio)
   const pasta = EXTRAS_TIPOS[info.tipo] ?? 'mods'

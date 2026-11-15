@@ -11,22 +11,22 @@ import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import { Aviso, Botao, Campo, PaginaAjustes, Secao } from '../componentes/ui'
 import { Endereco, Firewall, Testar } from './partes'
 import { BotaoDiagnostico, consertoDoDono } from '../componentes/Diagnostico'
+import { t } from '../../../shared/i18n'
 
 // Cada aba mostra um jeito de os amigos entrarem; só um fica "em uso" (o que liga com o servidor).
 const POR_ABA: Record<string, { modo: ModoConexao; descricao: string }> = {
   'playit.gg': {
     modo: 'playit',
-    descricao:
-      'Recomendado. Funciona pela internet sem mexer no roteador; seus amigos não instalam nada.'
+    descricao: t('telaConexao.recomendadoFuncionaPelaInternetSem')
   },
   'Radmin VPN': {
     modo: 'radmin',
-    descricao: 'Você e seus amigos entram na mesma rede do Radmin VPN.'
+    descricao: t('telaConexao.voceESeusAmigosEntram')
   },
-  'Rede local': { modo: 'lan', descricao: 'Para quem está no mesmo Wi-Fi ou rede da casa.' },
+  'Rede local': { modo: 'lan', descricao: t('telaConexao.paraQuemEstaNoMesmo') },
   Avançado: {
     modo: 'porta',
-    descricao: 'Abrir a porta no roteador: seus amigos entram pelo seu IP público.'
+    descricao: t('telaConexao.abrirAPortaNoRoteador')
   }
 }
 
@@ -71,15 +71,15 @@ export function TelaConexao({ aba }: { aba: string }): React.JSX.Element {
       <div className="flex items-center gap-4 border border-linha bg-panel p-4">
         <p className="flex-1 text-[13px]">{descricao}</p>
         {emUso ? (
-          <span className="text-[13px] font-bold">✓ Em uso: seus amigos entram por aqui</span>
+          <span className="text-[13px] font-bold">{t('telaConexao.emUsoSeusAmigosEntram')}</span>
         ) : (
           <Botao variante="primario" onClick={() => usar(modo)}>
-            Usar este método
+            {t('telaConexao.usarEsteMetodo')}
           </Botao>
         )}
         <BotaoDiagnostico
-          rotulo="Testar tudo"
-          titulo="Testar a conexão do servidor"
+          rotulo={t('telaConexao.testarTudo')}
+          titulo={t('telaConexao.testarAConexaoDoServidor')}
           rodar={window.api.diagnosticarDono}
           aoConsertar={consertoDoDono}
         />
@@ -133,22 +133,21 @@ function PainelPlayit({ estado, recarregar }: PropsPainel): React.JSX.Element {
 
   return (
     <>
-      <Secao titulo="1. Vincular sua conta (só uma vez)">
+      <Secao titulo={t('telaConexao.n1VincularSuaContaSo')}>
         {playit.vinculado ? (
-          <Aviso tipo="sucesso">Conta do playit.gg vinculada.</Aviso>
+          <Aviso tipo="sucesso">{t('telaConexao.contaDoPlayitGgVinculada')}</Aviso>
         ) : (
           <>
-            <p className="text-[13px] text-muted">
-              O app baixa o programa oficial do playit.gg e abre o site no navegador. Lá, crie uma
-              conta grátis (ou entre) e aprove o ServSquare.
-            </p>
+            <p className="text-[13px] text-muted">{t('telaConexao.oAppBaixaOPrograma')}</p>
             <Botao
               variante="primario"
               onClick={vincular}
               disabled={esperando}
               className="self-start"
             >
-              {esperando ? 'Esperando você aprovar no navegador...' : 'Vincular playit.gg'}
+              {esperando
+                ? t('telaConexao.esperandoVoceAprovarNoNavegador')
+                : t('telaConexao.vincularPlayitGg')}
             </Botao>
             {progresso && esperando && progresso.total > 0 && (
               <BarraProgresso
@@ -161,39 +160,42 @@ function PainelPlayit({ estado, recarregar }: PropsPainel): React.JSX.Element {
         )}
       </Secao>
 
-      <Secao titulo="2. Criar o túnel no site (só uma vez)">
+      <Secao titulo={t('telaConexao.n2CriarOTunelNo')}>
         <p className="text-[13px] text-muted">
-          No{' '}
+          {t('telaConexao.no')}{' '}
           <a
             href="https://playit.gg/account"
             target="_blank"
             rel="noreferrer"
             className="text-texto underline"
           >
-            site do playit.gg
+            {t('telaConexao.siteDoPlayitGg')}
           </a>
-          , crie um túnel do tipo <b className="text-texto">Minecraft Java</b> para o endereço local{' '}
-          <b className="text-texto">127.0.0.1</b> e a porta{' '}
-          <b className="text-texto">{estado.porta}</b>. Depois copie o endereço que o site mostrar e
-          cole aqui.
+          {t('telaConexao.crieUmTunelDoTipo')}{' '}
+          <b className="text-texto">{t('telaConexao.minecraftJava')}</b>{' '}
+          {t('telaConexao.paraOEnderecoLocal')} <b className="text-texto">127.0.0.1</b>{' '}
+          {t('telaConexao.eAPorta')} <b className="text-texto">{estado.porta}</b>
+          {t('telaConexao.depoisCopieOEnderecoQue')}
         </p>
         <form onSubmit={salvar} className="flex gap-2">
           <Campo
             value={endereco}
-            placeholder="ex.: nome.joinmc.link"
-            aria-label="Endereço do túnel do playit.gg"
+            placeholder={t('telaConexao.exNomeJoinmcLink')}
+            aria-label={t('telaConexao.enderecoDoTunelDoPlayit')}
             onChange={(e) => setEndereco(e.target.value)}
           />
           <Botao type="submit" variante="primario" disabled={!endereco.trim()}>
-            Salvar
+            {t('telaConexao.salvar')}
           </Botao>
         </form>
       </Secao>
 
-      <Secao titulo="3. Passar o endereço para seus amigos">
+      <Secao titulo={t('telaConexao.n3PassarOEnderecoPara')}>
         <p className="text-[13px] text-muted">
-          O playit.gg liga junto com o servidor.{' '}
-          {playit.agenteLigado ? 'Agora ele está ligado.' : 'Agora ele está desligado.'}
+          {t('telaConexao.oPlayitGgLigaJunto')}{' '}
+          {playit.agenteLigado
+            ? t('telaConexao.agoraEleEstaLigado')
+            : t('telaConexao.agoraEleEstaDesligado')}
         </p>
         {playit.endereco && <Endereco endereco={playit.endereco} />}
         {erro && <MensagemErro erro={erro} />}
@@ -207,14 +209,14 @@ function PainelPlayit({ estado, recarregar }: PropsPainel): React.JSX.Element {
 function PainelRadmin({ estado, recarregar }: PropsPainel): React.JSX.Element {
   return (
     <>
-      <Secao titulo="Endereço">
+      <Secao titulo={t('telaConexao.endereco')}>
         {estado.radminIp ? (
           <Endereco endereco={`${estado.radminIp}:${estado.porta}`} />
         ) : (
           <Aviso tipo="atencao">
             <span>
-              <b>Radmin VPN fechado ou desconectado.</b> Abra o Radmin VPN, ligue o botão de energia
-              e entre na mesma rede que seus amigos. O endereço aparece aqui sozinho.
+              <b>{t('telaConexao.radminVpnFechadoOuDesconectado')}</b>{' '}
+              {t('telaConexao.abraORadminVpnLigue')}
             </span>
           </Aviso>
         )}
@@ -228,13 +230,11 @@ function PainelRadmin({ estado, recarregar }: PropsPainel): React.JSX.Element {
 function PainelLan({ estado, recarregar }: PropsPainel): React.JSX.Element {
   return (
     <>
-      <Secao titulo="Endereço">
+      <Secao titulo={t('telaConexao.endereco')}>
         {estado.lanIp ? (
           <Endereco endereco={`${estado.lanIp}:${estado.porta}`} />
         ) : (
-          <Aviso tipo="atencao">
-            Não achei a rede local deste PC. Confira se o Wi-Fi ou o cabo está conectado.
-          </Aviso>
+          <Aviso tipo="atencao">{t('telaConexao.naoAcheiARedeLocal')}</Aviso>
         )}
       </Secao>
       <Firewall liberado={estado.firewallLiberado} aoLiberar={recarregar} />
@@ -266,42 +266,35 @@ function PainelPorta({ estado, recarregar }: PropsPainel): React.JSX.Element {
 
   return (
     <>
-      <Secao titulo="Endereço">
+      <Secao titulo={t('telaConexao.endereco')}>
         {ipPublico ? (
           <Endereco endereco={`${ipPublico}:${estado.porta}`} />
         ) : (
-          <p className="text-[13px] text-muted">Descobrindo o seu IP público...</p>
+          <p className="text-[13px] text-muted">{t('telaConexao.descobrindoOSeuIpPublico')}</p>
         )}
       </Secao>
 
-      <Secao titulo="Abrir a porta automaticamente">
+      <Secao titulo={t('telaConexao.abrirAPortaAutomaticamente')}>
         <Botao onClick={tentar} disabled={tentando} className="self-start">
-          {tentando ? 'Tentando...' : 'Tentar pelo UPnP'}
+          {tentando ? t('telaConexao.tentando') : t('telaConexao.tentarPeloUpnp')}
         </Botao>
         {upnp && <Aviso tipo={upnp.ok ? 'sucesso' : 'atencao'}>{upnp.mensagem}</Aviso>}
         {erro && <MensagemErro erro={erro} />}
       </Secao>
 
-      <Secao titulo="Abrir a porta à mão">
+      <Secao titulo={t('telaConexao.abrirAPortaAMao')}>
         <ol className="flex list-decimal flex-col gap-1 pl-5 text-[13px]">
+          <li>{t('telaConexao.abraAPaginaDoRoteador')}</li>
+          <li>{t('telaConexao.procureRedirecionamentoDePortaPort')}</li>
           <li>
-            Abra a página do roteador no navegador (geralmente 192.168.0.1 ou 192.168.1.1) e entre
-            com o usuário e a senha que ficam na etiqueta do roteador.
+            {t('telaConexao.crieUmaRegraPortaExterna')} <b>{estado.porta}</b>
+            {t('telaConexao.portaInterna')} <b>{estado.porta}</b>
+            {t('telaConexao.protocolo')} <b>{t('telaConexao.tcp')}</b>
+            {t('telaConexao.ipDestePc')} <b>{estado.lanIp ?? t('telaConexao.naoEncontrado')}</b>.
           </li>
-          <li>
-            Procure &quot;Redirecionamento de porta&quot;, &quot;Port forwarding&quot;,
-            &quot;NAT&quot; ou &quot;Servidor virtual&quot;.
-          </li>
-          <li>
-            Crie uma regra: porta externa <b>{estado.porta}</b>, porta interna <b>{estado.porta}</b>
-            , protocolo <b>TCP</b>, IP deste PC <b>{estado.lanIp ?? '(não encontrado)'}</b>.
-          </li>
-          <li>Salve, libere o Java no Firewall (abaixo) e clique em &quot;Testar conexão&quot;.</li>
+          <li>{t('telaConexao.salveLibereOJavaNo')}</li>
         </ol>
-        <p className="text-[13px] text-muted">
-          Se mesmo assim não funcionar, sua operadora pode usar CGNAT: ela divide um IP público
-          entre várias casas, e aí abrir a porta não adianta. Nesse caso, use o playit.gg.
-        </p>
+        <p className="text-[13px] text-muted">{t('telaConexao.seMesmoAssimNaoFuncionar')}</p>
       </Secao>
 
       <Firewall liberado={estado.firewallLiberado} aoLiberar={recarregar} />

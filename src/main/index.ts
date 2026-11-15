@@ -192,7 +192,8 @@ import {
   protegerBackup,
   restaurarBackup
 } from './backup'
-import { criarBandeja } from './bandeja'
+import { atualizarBandeja, criarBandeja } from './bandeja'
+import { aoMudarIdioma, escolherIdioma, estadoIdioma, iniciarIdioma } from './idioma'
 import { abrirPastaDoServidor, renomearServidor } from './renomear'
 import { analisarZip, criarDeZip } from './importarZip'
 import {
@@ -293,6 +294,8 @@ import {
   definirRecomendados,
   apagarImagemFundo,
   definirFundoInstalacao,
+  definirFundoServidor,
+  fundoDoServidorAtual,
   migrarFundosDasInstalacoes,
   usarFundoEmTodas,
   usosDosFundos,
@@ -311,6 +314,7 @@ import {
   versoesDoLoader
 } from './instalacoes'
 import './uso' // começa a medir CPU e RAM sempre que o servidor liga
+import { t } from '../shared/i18n'
 
 // O app virou HubSquare, mas a pasta de dados continua a do ServSquare (%APPDATA%\ServSquare):
 // preferências, PIN do celular, cache e a chave do safeStorage (no "Local State") ficam onde estão.
@@ -326,6 +330,8 @@ if (pastaDeTeste) {
   process.env.APPDATA = app.getPath('appData')
 }
 app.setPath('userData', join(app.getPath('appData'), 'ServSquare'))
+// Fase I1: o idioma vem antes de qualquer texto do processo principal.
+iniciarIdioma()
 // Fase V4: o protocolo das imagens de fundo precisa ser registrado antes de o app ficar pronto.
 registrarEsquemaFundo()
 
@@ -913,14 +919,14 @@ app.whenReady().then(async () => {
   ipcMain.handle('diagnostico:dono', () =>
     tentar(async () => {
       const linhas = await diagnosticarDono()
-      lembrarDiagnostico('Testar tudo (dono)', linhas)
+      lembrarDiagnostico(t('p.index.testarTudoDono'), linhas)
       return linhas
     })
   )
   ipcMain.handle('diagnostico:amigo', (_e, id: unknown) =>
     tentar(async () => {
       const linhas = await diagnosticarInstalacao(id)
-      lembrarDiagnostico('Não consigo entrar (amigo)', linhas)
+      lembrarDiagnostico(t('p.index.naoConsigoEntrarAmigo'), linhas)
       return linhas
     })
   )
@@ -988,7 +994,7 @@ app.whenReady().then(async () => {
       const pasta = await pastaJogo()
       await mkdir(pasta, { recursive: true })
       const erro = await shell.openPath(pasta)
-      if (erro) throw new ErroApp('Não consegui abrir a pasta das instalações.', erro)
+      if (erro) throw new ErroApp(t('p.index.naoConseguiAbrirAPasta'), erro)
     })
   )
   ipcMain.handle('instalacoes:atalho', (_e, id: unknown) => tentar(() => criarAtalho(id)))
@@ -1006,6 +1012,11 @@ app.whenReady().then(async () => {
   )
   ipcMain.handle('jogo:fundo', (_e, id: unknown, escolha: unknown) =>
     tentar(() => definirFundoInstalacao(id, escolha))
+  )
+  // Fase V10: fundo do servidor ativo (Painel › Fundo).
+  ipcMain.handle('servidor:fundo', () => comServidor(fundoDoServidorAtual))
+  ipcMain.handle('servidor:definirFundo', (_e, escolha: unknown) =>
+    comServidor((i) => definirFundoServidor(i, escolha))
   )
   ipcMain.handle('jogo:fundoEmTodas', (_e, escolha: unknown) =>
     tentar(() => usarFundoEmTodas(escolha))
@@ -1040,6 +1051,9 @@ app.whenReady().then(async () => {
   )
   iniciarDownloadsManuais().catch(() => {})
   // Modo do app (Fase M6). Trocar só muda a tela e os serviços: nenhum dado é apagado.
+  ipcMain.on('idioma:obter', (e) => (e.returnValue = estadoIdioma()))
+  ipcMain.handle('idioma:escolher', (_e, valor: unknown) => tentar(() => escolherIdioma(valor)))
+  aoMudarIdioma(() => atualizarBandeja())
   ipcMain.handle('modo:estado', () => tentar(async () => (await modoPronto, estadoModo())))
   ipcMain.handle('modo:escolher', (_e, valor: unknown) =>
     tentar(async () => {

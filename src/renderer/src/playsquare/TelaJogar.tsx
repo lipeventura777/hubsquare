@@ -9,19 +9,14 @@ import type {
   StatusServidorJogo,
   TravamentoMods
 } from '../../../shared/tipos'
-import { ArteDoBioma, FundoAnimado } from '../fundo/Fundo'
+import { FundoAnimado } from '../fundo/Fundo'
 import { CamadaFundo } from '../fundo/CamadaFundo'
-import {
-  AjustesImagem,
-  CartaoFundo,
-  escolhaDeImagem,
-  GradeBiomas,
-  GradeImagens,
-  useImagensFundo
-} from '../fundo/EscolherFundo'
-import { fundoEfetivo, urlDoFundo, type EscolhaFundo } from '../../../shared/fundoRegras'
+import { escolhaDeImagem, PainelFundo, useImagensFundo } from '../fundo/EscolherFundo'
+import { fundoEfetivo, type EscolhaFundo } from '../../../shared/fundoRegras'
 import { BotaoDiagnostico } from '../componentes/Diagnostico'
 import { useAparencia } from '../aparencia/useAparencia'
+import { BlocoVitrine, BotaoVitrine } from '../componentes/Vitrine'
+import { IconeDoServidor } from '../componentes/IconeDoServidor'
 import { classesBotao } from '../componentes/estilos'
 import { IconeAtencao, IconeInstalacoes } from '../componentes/icones'
 import { MensagemErro } from '../componentes/MensagemErro'
@@ -37,6 +32,7 @@ import {
   rotuloInstalar,
   useAbrirLauncherLigado
 } from './Instalar'
+import { t } from '../../../shared/i18n'
 
 // Tela Jogar do PlaySquare (Fase P4, DESIGN.md seção 6.1.3), no modelo do launcher oficial:
 // banner com o fundo da instalação, barra de ação (seletor, JOGAR, status do servidor) e os cards
@@ -44,9 +40,9 @@ import {
 // tem o botão separado "Ligar servidor e jogar".
 
 const NOMES_LOADER: Record<LoaderCliente, string> = {
-  vanilla: 'Vanilla',
-  fabric: 'Fabric',
-  forge: 'Forge',
+  vanilla: t('telaJogar.vanilla'),
+  fabric: t('telaJogar.fabric'),
+  forge: t('telaJogar.forge'),
   neoforge: 'NeoForge'
 }
 const CHAVE = 'hubsquare:instalacaoEscolhida' // a mesma do Explorar e do Conteúdo
@@ -77,11 +73,11 @@ function tempo(ms: number): string {
 
 function duracaoLonga(ms: number): string {
   const min = Math.round(ms / 60_000)
-  if (min < 1) return 'menos de 1 minuto'
-  if (min < 60) return `${min} ${min === 1 ? 'minuto' : 'minutos'}`
+  if (min < 1) return t('telaJogar.menosDe1Minuto')
+  if (min < 60) return `${min} ${min === 1 ? t('telaJogar.minuto') : t('telaJogar.minutos')}`
   const h = Math.floor(min / 60)
   const resto = min % 60
-  return `${h} h${resto ? ` ${resto} min` : ''}`
+  return `${h} h${resto ? t('telaJogar.min', { resto }) : ''}`
 }
 
 function bytes(n: number): string {
@@ -148,6 +144,8 @@ export function TelaJogar(): React.JSX.Element {
 
   const fluxo = useJogar(carregar)
   const escolhida = lista?.find((i) => i.id === id) ?? lista?.[0] ?? null
+  // Fase V11: modo vitrine (só o banner, com o JOGAR no bloco do canto; a tela não rola).
+  const { vitrine } = useAparencia()
 
   if (!lista) {
     return (
@@ -159,8 +157,8 @@ export function TelaJogar(): React.JSX.Element {
       <div className="p-10">
         <EstadoVazio
           icone={<IconeInstalacoes />}
-          titulo="Nenhuma instalação ainda"
-          texto="Crie uma instalação (ou entre com um convite) na tela Instalações para jogar."
+          titulo={t('telaJogar.nenhumaInstalacaoAinda')}
+          texto={t('telaJogar.crieUmaInstalacaoOuEntre')}
         />
       </div>
     )
@@ -172,38 +170,78 @@ export function TelaJogar(): React.JSX.Element {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto">
-      <Banner i={escolhida} aoMudar={carregar} />
-      <BarraJogar
+    <div
+      ref={(el) => {
+        if (el && vitrine) el.scrollTop = 0
+      }}
+      className={`min-h-0 flex-1 ${vitrine ? 'overflow-hidden' : 'overflow-auto'}`}
+    >
+      <Banner
         i={escolhida}
-        lista={lista}
-        estado={estados[escolhida.id] ?? null}
-        ocupado={fluxo.ocupado === escolhida.id}
-        outroOcupado={!!fluxo.ocupado && fluxo.ocupado !== escolhida.id}
-        progresso={fluxo.progresso}
-        aoEscolher={escolher}
-        aoJogar={(modo) => void fluxo.jogar(escolhida, undefined, modo)}
+        aoMudar={carregar}
+        vitrine={vitrine}
+        principal={
+          <BotaoJogar
+            i={escolhida}
+            estado={estados[escolhida.id] ?? null}
+            ocupado={fluxo.ocupado === escolhida.id}
+            outroOcupado={!!fluxo.ocupado && fluxo.ocupado !== escolhida.id}
+            compacto
+            aoJogar={(modo) => void fluxo.jogar(escolhida, undefined, modo)}
+          />
+        }
+        estado={
+          (fluxo.ocupado === escolhida.id || fluxo.erro) && (
+            <div className="flex min-w-0 flex-col gap-2 text-[13px]">
+              {fluxo.ocupado === escolhida.id && (
+                <span aria-live="polite">
+                  {fluxo.progresso?.etapa ?? t('telaJogar.preparando')}
+                </span>
+              )}
+              {fluxo.erro && <MensagemErro erro={fluxo.erro} />}
+            </div>
+          )
+        }
       />
-      <div className="mx-auto flex max-w-[1100px] flex-col gap-4 px-6 py-6">
-        {fluxo.erro && <MensagemErro erro={fluxo.erro} />}
-        <CardModsFaltando i={escolhida} />
-        <CardSessao
+      <div
+        className="vitrine-sai"
+        style={{ '--ordem': 1 } as React.CSSProperties}
+        data-escondido={vitrine || undefined}
+        inert={vitrine}
+      >
+        <BarraJogar
           i={escolhida}
+          lista={lista}
           estado={estados[escolhida.id] ?? null}
-          aoJogarDeNovo={() => void fluxo.jogar(escolhida)}
+          ocupado={fluxo.ocupado === escolhida.id}
+          outroOcupado={!!fluxo.ocupado && fluxo.ocupado !== escolhida.id}
+          progresso={fluxo.progresso}
+          aoEscolher={escolher}
+          aoJogar={(modo) => void fluxo.jogar(escolhida, undefined, modo)}
         />
-        <CardMemoria key={escolhida.id} i={escolhida} />
-        <h2 className="mt-2 text-xs font-bold tracking-wider text-muted uppercase">Instalações</h2>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
-          {lista.map((i, n) => (
-            <CardInstalacao
-              key={i.id}
-              i={i}
-              ordem={n}
-              selecionada={i.id === escolhida.id}
-              aoEscolher={() => escolher(i.id)}
-            />
-          ))}
+        <div className="mx-auto flex max-w-[1100px] flex-col gap-4 px-6 py-6">
+          {fluxo.erro && <MensagemErro erro={fluxo.erro} />}
+          <CardModsFaltando i={escolhida} />
+          <CardSessao
+            i={escolhida}
+            estado={estados[escolhida.id] ?? null}
+            aoJogarDeNovo={() => void fluxo.jogar(escolhida)}
+          />
+          <CardMemoria key={escolhida.id} i={escolhida} />
+          <h2 className="mt-2 text-xs font-bold tracking-wider text-muted uppercase">
+            {t('telaJogar.instalacoes')}
+          </h2>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+            {lista.map((i, n) => (
+              <CardInstalacao
+                key={i.id}
+                i={i}
+                ordem={n}
+                selecionada={i.id === escolhida.id}
+                aoEscolher={() => escolher(i.id)}
+              />
+            ))}
+          </div>
         </div>
       </div>
       {fluxo.dialogo}
@@ -215,12 +253,19 @@ export function TelaJogar(): React.JSX.Element {
 
 function Banner({
   i,
-  aoMudar
+  aoMudar,
+  vitrine,
+  principal,
+  estado
 }: {
   i: Instalacao
   aoMudar: () => Promise<void>
+  // Fase V11: modo vitrine (o banner ocupa a tela e fica só o bloco com o JOGAR).
+  vitrine: boolean
+  principal: React.ReactNode
+  estado: React.ReactNode
 }): React.JSX.Element {
-  const { aparencia, fundoApp } = useAparencia()
+  const { aparencia, fundoApp, definirVitrine } = useAparencia()
   const imgs = useImagensFundo()
   const [erro, setErro] = useState<ErroTela | null>(null)
   const [falhou, setFalhou] = useState<string | null>(null) // imagem que não abriu
@@ -294,9 +339,35 @@ function Banner({
 
   const imagemEfetiva = efetivo.tipo === 'imagem' ? efetivo : null
 
+  // O mesmo botão "Fundo" no canto do banner e no bloco da vitrine.
+  const menuFundo = (
+    <Menu
+      rotulo={t('telaJogar.trocarOFundo')}
+      classeBotao={classesBotao('secundario', 'pequeno')}
+      painel={
+        <PainelFundo
+          titulo={t('telaJogar.fundoDe', { nome: i.nome })}
+          rotulo={t('telaJogar.fundoDaInstalacao')}
+          atual={daInstalacao}
+          definir={(e, imediato) => {
+            if (e?.tipo !== 'instalacao') definir(e, imediato)
+          }}
+          imgs={imgs}
+          emTodas={async (e) => {
+            const r = await window.api.usarFundoEmTodas(e)
+            setErro(r.ok ? null : r.erro)
+            await aoMudar()
+          }}
+        />
+      }
+    >
+      {t('telaJogar.fundo')}
+    </Menu>
+  )
+
   return (
     <section
-      aria-label={`Instalação ${i.nome}`}
+      aria-label={t('telaJogar.instalacao', { nome: i.nome })}
       onDragOver={(e) => {
         if (![...e.dataTransfer.types].includes('Files')) return
         e.preventDefault()
@@ -306,7 +377,9 @@ function Banner({
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setSoltando(false)
       }}
       onDrop={(e) => void soltar(e)}
-      className="relative flex h-[42vh] min-h-[260px] shrink-0 items-end overflow-hidden text-on-dark"
+      className={`vitrine-altura relative flex min-h-[260px] shrink-0 items-end overflow-hidden text-on-dark ${
+        vitrine ? 'h-full' : 'h-[42vh]'
+      }`}
     >
       {/* Fundo (Fase V4, seção 7.2): o bioma vivo (troca de instalação com a transição da V2) ou
           a imagem com os ajustes, com crossfade entre imagens. */}
@@ -323,9 +396,12 @@ function Banner({
           />
         ))}
       <div aria-hidden="true" className="banner-gradiente absolute inset-0" />
+      {/* Na vitrine, o nome do banner sai (fora do Tab e do leitor): o bloco mostra o nome. */}
       <div
         key={i.id}
-        className={`relative flex min-w-0 flex-1 items-end gap-4 px-8 pb-6 ${trocou ? 'anim-pagina' : ''}`}
+        className={`vitrine-sai relative flex min-w-0 flex-1 items-end gap-4 px-8 pb-6 ${trocou ? 'anim-pagina' : ''}`}
+        data-escondido={vitrine || undefined}
+        inert={vitrine}
       >
         {i.imagem && (
           <img
@@ -343,7 +419,9 @@ function Banner({
           </h2>
           <p className="text-[13px] opacity-90">
             {NOMES_LOADER[i.loader]} {i.versao}
-            {i.origem.tipo === 'convite' ? ` · convite de ${i.origem.servidor}` : ''}
+            {i.origem.tipo === 'convite'
+              ? t('telaJogar.conviteDe', { servidor: i.origem.servidor })
+              : ''}
           </p>
         </div>
       </div>
@@ -352,27 +430,36 @@ function Banner({
           aria-hidden="true"
           className="pointer-events-none absolute inset-3 grid place-items-center rounded-(--raio-item) border-2 border-dashed border-accent bg-(--text-on-light)/60 text-[15px] font-bold text-on-dark"
         >
-          Solte a imagem para usar como fundo desta instalação
+          {t('telaJogar.solteAImagemParaUsar')}
         </div>
       )}
-      <div className="absolute top-3 right-3">
-        <Menu
-          rotulo="Trocar o fundo"
-          classeBotao={classesBotao('secundario', 'pequeno')}
-          painel={
-            <PainelFundo
-              i={i}
-              daInstalacao={daInstalacao}
-              definir={definir}
-              imgs={imgs}
-              aoErro={setErro}
-              aoMudar={aoMudar}
-            />
+      {!vitrine && (
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          <BotaoVitrine ligada={false} aoAlternar={() => definirVitrine(true)} />
+          {menuFundo}
+        </div>
+      )}
+      {vitrine && (
+        <BlocoVitrine
+          icone={
+            i.imagem ? (
+              <img
+                src={i.imagem}
+                alt=""
+                className="h-14 w-14 shrink-0 border-2 border-linha object-cover [image-rendering:pixelated]"
+              />
+            ) : (
+              <IconeDoServidor icone={null} nome={i.nome} tam={56} />
+            )
           }
-        >
-          Fundo
-        </Menu>
-      </div>
+          nome={i.nome}
+          detalhe={`${NOMES_LOADER[i.loader]} ${i.versao}`}
+          principal={principal}
+          estado={estado}
+          fundo={menuFundo}
+          aoMostrar={() => definirVitrine(false)}
+        />
+      )}
       {(erro ||
         falhou === nomeImagem ||
         (falhou && efetivo.tipo === 'bioma' && i.fundo?.tipo === 'imagem')) && (
@@ -380,7 +467,7 @@ function Banner({
           {erro && <MensagemErro erro={erro} />}
           {falhou && i.fundo?.tipo === 'imagem' && i.fundo.imagem === falhou && (
             <Aviso tipo="atencao">
-              <span>A imagem desta instalação não abriu. Mostrando o bioma.</span>
+              <span>{t('telaJogar.aImagemDestaInstalacaoNao')}</span>
             </Aviso>
           )}
         </div>
@@ -389,168 +476,124 @@ function Banner({
   )
 }
 
-// Painel "Fundo" da tela Jogar (Fase V4, seção 7.2): Igual ao app, Bioma ou Imagem, com a prévia
-// de cada um; embaixo, usar em todas as instalações (com confirmação) e voltar ao fundo do app.
-function PainelFundo({
+// ---------- Barra de ação ----------
+
+// Botão principal do Jogar (INSTALAR/ATUALIZAR, ou JOGAR com o launcher ligado): o mesmo na
+// barra e no bloco da vitrine (Fase V11). "compacto": sem as frases de ajuda embaixo.
+function BotaoJogar({
   i,
-  daInstalacao,
-  definir,
-  imgs,
-  aoErro,
-  aoMudar
+  estado,
+  ocupado,
+  outroOcupado,
+  mostrarLigar = false,
+  compacto = false,
+  aoJogar
 }: {
   i: Instalacao
-  daInstalacao: EscolhaFundo | null
-  definir: (escolha: EscolhaFundo | null, imediato?: boolean) => void
-  imgs: ReturnType<typeof useImagensFundo>
-  aoErro: (e: ErroTela | null) => void
-  aoMudar: () => Promise<void>
+  estado: EstadoJogo | null
+  ocupado: boolean
+  outroOcupado: boolean
+  mostrarLigar?: boolean
+  compacto?: boolean
+  aoJogar: (modo: ModoJogar) => void
 }): React.JSX.Element {
-  const { aparencia, fundoApp } = useAparencia()
-  const [modo, setModo] = useState<'app' | 'bioma' | 'imagem'>(daInstalacao?.tipo ?? 'app')
-  const [confirmar, setConfirmar] = useState(false)
-  const biomaApp = aparencia?.bioma ?? 'dia'
-  const doApp = fundoApp ?? { tipo: 'bioma' as const, bioma: biomaApp }
-  const imagem = daInstalacao?.tipo === 'imagem' ? daInstalacao : null
-
-  async function emTodas(): Promise<void> {
-    const r = await window.api.usarFundoEmTodas(daInstalacao)
-    aoErro(r.ok ? null : r.erro)
-    setConfirmar(false)
-    await aoMudar()
-  }
-
-  const opcoes = [
-    {
-      modo: 'app' as const,
-      rotulo: 'Igual ao app',
-      previa: <CamadaFundo escolha={doApp} parado />,
-      escolher: () => definir(null)
-    },
-    {
-      modo: 'bioma' as const,
-      rotulo: 'Bioma',
-      previa: (
-        <ArteDoBioma
-          bioma={daInstalacao?.tipo === 'bioma' ? daInstalacao.bioma : biomaApp}
-          className="absolute inset-0 h-full w-full"
-        />
-      ),
-      escolher: () => daInstalacao?.tipo !== 'bioma' && definir({ tipo: 'bioma', bioma: biomaApp })
-    },
-    {
-      modo: 'imagem' as const,
-      rotulo: 'Imagem',
-      previa: imagem ? (
-        <CamadaFundo escolha={imagem} parado />
-      ) : (
-        <span className="absolute inset-0 grid place-items-center bg-panel-2 px-2 text-center text-xs text-muted">
-          Uma imagem sua
-        </span>
-      ),
-      // Escolher "Imagem" sem imagem ainda só abre a lista (nada muda até escolher uma).
-      escolher: () => {
-        const primeira = imgs.imagens?.[0]
-        if (!imagem && primeira) definir(escolhaDeImagem(primeira.nome, daInstalacao))
-      }
-    }
-  ]
-
+  const abrirLigado = useAbrirLauncherLigado()
+  const [agora, setAgora] = useState(() => Date.now())
+  const jogando = estado?.fase === 'jogando'
+  const abrindo = estado?.fase === 'abrindo'
+  useEffect(() => {
+    if (!jogando) return
+    const t = setInterval(() => setAgora(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [jogando])
+  const texto = ocupado
+    ? t('telaJogar.preparando2')
+    : abrindo
+      ? t('telaJogar.abrindoOLauncher')
+      : jogando
+        ? t('telaJogar.jogando', { tempo: tempo(agora - Date.parse(estado.desde)) })
+        : desatualizada(i)
+          ? t('telaJogar.atualizarEJogar')
+          : t('telaJogar.jogar')
+  const clicavel = !ocupado && !jogando && !outroOcupado
+  const instalar = precisaInstalar(i) || ocupado
   return (
-    <div className="flex w-[380px] max-w-[calc(100vw-48px)] flex-col gap-3">
-      <p className="font-bold">Fundo de {i.nome}</p>
-      <div role="radiogroup" aria-label="Fundo da instalação" className="grid grid-cols-3 gap-2">
-        {opcoes.map((o) => (
-          <CartaoFundo
-            key={o.modo}
-            rotulo={o.rotulo}
-            marcado={modo === o.modo}
-            aoEscolher={() => {
-              setModo(o.modo)
-              o.escolher()
-            }}
-          >
-            {o.previa}
-          </CartaoFundo>
-        ))}
-      </div>
-      {modo === 'app' && (
-        <p className="text-xs text-muted">
-          Usa o fundo do app (Aparência › Fundo). Mudando lá, muda aqui também.
-        </p>
-      )}
-      {modo === 'bioma' && (
-        <GradeBiomas
-          atual={daInstalacao?.tipo === 'bioma' ? daInstalacao.bioma : null}
-          aoEscolher={(b) => definir({ tipo: 'bioma', bioma: b })}
-          pequeno
-        />
-      )}
-      {modo === 'imagem' && (
-        <>
-          <GradeImagens
-            imagens={imgs.imagens}
-            atual={imagem?.imagem ?? null}
-            aoEscolher={(nome) => definir(escolhaDeImagem(nome, daInstalacao))}
-            aoEscolherOutra={async () => {
-              const nome = await imgs.escolher()
-              if (nome) definir(escolhaDeImagem(nome, daInstalacao))
-            }}
-            pequeno
-          />
-          {imgs.erro && <MensagemErro erro={imgs.erro} />}
-          {imagem && (
-            <AjustesImagem
-              url={urlDoFundo(imagem.imagem)}
-              ajuste={imagem.ajuste}
-              aoMudar={(ajuste) => definir({ ...imagem, ajuste }, false)}
-            />
-          )}
-        </>
-      )}
-      <div className="flex flex-col items-start gap-1 border-t border-linha pt-3">
-        {confirmar ? (
-          <div className="flex flex-col gap-2">
-            <p>
-              Trocar o fundo de todas as instalações por {daInstalacao ? 'este' : '"Igual ao app"'}?
-              Cada uma pode ser mudada de novo depois.
-            </p>
-            <div className="flex gap-2">
-              <Botao tamanho="pequeno" variante="primario" onClick={() => void emTodas()}>
-                Usar em todas
-              </Botao>
-              <Botao tamanho="pequeno" onClick={() => setConfirmar(false)}>
-                Cancelar
-              </Botao>
+    <>
+      {!abrirLigado ? (
+        <div className="flex flex-col items-center gap-1">
+          {instalar ? (
+            <>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={!ocupado && !outroOcupado ? () => aoJogar('instalar') : undefined}
+                  aria-disabled={ocupado || outroOcupado}
+                  className={`${classesBotao('primario', 'grande')} ${
+                    ocupado || outroOcupado
+                      ? 'cursor-default active:translate-y-0! active:border-b-[3px]!'
+                      : ''
+                  } ${ocupado ? 'anim-brilho' : ''}`}
+                >
+                  <span
+                    key={rotuloInstalar(i, ocupado)}
+                    className={`anim-linha ${ocupado ? 'pontos' : ''}`}
+                  >
+                    {rotuloInstalar(i, ocupado)}
+                  </span>
+                </button>
+                <JogarEmBreve />
+              </div>
+              {!compacto && (
+                <span className="text-xs text-muted">
+                  {i.instalada
+                    ? t('telaJogar.oServidorOuAInstalacao')
+                    : t('telaJogar.montaAPastaDaInstalacao')}
+                </span>
+              )}
+            </>
+          ) : (
+            <div className="flex items-start gap-2">
+              <AcoesDaInstalada key={i.id} i={i} />
+              <JogarEmBreve />
             </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={clicavel ? () => aoJogar('jogar') : undefined}
+              aria-disabled={!clicavel}
+              className={`${classesBotao('primario', 'grande')} tabular-nums ${
+                texto.length > 10 ? 'text-lg!' : ''
+              } ${
+                // Sem clique (preparando, abrindo, jogando): o relevo não afunda.
+                clicavel ? '' : 'cursor-default active:translate-y-0! active:border-b-[3px]!'
+              } ${ocupado || abrindo ? 'anim-brilho' : ''}`}
+            >
+              <span
+                key={texto.split(' ·')[0]}
+                className={`anim-linha ${ocupado || abrindo ? 'pontos' : ''}`}
+              >
+                {texto}
+              </span>
+            </button>
+            {mostrarLigar && (
+              <Botao variante="secundario" onClick={() => aoJogar('ligar')}>
+                {t('telaJogar.ligarServidorEJogar')}
+              </Botao>
+            )}
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmar(true)}
-            className="text-[13px] underline hover:text-accent"
-          >
-            Usar este fundo em todas as instalações
-          </button>
-        )}
-        {daInstalacao && (
-          <button
-            type="button"
-            onClick={() => {
-              setModo('app')
-              definir(null)
-            }}
-            className="text-[13px] underline hover:text-accent"
-          >
-            Voltar ao fundo do app
-          </button>
-        )}
-      </div>
-    </div>
+          {!compacto && (
+            <span className="text-xs text-muted">{t('telaJogar.soAbreOJogoPelo')}</span>
+          )}
+          {i.instalada && !ocupado && <AcoesDaInstalada key={i.id} i={i} compacto />}
+        </div>
+      )}
+    </>
   )
 }
-
-// ---------- Barra de ação ----------
 
 function BarraJogar({
   i,
@@ -572,37 +615,20 @@ function BarraJogar({
   aoJogar: (modo: ModoJogar) => void
 }): React.JSX.Element {
   const abrirLigado = useAbrirLauncherLigado()
-  const [agora, setAgora] = useState(() => Date.now())
   const jogando = estado?.fase === 'jogando'
   const abrindo = estado?.fase === 'abrindo'
-  useEffect(() => {
-    if (!jogando) return
-    const t = setInterval(() => setAgora(Date.now()), 1000)
-    return () => clearInterval(t)
-  }, [jogando])
   const status = useStatus(i)
   const vel = useVelocidade(ocupado ? progresso : null)
-
-  const texto = ocupado
-    ? 'PREPARANDO'
-    : abrindo
-      ? 'ABRINDO O LAUNCHER'
-      : jogando
-        ? `JOGANDO · ${tempo(agora - Date.parse(estado.desde))}`
-        : desatualizada(i)
-          ? 'ATUALIZAR E JOGAR'
-          : 'JOGAR'
   const clicavel = !ocupado && !jogando && !outroOcupado
   // Dono com o servidor desligado: o botão separado liga pelo ServSquare e só então prepara o jogo.
   const mostrarLigar =
     abrirLigado && !!status?.dono && !status.online && status.podeLigar && clicavel && !abrindo
-  const instalar = precisaInstalar(i) || ocupado
 
   return (
     <>
       <div className="grid min-h-20 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 border-y-2 border-linha bg-panel px-6 py-2">
         <Selecao
-          aria-label="Instalação"
+          aria-label={t('telaJogar.instalacao2')}
           value={i.id}
           onChange={(e) => aoEscolher(e.target.value)}
           className="w-full max-w-[280px] justify-self-start"
@@ -614,76 +640,14 @@ function BarraJogar({
           ))}
         </Selecao>
 
-        {!abrirLigado ? (
-          <div className="flex flex-col items-center gap-1">
-            {instalar ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={!ocupado && !outroOcupado ? () => aoJogar('instalar') : undefined}
-                    aria-disabled={ocupado || outroOcupado}
-                    className={`${classesBotao('primario', 'grande')} ${
-                      ocupado || outroOcupado
-                        ? 'cursor-default active:translate-y-0! active:border-b-[3px]!'
-                        : ''
-                    } ${ocupado ? 'anim-brilho' : ''}`}
-                  >
-                    <span
-                      key={rotuloInstalar(i, ocupado)}
-                      className={`anim-linha ${ocupado ? 'pontos' : ''}`}
-                    >
-                      {rotuloInstalar(i, ocupado)}
-                    </span>
-                  </button>
-                  <JogarEmBreve />
-                </div>
-                <span className="text-xs text-muted">
-                  {i.instalada
-                    ? 'O servidor ou a instalação mudou: atualizar troca só o que veio dele.'
-                    : 'Monta a pasta da instalação com os mods, packs e servidores.'}
-                </span>
-              </>
-            ) : (
-              <div className="flex items-start gap-2">
-                <AcoesDaInstalada key={i.id} i={i} />
-                <JogarEmBreve />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={clicavel ? () => aoJogar('jogar') : undefined}
-                aria-disabled={!clicavel}
-                className={`${classesBotao('primario', 'grande')} tabular-nums ${
-                  texto.length > 10 ? 'text-lg!' : ''
-                } ${
-                  // Sem clique (preparando, abrindo, jogando): o relevo não afunda.
-                  clicavel ? '' : 'cursor-default active:translate-y-0! active:border-b-[3px]!'
-                } ${ocupado || abrindo ? 'anim-brilho' : ''}`}
-              >
-                <span
-                  key={texto.split(' ·')[0]}
-                  className={`anim-linha ${ocupado || abrindo ? 'pontos' : ''}`}
-                >
-                  {texto}
-                </span>
-              </button>
-              {mostrarLigar && (
-                <Botao variante="secundario" onClick={() => aoJogar('ligar')}>
-                  Ligar servidor e jogar
-                </Botao>
-              )}
-            </div>
-            <span className="text-xs text-muted">
-              Só abre o jogo pelo Minecraft Launcher. O servidor não liga nem desliga por aqui.
-            </span>
-            {i.instalada && !ocupado && <AcoesDaInstalada key={i.id} i={i} compacto />}
-          </div>
-        )}
+        <BotaoJogar
+          i={i}
+          estado={estado}
+          ocupado={ocupado}
+          outroOcupado={outroOcupado}
+          mostrarLigar={mostrarLigar}
+          aoJogar={aoJogar}
+        />
 
         <StatusDoServidor
           status={status}
@@ -691,8 +655,8 @@ function BarraJogar({
             status &&
             !status.dono && (
               <BotaoDiagnostico
-                rotulo="Não consigo entrar"
-                titulo={`Não consigo entrar em ${i.nome}`}
+                rotulo={t('telaJogar.naoConsigoEntrar')}
+                titulo={t('telaJogar.naoConsigoEntrarEm', { nome: i.nome })}
                 tamanho="pequeno"
                 rodar={() => window.api.diagnosticarInstalacao(i.id)}
                 aoConsertar={async () => {
@@ -708,17 +672,22 @@ function BarraJogar({
       {ocupado && (
         <div className="flex flex-col gap-1 border-b-2 border-linha bg-panel-2 px-6 py-3 text-[13px]">
           <div className="flex flex-wrap justify-between gap-2">
-            <span className="min-w-0 truncate">{progresso?.etapa ?? 'Preparando...'}</span>
+            <span className="min-w-0 truncate">
+              {progresso?.etapa ?? t('telaJogar.preparando')}
+            </span>
             {progresso && progresso.total > 0 && (
               <span className="shrink-0 font-mono text-xs text-muted">
-                {bytes(progresso.recebido)} de {bytes(progresso.total)}
+                {t('telaJogar.de', {
+                  bytes: bytes(progresso.recebido),
+                  bytes2: bytes(progresso.total)
+                })}
                 {vel.porSegundo > 0 && ` · ${bytes(vel.porSegundo)}/s`}
                 {vel.restante !== null && ` · falta ${tempo(vel.restante * 1000)}`}
               </span>
             )}
           </div>
           <BarraProgresso
-            rotulo={progresso?.etapa ?? 'Preparando'}
+            rotulo={progresso?.etapa ?? t('telaJogar.preparando3')}
             valor={progresso?.recebido ?? 0}
             maximo={progresso?.total ?? 0}
           />
@@ -753,11 +722,11 @@ function useStatus(i: Instalacao): StatusServidorJogo | null {
 }
 
 const TEXTO_PEDIDO: Record<NonNullable<StatusServidorJogo['pedido']>['situacao'], string> = {
-  pendente: 'Aguardando o dono aprovar',
-  aprovado: 'Aprovado: você está na whitelist',
-  recusado: 'Recusado pelo dono',
-  desconhecido: 'Aguardando o dono aprovar',
-  naoEnviado: 'Pedido para entrar vai quando o dono abrir o HubSquare'
+  pendente: t('telaJogar.aguardandoODonoAprovar'),
+  aprovado: t('telaJogar.aprovadoVoceEstaNaWhitelist'),
+  recusado: t('telaJogar.recusadoPeloDono'),
+  desconhecido: t('telaJogar.aguardandoODonoAprovar'),
+  naoEnviado: t('telaJogar.pedidoParaEntrarVaiQuando')
 }
 
 function StatusDoServidor({
@@ -770,7 +739,7 @@ function StatusDoServidor({
   if (!status) {
     return (
       <span className="justify-self-end text-xs text-muted">
-        Sem servidor ligado a esta instalação
+        {t('telaJogar.semServidorLigadoAEsta')}
       </span>
     )
   }
@@ -784,18 +753,18 @@ function StatusDoServidor({
         </b>
         <span className="shrink-0 text-muted">
           {status.ligando
-            ? 'ligando…'
+            ? t('telaJogar.ligando')
             : status.online === null
-              ? 'sem endereço'
+              ? t('telaJogar.semEndereco')
               : status.online
                 ? status.contagem
                   ? `${status.contagem.online}/${status.contagem.max} online`
-                  : `${status.jogadores.length} online`
-                : 'Servidor desligado'}
+                  : t('telaJogar.online', { length: status.jogadores.length })
+                : t('telaJogar.servidorDesligado')}
         </span>
       </span>
       {status.online && status.jogadores.length > 0 && (
-        <span className="flex gap-1" aria-label="Jogadores online">
+        <span className="flex gap-1" aria-label={t('telaJogar.jogadoresOnline')}>
           {status.jogadores.slice(0, 8).map((j) => (
             <span key={j.nome} title={j.nome}>
               <CabecaJogador nome={j.nome} uuid={j.uuid ?? undefined} />
@@ -809,7 +778,9 @@ function StatusDoServidor({
         </span>
       )}
       {!status.online && status.mensagem && (
-        <span className="max-w-[320px] text-xs">Recado do dono: “{status.mensagem}”</span>
+        <span className="max-w-[320px] text-xs">
+          {t('telaJogar.recadoDoDono', { mensagem: status.mensagem })}
+        </span>
       )}
       {/* Fase M4: o pedido para entrar na whitelist (só do próprio jogador). */}
       {status.pedido && (
@@ -843,8 +814,8 @@ function CardMemoria({ i }: { i: Instalacao }): React.JSX.Element | null {
   if (!m) {
     return (
       <section className="flex flex-col gap-2 border border-linha bg-panel p-4">
-        <p className="text-[13px] font-bold">Memória do jogo</p>
-        <p className="text-xs text-muted">Contando mods…</p>
+        <p className="text-[13px] font-bold">{t('telaJogar.memoriaDoJogo')}</p>
+        <p className="text-xs text-muted">{t('telaJogar.contandoMods')}</p>
       </section>
     )
   }
@@ -862,7 +833,7 @@ function CardMemoria({ i }: { i: Instalacao }): React.JSX.Element | null {
   return (
     <section className="flex flex-col gap-2 border border-linha bg-panel p-4">
       <Slider
-        rotulo="Memória do jogo"
+        rotulo={t('telaJogar.memoriaDoJogo')}
         valor={m.atual}
         min={m.min}
         max={m.max}
@@ -870,9 +841,10 @@ function CardMemoria({ i }: { i: Instalacao }): React.JSX.Element | null {
         formatar={(v) => `${v} GB`}
       />
       <p className="text-xs text-muted">
-        Sugerido: {m.sugerida} GB ({m.mods} {m.mods === 1 ? 'mod' : 'mods'} e a memória deste PC).
+        {t('telaJogar.sugeridoGb', { sugerida: m.sugerida, mods: m.mods })}{' '}
+        {m.mods === 1 ? t('telaJogar.mod') : t('telaJogar.mods')} {t('telaJogar.eAMemoriaDestePc')}
         {m.servidor !== null &&
-          ` O servidor roda neste PC com ${m.servidor} GB; sobram ${m.disponivel} GB para o jogo.`}
+          t('telaJogar.oServidorRodaNestePc', { servidor: m.servidor, disponivel: m.disponivel })}
         {m.atual !== m.sugerida && (
           <>
             {' '}
@@ -881,16 +853,15 @@ function CardMemoria({ i }: { i: Instalacao }): React.JSX.Element | null {
               className="underline hover:text-texto"
               onClick={() => mudar(m.sugerida)}
             >
-              Usar a sugestão
+              {t('telaJogar.usarASugestao')}
             </button>
           </>
         )}
       </p>
       {!m.cabe && (
         <p className="text-[13px] text-warning">
-          <IconeAtencao className="inline-block h-3.5 w-3.5 shrink-0 align-[-2px] mr-1" /> Com o
-          servidor ligado neste PC, {m.atual} GB para o jogo não cabe: diminua para {m.disponivel}{' '}
-          GB ou menos, ou tire memória do servidor em Opções › Gerais.
+          <IconeAtencao className="inline-block h-3.5 w-3.5 shrink-0 align-[-2px] mr-1" />{' '}
+          {t('telaJogar.comOServidorLigadoNeste', { atual: m.atual, disponivel: m.disponivel })}
         </p>
       )}
       {erro && <MensagemErro erro={erro} />}
@@ -939,16 +910,16 @@ function CardSessao({
         <p className="flex-1 text-[13px]">
           {fechou.travou ? (
             <span className="text-warning">
-              <IconeAtencao className="inline-block h-3.5 w-3.5 shrink-0 align-[-2px] mr-1" />O jogo
-              fechou com um travamento
+              <IconeAtencao className="inline-block h-3.5 w-3.5 shrink-0 align-[-2px] mr-1" />
+              {t('telaJogar.oJogoFechouComUm')}
             </span>
           ) : (
-            'Sessão encerrada'
+            t('telaJogar.sessaoEncerrada')
           )}{' '}
-          · você jogou <b>{duracaoLonga(fechou.duracaoMs)}</b>.
+          {t('telaJogar.voceJogou')} <b>{duracaoLonga(fechou.duracaoMs)}</b>.
         </p>
         <Botao tamanho="pequeno" onClick={fechar}>
-          Fechar
+          {t('telaJogar.fechar')}
         </Botao>
       </div>
       {fechou.travou && travamento && (
@@ -956,9 +927,7 @@ function CardSessao({
           {travamento.causa && <p>{travamento.causa}</p>}
           {travamento.suspeitos.length ? (
             <>
-              <p className="text-muted">
-                Mods que podem ter causado (pelo relatório de travamento):
-              </p>
+              <p className="text-muted">{t('telaJogar.modsQuePodemTerCausado')}</p>
               {travamento.suspeitos.map((s) => (
                 <CaixaSelecao
                   key={s.chave}
@@ -990,14 +959,11 @@ function CardSessao({
                   aoJogarDeNovo()
                 }}
               >
-                Desativar e tentar de novo
+                {t('telaJogar.desativarETentarDeNovo')}
               </Botao>
             </>
           ) : (
-            <p className="text-muted">
-              O relatório não aponta nenhum mod. Veja o arquivo na pasta crash-reports da
-              instalação.
-            </p>
+            <p className="text-muted">{t('telaJogar.oRelatorioNaoApontaNenhum')}</p>
           )}
           {erro && <MensagemErro erro={erro} />}
         </div>
@@ -1009,10 +975,10 @@ function CardSessao({
 // ---------- Mods que faltaram ao ligar o servidor ----------
 
 const ESTADO_DO_MOD: Record<string, { texto: string; cor: string }> = {
-  aguardando: { texto: 'Aguardando o download', cor: 'text-muted' },
-  conferindo: { texto: 'Detectado, conferindo…', cor: 'text-warning' },
-  pronto: { texto: 'Instalado ✓', cor: 'text-online' },
-  diferente: { texto: 'Arquivo diferente', cor: 'text-danger' }
+  aguardando: { texto: t('telaJogar.aguardandoODownload'), cor: 'text-muted' },
+  conferindo: { texto: t('telaJogar.detectadoConferindo'), cor: 'text-warning' },
+  pronto: { texto: t('telaJogar.instalado'), cor: 'text-online' },
+  diferente: { texto: t('telaJogar.arquivoDiferente'), cor: 'text-danger' }
 }
 
 // Só o dono: o servidor desta instalação fechou ao ligar porque faltam mods. Cada mod achado no
@@ -1043,21 +1009,20 @@ function CardModsFaltando({ i }: { i: Instalacao }): React.JSX.Element | null {
         <IconeAtencao className="mr-1 inline-block h-3.5 w-3.5 shrink-0 align-[-2px]" />
         {tudoPronto ? (
           <>
-            Tudo instalado. Ligue o servidor <b>{status!.nome}</b> de novo.
+            {t('telaJogar.tudoInstaladoLigueOServidor')} <b>{status!.nome}</b>{' '}
+            {t('telaJogar.deNovo')}
           </>
         ) : (
           <>
-            O servidor <b>{status!.nome}</b> não ligou: falta{' '}
-            {linhas.length === 1 ? '1 mod' : `${linhas.length} mods`}
+            {t('telaJogar.oServidor')} <b>{status!.nome}</b> {t('telaJogar.naoLigouFalta')}{' '}
+            {linhas.length === 1
+              ? t('telaJogar.n1Mod')
+              : t('telaJogar.mods2', { length: linhas.length })}
           </>
         )}
       </p>
       {!tudoPronto && (
-        <p className="text-[13px] text-muted">
-          Alguns mods do servidor precisam de outros mods que não estão na pasta mods. Abra a página
-          de cada um e baixe o arquivo: o HubSquare reconhece o download na pasta Downloads e coloca
-          sozinho na pasta mods do servidor.
-        </p>
+        <p className="text-[13px] text-muted">{t('telaJogar.algunsModsDoServidorPrecisam')}</p>
       )}
       <ul className="flex flex-col divide-y divide-linha border-y border-linha">
         {linhas.map(({ m, d }) => {
@@ -1068,13 +1033,15 @@ function CardModsFaltando({ i }: { i: Instalacao }): React.JSX.Element | null {
                 <b>{m.titulo ?? m.id}</b>
                 <span className="text-muted">
                   {' '}
-                  — pedido por {m.pedidoPor}
-                  {m.exige && ` (versão ${m.exige.replace(/ or later$/, ' ou mais nova')})`}
+                  {t('telaJogar.pedidoPor', { pedidoPor: m.pedidoPor })}
+                  {m.exige &&
+                    t('telaJogar.versao', {
+                      replace: m.exige.replace(/ or later$/, t('telaJogar.ouMaisNova'))
+                    })}
                 </span>
                 {!d && (
                   <span className="block text-xs text-muted">
-                    O app não achou este mod no Modrinth para o Minecraft {i.versao}: procure pelo
-                    nome e instale pela tela Mods do servidor.
+                    {t('telaJogar.oAppNaoAchouEste', { versao: i.versao })}
                   </span>
                 )}
               </span>
@@ -1085,7 +1052,7 @@ function CardModsFaltando({ i }: { i: Instalacao }): React.JSX.Element | null {
                   variante="primario"
                   onClick={() => void abrir(window.api.abrirPaginaDownload(d.id))}
                 >
-                  Abrir página
+                  {t('telaJogar.abrirPagina')}
                 </Botao>
               )}
               {!d && (
@@ -1093,7 +1060,7 @@ function CardModsFaltando({ i }: { i: Instalacao }): React.JSX.Element | null {
                   tamanho="pequeno"
                   onClick={() => void abrir(window.api.buscarModFaltando(m.id))}
                 >
-                  Procurar no Modrinth
+                  {t('telaJogar.procurarNoModrinth')}
                 </Botao>
               )}
             </li>
@@ -1106,7 +1073,7 @@ function CardModsFaltando({ i }: { i: Instalacao }): React.JSX.Element | null {
           tamanho="pequeno"
           onClick={() => abrirDownloads(achados[0].d!.alvo)}
         >
-          Já baixei, escolher o arquivo
+          {t('telaJogar.jaBaixeiEscolherOArquivo')}
         </Botao>
       )}
       {erro && <MensagemErro erro={erro} />}
@@ -1117,9 +1084,13 @@ function CardModsFaltando({ i }: { i: Instalacao }): React.JSX.Element | null {
 // ---------- Cards das instalações ----------
 
 function quando(iso: string | null): string {
-  if (!iso) return 'Nunca jogada'
+  if (!iso) return t('telaJogar.nuncaJogada')
   const dias = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
-  return dias <= 0 ? 'Jogada hoje' : dias === 1 ? 'Jogada ontem' : `Jogada há ${dias} dias`
+  return dias <= 0
+    ? t('telaJogar.jogadaHoje')
+    : dias === 1
+      ? t('telaJogar.jogadaOntem')
+      : t('telaJogar.jogadaHaDias', { dias })
 }
 
 function CardInstalacao({

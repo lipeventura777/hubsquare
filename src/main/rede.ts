@@ -7,6 +7,7 @@ import { pipeline } from 'stream/promises'
 import type { ReadableStream as WebReadableStream } from 'stream/web'
 import { ErroApp, detalhar } from './erros'
 import type { Progresso } from '../shared/tipos'
+import { t } from '../shared/i18n'
 
 export type AoProgredir = (p: Progresso) => void
 
@@ -55,15 +56,12 @@ async function pedir(
             : (extra?.signal ?? undefined)
     })
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui me conectar à internet. Confira sua conexão e tente de novo.',
-      `${url}\n${detalhar(e)}`
-    )
+    throw new ErroApp(t('p.rede.naoConseguiMeConectarA'), `${url}\n${detalhar(e)}`)
   }
   if (!resposta.ok && !(aceitar404 && resposta.status === 404)) {
     throw new ErroApp(
-      'O site de download respondeu com erro. Espere alguns minutos e tente de novo.',
-      `${url}\nHTTP ${resposta.status} ${resposta.statusText}`
+      t('p.rede.oSiteDeDownloadRespondeu'),
+      t('p.rede.http', { url, status: resposta.status, statusText: resposta.statusText })
     )
   }
   return resposta
@@ -121,10 +119,7 @@ export async function baixar(
     )
   } catch (e) {
     await rm(temporario, { force: true })
-    throw new ErroApp(
-      'O download foi interrompido. Confira sua internet e tente de novo.',
-      `${url}\n${detalhar(e)}`
-    )
+    throw new ErroApp(t('p.rede.oDownloadFoiInterrompidoConfira'), `${url}\n${detalhar(e)}`)
   }
 
   if (hash && checksum) {
@@ -132,7 +127,7 @@ export async function baixar(
     if (obtido !== checksum.valor.toLowerCase()) {
       await rm(temporario, { force: true })
       throw new ErroApp(
-        'O arquivo baixado veio corrompido. Tente de novo.',
+        t('p.rede.oArquivoBaixadoVeioCorrompido'),
         `${url}\n${checksum.algoritmo} esperado: ${checksum.valor}\n${checksum.algoritmo} obtido: ${obtido}`
       )
     }

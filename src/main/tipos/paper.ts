@@ -3,6 +3,7 @@ import { ErroApp } from '../erros'
 import { versoesRelease } from '../mojang'
 import { baixar, buscarJson } from '../rede'
 import type { TipoServidor } from '.'
+import { t } from '../../shared/i18n'
 
 // API Fill v3 do PaperMC (a v2 foi desativada).
 const API = 'https://fill.papermc.io/v3/projects/paper'
@@ -44,7 +45,7 @@ export const paper: TipoServidor = {
       `${API}/versions/${encodeURIComponent(versao)}/builds/latest`
     )
     const jar = build.downloads['server:default']
-    if (!jar) throw new ErroApp(`O Paper ${versao} ainda não tem download. Escolha outra versão.`)
+    if (!jar) throw new ErroApp(t('tipos.paper.oPaperAindaNaoTem', { versao }))
     await baixar(
       jar.url,
       destino,

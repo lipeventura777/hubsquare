@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ErroTela } from '../../../shared/tipos'
 import { Botao } from './ui'
 import { BotaoRelatorio } from './RelatorioErro'
+import { t } from '../../../shared/i18n'
 
 // A mensagem vem como "O que aconteceu. O que fazer.": a primeira frase vira o título.
 function dividir(mensagem: string): [string, string] {
@@ -62,25 +63,27 @@ export function MensagemErro({
             onClick={ligarMesmoAssim}
             disabled={ligando}
           >
-            {ligando ? 'Ligando...' : 'Ligar mesmo assim'}
+            {ligando ? t('mensagemErro.ligando') : t('mensagemErro.ligarMesmoAssim')}
           </Botao>
           {erroLigar && <p className="mt-1 text-sm">{erroLigar}</p>}
         </>
       )}
       {aoTentarDeNovo && (
         <Botao variante="perigo" tamanho="pequeno" className="mt-2" onClick={aoTentarDeNovo}>
-          Tentar de novo só os que falharam
+          {t('mensagemErro.tentarDeNovoSoOs')}
         </Botao>
       )}
       {erro.detalhes && (
         <details className="mt-2 text-sm">
-          <summary className="cursor-pointer text-muted underline">Ver detalhes</summary>
+          <summary className="cursor-pointer text-muted underline">
+            {t('mensagemErro.verDetalhes')}
+          </summary>
           <pre className="mt-2 max-h-48 overflow-auto bg-console p-3 font-mono text-xs break-all whitespace-pre-wrap text-console-muted">
             {erro.detalhes}
           </pre>
           <div className="mt-2 flex flex-wrap gap-2">
             <Botao tamanho="pequeno" onClick={copiar}>
-              {copiado ? 'Copiado!' : 'Copiar'}
+              {copiado ? t('mensagemErro.copiado') : t('mensagemErro.copiar')}
             </Botao>
             <BotaoRelatorio pequeno />
           </div>

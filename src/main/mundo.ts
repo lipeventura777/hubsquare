@@ -3,6 +3,7 @@ import { mkdir, rename } from 'fs/promises'
 import { isAbsolute, join, relative } from 'path'
 import { lerArquivoPropriedades } from './config'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 export function dentroDe(pasta: string, caminho: string): boolean {
   const r = relative(pasta, caminho)
@@ -13,9 +14,7 @@ export function dentroDe(pasta: string, caminho: string): boolean {
 export async function nivelDoMundo(pasta: string): Promise<string> {
   const nivel = (await lerArquivoPropriedades(pasta)).get('level-name') || 'world'
   if (/[\\/:*?"<>|]/.test(nivel) || nivel === '.' || nivel === '..') {
-    throw new ErroApp(
-      `O nome do mundo no server.properties ("${nivel}") não é um nome de pasta válido. Corrija o level-name e tente de novo.`
-    )
+    throw new ErroApp(t('p.mundo.oNomeDoMundoNo', { nivel }))
   }
   return nivel
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { AjustesApp } from '../../../shared/tipos'
 import { LinhaControle } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // "Verificar atualizações automaticamente" (ligado por padrão). Vale para o app todo.
 export function AjusteAtualizacoes(): React.JSX.Element | null {
@@ -14,17 +15,14 @@ export function AjusteAtualizacoes(): React.JSX.Element | null {
   return (
     <>
       <LinhaControle
-        rotulo="Verificar atualizações automaticamente"
+        rotulo={t('ajusteAtualizacoes.verificarAtualizacoesAutomaticamente')}
         ligado={ajustes.verificarAtualizacoes}
         aoMudar={async (v) => {
           const r = await window.api.salvarAjustes({ verificarAtualizacoes: v })
           if (r.ok) setAjustes(r.valor)
         }}
       />
-      <p className="text-xs text-muted">
-        Ao abrir o app e a cada 6 horas, ele só confere se há versão nova do software, do Minecraft,
-        dos mods ou do modpack, e mostra um aviso no Painel. Nada é atualizado sem você clicar.
-      </p>
+      <p className="text-xs text-muted">{t('ajusteAtualizacoes.aoAbrirOAppE')}</p>
       <AjusteVersaoApp />
     </>
   )
@@ -41,17 +39,14 @@ export function AjusteVersaoApp(): React.JSX.Element | null {
   return (
     <>
       <LinhaControle
-        rotulo="Avisar quando sair versão nova do HubSquare"
+        rotulo={t('ajusteAtualizacoes.avisarQuandoSairVersaoNova')}
         ligado={ligado}
         aoMudar={async (v) => {
           const r = await window.api.ligarAvisoVersao(v)
           if (r.ok) setLigado(r.valor)
         }}
       />
-      <p className="text-xs text-muted">
-        Ao abrir o app e a cada 6 horas, ele confere no GitHub se saiu versão nova. O aviso só abre
-        a página para baixar; nada é instalado sozinho.
-      </p>
+      <p className="text-xs text-muted">{t('ajusteAtualizacoes.aoAbrirOAppE2')}</p>
     </>
   )
 }

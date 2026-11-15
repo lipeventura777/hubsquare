@@ -18,6 +18,7 @@ import { suspeitosDoTravamento } from './modsProblemas'
 import { editarOrganizacao, idDoMod, lerOrganizacao } from './organizacao'
 import { pastaLivre } from './pastaLivre'
 import { ligar } from './servidor'
+import { t } from '../shared/i18n'
 
 // Travamento × mods e lista de mods em JSON (Fase 25).
 
@@ -70,11 +71,11 @@ export async function desativarETentar(
   chaves: unknown,
   nome: unknown
 ): Promise<void> {
-  if (!pastaLivre(info)) throw new ErroApp('O servidor já está ligado.')
+  if (!pastaLivre(info)) throw new ErroApp(t('p.listaMods.oServidorJaEstaLigado'))
   const arquivos = (Array.isArray(chaves) ? chaves : [])
     .filter((c): c is string => typeof c === 'string' && c.startsWith('extras:'))
     .map((c) => c.slice('extras:'.length))
-  if (!arquivos.length) throw new ErroApp('Escolha pelo menos um mod para desativar.')
+  if (!arquivos.length) throw new ErroApp(t('p.listaMods.escolhaPeloMenosUmMod'))
   for (const a of arquivos) await alternarMod(info, a, false)
   await dispensarTravamento(info, nome)
   // No PlaySquare quem abre o jogo é o launcher oficial: o jogador clica em Jogar de novo.
@@ -113,9 +114,9 @@ export async function exportarLista(
     }
   })
   const opcoes = {
-    title: 'Exportar a lista de mods',
+    title: t('p.listaMods.exportarAListaDeMods'),
     defaultPath: join(app.getPath('downloads'), `${info.nome} - mods.json`),
-    filters: [{ name: 'Lista de mods (JSON)', extensions: ['json'] }]
+    filters: [{ name: t('p.listaMods.listaDeModsJson'), extensions: ['json'] }]
   }
   const e = janela
     ? await dialog.showSaveDialog(janela, opcoes)
@@ -137,9 +138,9 @@ export async function importarLista(
   janela: BrowserWindow | null
 ): Promise<ResultadoImportacao | null> {
   const opcoes = {
-    title: 'Importar uma lista de mods',
+    title: t('p.listaMods.importarUmaListaDeMods'),
     properties: ['openFile' as const],
-    filters: [{ name: 'Lista de mods (JSON)', extensions: ['json'] }]
+    filters: [{ name: t('p.listaMods.listaDeModsJson'), extensions: ['json'] }]
   }
   const e = janela
     ? await dialog.showOpenDialog(janela, opcoes)
@@ -147,15 +148,15 @@ export async function importarLista(
   const arquivo = e.filePaths[0]
   if (e.canceled || !arquivo) return null
   if ((await stat(arquivo)).size > 1024 * 1024)
-    throw new ErroApp('Esse arquivo é grande demais para uma lista de mods.')
+    throw new ErroApp(t('p.listaMods.esseArquivoEGrandeDemais'))
   let dado: { formato?: unknown; mods?: unknown }
   try {
     dado = JSON.parse(await readFile(arquivo, 'utf8'))
   } catch {
-    throw new ErroApp('Esse arquivo não é uma lista de mods do ServSquare (JSON inválido).')
+    throw new ErroApp(t('p.listaMods.esseArquivoNaoEUma'))
   }
   if (dado.formato !== 'servsquare-mods' || !Array.isArray(dado.mods)) {
-    throw new ErroApp('Esse arquivo não é uma lista de mods exportada pelo ServSquare.')
+    throw new ErroApp(t('p.listaMods.esseArquivoNaoEUma2'))
   }
   const itens = dado.mods.slice(0, 500).flatMap((x): ItemDaLista[] => {
     const m = x as Record<string, unknown>

@@ -11,7 +11,7 @@ import {
 } from '../shared/tipos'
 import { registrarAcao } from './acoes'
 import { lerAparencia } from './aparencia'
-import { HTML, JS, MANIFESTO, css } from './celularPagina'
+import { html, js, manifesto, css } from './celularPagina'
 import {
   VALIDADE_SESSAO,
   acharSessao,
@@ -43,6 +43,7 @@ import {
   reiniciar,
   servidorAtual
 } from './servidor'
+import { t } from '../shared/i18n'
 
 // Integrações › Celular (Fase 20): painel no navegador do celular.
 // Escuta só nos IPs da rede local, do Radmin e do Tailscale (nunca em 0.0.0.0) e nunca abre porta
@@ -110,9 +111,7 @@ async function reiniciarEscuta(): Promise<void> {
   if (!config.ativo) return
   for (const ip of enderecosAlvo()) {
     const s = createServer((req, res) => {
-      tratar(req, res).catch(() =>
-        responder(res, 500, { erro: 'Algo deu errado no PC. Tente de novo.' })
-      )
+      tratar(req, res).catch(() => responder(res, 500, { erro: t('p.celular.algoDeuErradoNoPc') }))
     })
     try {
       await new Promise<void>((resolver, falhar) => {
@@ -124,8 +123,8 @@ async function reiniciarEscuta(): Promise<void> {
     } catch (e) {
       erroEscuta =
         (e as NodeJS.ErrnoException).code === 'EADDRINUSE'
-          ? `A porta ${config.porta} já está em uso por outro programa. Escolha outra porta.`
-          : `Não consegui abrir o painel em ${ip}.`
+          ? t('p.celular.aPortaJaEstaEm', { porta: config.porta })
+          : t('p.celular.naoConseguiAbrirOPainel', { ip })
     }
   }
 }
@@ -187,7 +186,7 @@ function lerCorpo(req: IncomingMessage): Promise<Record<string, unknown>> {
   return new Promise((resolver, falhar) => {
     // Só JSON: um formulário de outro site não consegue mandar este tipo sem a permissão do navegador.
     if (!(req.headers['content-type'] ?? '').startsWith('application/json')) {
-      return falhar(new ErroApp('Pedido inválido.'))
+      return falhar(new ErroApp(t('p.celular.pedidoInvalido')))
     }
     let tamanho = 0
     const partes: Buffer[] = []
@@ -195,7 +194,7 @@ function lerCorpo(req: IncomingMessage): Promise<Record<string, unknown>> {
       tamanho += p.length
       if (tamanho > LIMITE_CORPO) {
         req.destroy()
-        falhar(new ErroApp('Pedido grande demais.'))
+        falhar(new ErroApp(t('p.celular.pedidoGrandeDemais')))
       } else partes.push(p)
     })
     req.on('end', () => {
@@ -203,7 +202,7 @@ function lerCorpo(req: IncomingMessage): Promise<Record<string, unknown>> {
         const v = JSON.parse(Buffer.concat(partes).toString('utf8') || '{}')
         resolver(v && typeof v === 'object' ? v : {})
       } catch {
-        falhar(new ErroApp('Pedido inválido.'))
+        falhar(new ErroApp(t('p.celular.pedidoInvalido')))
       }
     })
   })
@@ -211,7 +210,7 @@ function lerCorpo(req: IncomingMessage): Promise<Record<string, unknown>> {
 
 async function registrar(texto: string): Promise<void> {
   const info = await servidorAtual()
-  if (info) await registrarAcao(info, `Celular: ${texto}`)
+  if (info) await registrarAcao(info, t('p.celular.celular', { texto }))
 }
 
 // ---------- Rotas ----------
@@ -222,33 +221,33 @@ async function tratar(req: IncomingMessage, res: ServerResponse): Promise<void> 
   const host = req.headers.host
   // Contra "DNS rebinding": só responde pelos próprios endereços.
   if (!hostPermitido(host, escutando, config.porta)) {
-    return responder(res, 403, { erro: 'Endereço não permitido.' })
+    return responder(res, 403, { erro: t('p.celular.enderecoNaoPermitido') })
   }
   const url = new URL(req.url ?? '/', `http://${host}`)
   const rota = `${req.method} ${url.pathname}`
 
   if (req.method === 'GET') {
-    if (url.pathname === '/') return arquivoFixo(res, 'text/html; charset=utf-8', HTML)
-    if (url.pathname === '/app.js') return arquivoFixo(res, 'text/javascript; charset=utf-8', JS)
+    if (url.pathname === '/') return arquivoFixo(res, 'text/html; charset=utf-8', html())
+    if (url.pathname === '/app.js') return arquivoFixo(res, 'text/javascript; charset=utf-8', js())
     if (url.pathname === '/app.css') {
       const destaque = corSegura((await lerAparencia().catch(() => null))?.destaque)
       return arquivoFixo(res, 'text/css; charset=utf-8', css(destaque, textoSobre(destaque)))
     }
     if (url.pathname === '/manifest.webmanifest') {
-      return arquivoFixo(res, 'application/manifest+json', MANIFESTO)
+      return arquivoFixo(res, 'application/manifest+json', manifesto())
     }
     if (url.pathname === '/icone.png') return arquivoFixo(res, 'image/png', await readFile(icone))
   }
 
   // Tudo que muda algo: a Origem (quando o navegador manda) precisa ser este mesmo endereço.
   if (req.method === 'POST' && !origemPermitida(req.headers.origin, host as string)) {
-    return responder(res, 403, { erro: 'Pedido de outro site recusado.' })
+    return responder(res, 403, { erro: t('p.celular.pedidoDeOutroSiteRecusado') })
   }
 
   if (rota === 'POST /api/login') return login(req, res)
 
   const sessao = acharSessao(config.sessoes, lerCookie(req.headers.cookie, COOKIE), Date.now())
-  if (!sessao) return responder(res, 401, { erro: 'Entre com o PIN.' })
+  if (!sessao) return responder(res, 401, { erro: t('p.celular.entreComOPin') })
   sessao.usada = Date.now()
   gravarUsoDepois ??= setTimeout(() => {
     gravarUsoDepois = undefined
@@ -261,9 +260,9 @@ async function tratar(req: IncomingMessage, res: ServerResponse): Promise<void> 
   if (req.method === 'POST') {
     // CSRF: o token da sessão precisa vir no cabeçalho (outro site não consegue ler nem mandar).
     if (req.headers['x-csrf'] !== sessao.csrf)
-      return responder(res, 403, { erro: 'Recarregue a página.' })
+      return responder(res, 403, { erro: t('p.celular.recarregueAPagina') })
     const corpo = await lerCorpo(req).catch(() => null)
-    if (!corpo) return responder(res, 400, { erro: 'Pedido inválido.' })
+    if (!corpo) return responder(res, 400, { erro: t('p.celular.pedidoInvalido') })
     if (url.pathname === '/api/acao') return acao(res, sessao, corpo.acao)
     if (url.pathname === '/api/trocar') return trocar(res, sessao, corpo.id, corpo.ligar)
     if (url.pathname === '/api/sair') {
@@ -278,12 +277,12 @@ async function tratar(req: IncomingMessage, res: ServerResponse): Promise<void> 
       )
     }
   }
-  responder(res, 404, { erro: 'Não encontrado.' })
+  responder(res, 404, { erro: t('p.celular.naoEncontrado') })
 }
 
 async function login(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const corpo = await lerCorpo(req).catch(() => null)
-  if (!corpo) return responder(res, 400, { erro: 'Pedido inválido.' })
+  if (!corpo) return responder(res, 400, { erro: t('p.celular.pedidoInvalido') })
   const aparelho = nomeDoAparelho(req.headers['user-agent'])
   const bloqueioAntes = tentativas.bloqueadoAte
   const r = tentarLogin(corpo.pin, config.pin, tentativas, Date.now())
@@ -292,15 +291,19 @@ async function login(req: IncomingMessage, res: ServerResponse): Promise<void> {
       const min = Math.max(1, Math.ceil((r.ate - Date.now()) / 60_000))
       // Registra só quando o bloqueio começa (não a cada tentativa durante ele).
       if (r.ate !== bloqueioAntes)
-        await registrar(`PIN errado 5 vezes (${aparelho}). Painel bloqueado por 15 min.`)
+        await registrar(t('p.celular.pinErrado5VezesPainel', { aparelho }))
       return responder(res, 429, {
-        erro: `Muitas tentativas erradas. Tente de novo em ${min} min.`
+        erro: t('p.celular.muitasTentativasErradasTenteDe', { min })
       })
     }
-    if (r.motivo === 'sem-pin')
-      return responder(res, 403, { erro: 'Crie o PIN no app, em Integrações › Celular.' })
+    if (r.motivo === 'sem-pin') return responder(res, 403, { erro: t('p.celular.crieOPinNoApp') })
     return responder(res, 401, {
-      erro: `PIN errado. ${r.restantes === 1 ? 'Falta 1 tentativa' : `Faltam ${r.restantes} tentativas`} antes de bloquear por 15 min.`
+      erro: t('p.celular.pinErradoAntesDeBloquear', {
+        v:
+          r.restantes === 1
+            ? t('p.celular.falta1Tentativa')
+            : t('p.celular.faltamTentativas', { restantes: r.restantes })
+      })
     })
   }
   const { token, sessao } = novaSessao(aparelho, Date.now())
@@ -374,7 +377,7 @@ async function estado(sessao: Sessao): Promise<unknown> {
 async function cabeca(res: ServerResponse, uuid: string | null): Promise<void> {
   const info = await servidorAtual()
   const dataUrl = info && uuid ? await cabecaJogador(info, uuid).catch(() => null) : null
-  if (!dataUrl) return responder(res, 404, { erro: 'Sem cabeça.' })
+  if (!dataUrl) return responder(res, 404, { erro: t('p.celular.semCabeca') })
   arquivoFixo(res, 'image/png', Buffer.from(dataUrl.split(',')[1], 'base64'))
 }
 
@@ -383,19 +386,19 @@ async function acao(res: ServerResponse, sessao: Sessao, qual: unknown): Promise
   try {
     if (qual === 'ligar') {
       await ligar()
-      await registrar(`${quem} ligou o servidor.`)
+      await registrar(t('p.celular.ligouOServidor', { quem }))
     } else if (qual === 'desligar') {
-      await registrar(`${quem} desligou o servidor.`)
+      await registrar(t('p.celular.desligouOServidor', { quem }))
       // Desligar leva até 30 s; o painel acompanha pelo estado.
       void desligar().catch(() => {})
     } else if (qual === 'reiniciar') {
-      await registrar(`${quem} reiniciou o servidor.`)
+      await registrar(t('p.celular.reiniciouOServidor', { quem }))
       void reiniciar().catch(() => {})
-    } else return responder(res, 400, { erro: 'Ação desconhecida.' })
+    } else return responder(res, 400, { erro: t('p.celular.acaoDesconhecida') })
     responder(res, 200, {})
   } catch (e) {
     responder(res, 409, {
-      erro: e instanceof ErroApp ? e.message : 'Não deu certo. Tente de novo.'
+      erro: e instanceof ErroApp ? e.message : t('p.celular.naoDeuCertoTenteDe')
     })
   }
 }
@@ -407,9 +410,13 @@ async function trocar(
   ligarDepois: unknown
 ): Promise<void> {
   const alvo = (await listarServidores()).find((s) => s.id === id)
-  if (!alvo) return responder(res, 404, { erro: 'Esse servidor não existe mais.' })
+  if (!alvo) return responder(res, 404, { erro: t('p.celular.esseServidorNaoExisteMais') })
   await registrar(
-    `${sessao.aparelho} trocou para o servidor ${alvo.nome}${ligarDepois === true ? ' e ligou' : ''}.`
+    t('p.celular.trocouParaOServidor', {
+      aparelho: sessao.aparelho,
+      nome: alvo.nome,
+      v: ligarDepois === true ? t('p.celular.eLigou') : ''
+    })
   )
   // Desligar o atual (com backup) pode demorar; o painel acompanha pelo estado.
   void trocarServidor(id, ligarDepois === true).catch(() => {})
@@ -426,9 +433,9 @@ export function estadoCelular(): EstadoCelular {
     porta: config.porta,
     temPin: !!config.pin,
     enderecos: [
-      { rotulo: 'Rede local (Wi-Fi de casa)', ip: ipLocal() },
-      { rotulo: 'Radmin VPN', ip: ipRadmin() },
-      { rotulo: 'Tailscale (fora de casa)', ip: ipTailscale() }
+      { rotulo: t('p.celular.redeLocalWiFiDe'), ip: ipLocal() },
+      { rotulo: t('p.celular.radminVpn'), ip: ipRadmin() },
+      { rotulo: t('p.celular.tailscaleForaDeCasa'), ip: ipTailscale() }
     ].map((e) => ({
       rotulo: e.rotulo,
       url: url(e.ip),
@@ -443,7 +450,7 @@ export function estadoCelular(): EstadoCelular {
 
 // Trocar o PIN desconecta todos os aparelhos.
 export async function definirPin(pin: unknown): Promise<EstadoCelular> {
-  if (!pinValido(pin)) throw new ErroApp('O PIN precisa ter de 6 a 8 números.')
+  if (!pinValido(pin)) throw new ErroApp(t('p.celular.oPinPrecisaTerDe'))
   config.pin = criarHashPin(pin)
   config.sessoes = []
   await gravar()
@@ -451,7 +458,7 @@ export async function definirPin(pin: unknown): Promise<EstadoCelular> {
 }
 
 export async function ativarCelular(valor: unknown): Promise<EstadoCelular> {
-  if (valor === true && !config.pin) throw new ErroApp('Crie o PIN antes de ligar o painel.')
+  if (valor === true && !config.pin) throw new ErroApp(t('p.celular.crieOPinAntesDe'))
   config.ativo = valor === true
   await gravar()
   await reiniciarEscuta()
@@ -460,7 +467,7 @@ export async function ativarCelular(valor: unknown): Promise<EstadoCelular> {
 
 export async function definirPortaCelular(valor: unknown): Promise<EstadoCelular> {
   if (!Number.isInteger(valor) || (valor as number) < 1024 || (valor as number) > 65535) {
-    throw new ErroApp('Escolha uma porta entre 1024 e 65535.')
+    throw new ErroApp(t('p.celular.escolhaUmaPortaEntre1024'))
   }
   config.porta = valor as number
   await gravar()
@@ -471,6 +478,6 @@ export async function definirPortaCelular(valor: unknown): Promise<EstadoCelular
 export async function desconectarTodos(): Promise<EstadoCelular> {
   config.sessoes = []
   await gravar()
-  await registrar('todos os aparelhos foram desconectados pelo app.')
+  await registrar(t('p.celular.todosOsAparelhosForamDesconectados'))
   return estadoCelular()
 }

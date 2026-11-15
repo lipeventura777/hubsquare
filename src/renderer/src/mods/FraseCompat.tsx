@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Compat, TipoAviso } from '../../../shared/tipos'
 import { IconeErro, IconeOk } from '../componentes/icones'
+import { t } from '../../../shared/i18n'
 
 // PlaySquare (Fase P3, DESIGN.md seção 6.1.5): se o item vai funcionar no jogo do jogador e por
 // quê, numa frase. Cada tipo de aviso tem "Não mostrar de novo" (reativável em Ajustes do jogo);
@@ -62,7 +63,7 @@ export function FraseCompat({
           onClick={() => mudar(compat.aviso!, true)}
           className="text-xs text-muted underline hover:text-texto"
         >
-          Não mostrar de novo
+          {t('fraseCompat.naoMostrarDeNovo')}
         </button>
       )}
     </div>

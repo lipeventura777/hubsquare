@@ -1,3 +1,4 @@
+import { t } from './i18n'
 // Diagnóstico de conexão (Fase M5), sem DOM nem Electron: testado em
 // tests/diagnosticoRegras.test.ts. As checagens rodam em ordem; quando uma essencial falha, as
 // seguintes ficam "puladas" (o primeiro problema é o que impede a entrada).
@@ -9,11 +10,11 @@ export type Conserto =
   'ligarServidor' | 'religarTunel' | 'recriarFirewall' | 'atualizarInstalacao' | 'abrirPedidos'
 
 export const NOMES_CONSERTOS: Record<Conserto, string> = {
-  ligarServidor: 'Ligar o servidor',
-  religarTunel: 'Religar o túnel',
-  recriarFirewall: 'Liberar o Java no Firewall',
-  atualizarInstalacao: 'Atualizar a instalação',
-  abrirPedidos: 'Ver os pedidos'
+  ligarServidor: t('s.diagnosticoRegras.ligarOServidor'),
+  religarTunel: t('s.diagnosticoRegras.religarOTunel'),
+  recriarFirewall: t('s.diagnosticoRegras.liberarOJavaNoFirewall'),
+  atualizarInstalacao: t('s.diagnosticoRegras.atualizarAInstalacao'),
+  abrirPedidos: t('s.diagnosticoRegras.verOsPedidos')
 }
 
 export interface LinhaDiagnostico {
@@ -31,7 +32,7 @@ export interface Checagem {
   rodar: () => Promise<{ resultado: 'ok' | 'falhou' | 'aviso'; frase: string; conserto?: Conserto }>
 }
 
-export const FRASE_PULADA = 'Não conferido: resolva o problema acima primeiro.'
+export const FRASE_PULADA = t('s.diagnosticoRegras.naoConferidoResolvaOProblema')
 
 export async function rodarChecagens(lista: Checagem[]): Promise<LinhaDiagnostico[]> {
   const linhas: LinhaDiagnostico[] = []
@@ -45,7 +46,7 @@ export async function rodarChecagens(lista: Checagem[]): Promise<LinhaDiagnostic
     try {
       r = await c.rodar()
     } catch {
-      r = { resultado: 'falhou', frase: 'Não deu para conferir isto agora. Tente de novo.' }
+      r = { resultado: 'falhou', frase: t('s.diagnosticoRegras.naoDeuParaConferirIsto') }
     }
     linhas.push({ id: c.id, nome: c.nome, ...r })
     if (r.resultado === 'falhou' && c.essencial) parou = true
@@ -88,7 +89,9 @@ export function textoParaCopiar(titulo: string, linhas: LinhaDiagnostico[]): str
   return limparParaCopiar(
     [
       `HubSquare: ${titulo}`,
-      problema ? `Problema: ${problema.nome}. ${problema.frase}` : 'Nenhum problema encontrado.',
+      problema
+        ? `Problema: ${problema.nome}. ${problema.frase}`
+        : t('s.diagnosticoRegras.nenhumProblemaEncontrado'),
       ...linhas.map((l) => `${SIMBOLO[l.resultado]} ${l.nome}: ${l.frase}`)
     ].join('\n')
   )

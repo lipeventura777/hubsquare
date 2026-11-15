@@ -12,6 +12,7 @@ import { analisarZip, extrairMundoDoZip } from './importarZip'
 import { dentroDe, nivelDoMundo, pastasDoMundo } from './mundo'
 import { comServidorDesligado } from './servidor'
 import { versaoDoLevelDat } from './zipSeguro'
+import { t } from '../shared/i18n'
 
 // Tela Mundos: os mundos são as pastas com level.dat na raiz do servidor; o ativo é o
 // level-name do server.properties. Tudo aqui só roda com o servidor desligado.
@@ -56,9 +57,7 @@ export async function listarMundos(info: InfoServidor): Promise<MundoServidor[]>
 function validarNomeMundo(valor: unknown): string {
   const nome = typeof valor === 'string' ? valor.trim() : ''
   if (!nome || nome.length > 64 || !/^[\p{L}\p{N} _.-]+$/u.test(nome) || /[. ]$/.test(nome)) {
-    throw new ErroApp(
-      'Use só letras, números, espaço, ponto, "-" e "_" no nome do mundo (até 64 caracteres, sem terminar em ponto).'
-    )
+    throw new ErroApp(t('p.mundos.useSoLetrasNumerosEspaco'))
   }
   return nome
 }
@@ -68,7 +67,7 @@ async function mundoExistente(info: InfoServidor, valor: unknown): Promise<strin
   const nome = validarNomeMundo(valor)
   const pasta = await caminhoNoServidor(info.pasta, nome).catch(() => null)
   if (!pasta || !existsSync(join(pasta, 'level.dat'))) {
-    throw new ErroApp(`Não achei o mundo "${nome}". Atualize a lista.`)
+    throw new ErroApp(t('p.mundos.naoAcheiOMundoAtualize', { nome }))
   }
   return nome
 }
@@ -80,7 +79,7 @@ function nomeLivre(info: InfoServidor, desejado: string): string {
       .replace(/[^\p{L}\p{N} _.-]/gu, ' ')
       .replace(/[. ]+$/, '')
       .trim()
-      .slice(0, 56) || 'Mundo importado'
+      .slice(0, 56) || t('p.mundos.mundoImportado')
   const livre = (n: string): boolean =>
     pastasDoMundo(n).every((p) => !existsSync(join(info.pasta, p)))
   let nome = base
@@ -103,10 +102,9 @@ export function gerarMundo(
 ): Promise<void> {
   const nome = validarNomeMundo(valorNome)
   const seed = typeof valorSeed === 'string' ? valorSeed.trim() : ''
-  if (seed.length > 64 || /[\r\n]/.test(seed))
-    throw new ErroApp('A seed pode ter até 64 caracteres.')
+  if (seed.length > 64 || /[\r\n]/.test(seed)) throw new ErroApp(t('p.mundos.aSeedPodeTerAte'))
   if (nomeLivre(info, nome) !== nome) {
-    throw new ErroApp(`Já existe uma pasta chamada "${nome}". Escolha outro nome.`)
+    throw new ErroApp(t('p.mundos.jaExisteUmaPastaChamada', { nome }))
   }
   return comServidorDesligado(async () => {
     await compactarMundo(info, undefined, 'mundos')
@@ -119,12 +117,12 @@ export function apagarMundo(info: InfoServidor, valor: unknown): Promise<void> {
   return comServidorDesligado(async () => {
     const nome = await mundoExistente(info, valor)
     if (nome.toLowerCase() === (await nivelDoMundo(info.pasta)).toLowerCase()) {
-      throw new ErroApp('Esse é o mundo ativo. Torne outro mundo ativo antes de apagar este.')
+      throw new ErroApp(t('p.mundos.esseEOMundoAtivo'))
     }
     try {
       await compactarMundo(info, nome, 'mundos')
     } catch (e) {
-      throw new ErroApp('O backup do mundo falhou, então nada foi apagado.', detalhar(e))
+      throw new ErroApp(t('p.mundos.oBackupDoMundoFalhou'), detalhar(e))
     }
     for (const p of pastasDoMundo(nome)) {
       const pasta = join(info.pasta, p)
@@ -142,9 +140,9 @@ export function exportarMundo(
   return comServidorDesligado(async () => {
     const nome = await mundoExistente(info, valor)
     const opcoes = {
-      title: 'Exportar mundo',
+      title: t('p.mundos.exportarMundo'),
       defaultPath: `${nome}.zip`,
-      filters: [{ name: 'Arquivo .zip', extensions: ['zip'] }]
+      filters: [{ name: t('p.mundos.arquivoZip'), extensions: ['zip'] }]
     }
     const escolha = janela
       ? await dialog.showSaveDialog(janela, opcoes)
@@ -156,7 +154,7 @@ export function exportarMundo(
     try {
       await tar(['-a', '-c', '-f', destino, '-C', info.pasta, ...pastas])
     } catch (e) {
-      throw new ErroApp('Não consegui criar o .zip. Confira se há espaço no disco.', detalhar(e))
+      throw new ErroApp(t('p.mundos.naoConseguiCriarOZip'), detalhar(e))
     }
     return true
   })
@@ -169,7 +167,7 @@ export async function importarMundoDePasta(
 ): Promise<string | null> {
   const saves = join(process.env.APPDATA ?? '', '.minecraft', 'saves')
   const opcoes = {
-    title: 'Escolha a pasta do mundo',
+    title: t('p.mundos.escolhaAPastaDoMundo'),
     defaultPath: existsSync(saves) ? saves : undefined,
     properties: ['openDirectory' as const]
   }
@@ -179,12 +177,10 @@ export async function importarMundoDePasta(
   const origem = escolha.filePaths[0]
   if (escolha.canceled || !origem) return null
   if (!existsSync(join(origem, 'level.dat'))) {
-    throw new ErroApp(
-      'Essa pasta não é um mundo do Minecraft (não tem o arquivo level.dat). Escolha a pasta do mundo, por exemplo dentro de .minecraft\\saves.'
-    )
+    throw new ErroApp(t('p.mundos.essaPastaNaoEUm'))
   }
   if (dentroDe(info.pasta, origem)) {
-    throw new ErroApp('Essa pasta já está dentro do servidor. Escolha um mundo de fora.')
+    throw new ErroApp(t('p.mundos.essaPastaJaEstaDentro'))
   }
   return comServidorDesligado(async () => {
     const nome = nomeLivre(info, basename(origem))
@@ -197,10 +193,7 @@ export async function importarMundoDePasta(
       })
       await rename(temporaria, join(info.pasta, nome))
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui copiar o mundo. Feche o Minecraft se ele estiver com esse mundo aberto e tente de novo.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.mundos.naoConseguiCopiarOMundo'), detalhar(e))
     } finally {
       await rm(temporaria, { recursive: true, force: true }).catch(() => {})
     }

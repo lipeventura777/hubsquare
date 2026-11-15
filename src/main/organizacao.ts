@@ -3,6 +3,7 @@ import { join } from 'path'
 import { CORES_ETIQUETA, type CorEtiqueta, type InfoServidor } from '../shared/tipos'
 import { gravarComSeguranca } from './config'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // Organização dos mods (Fase 25), na pasta do servidor: etiqueta e nota de cada mod, versões
 // travadas, a versão anterior de cada mod (para "voltar") e os perfis de mods.
@@ -65,7 +66,7 @@ const ID = /^(modrinth|curseforge|hangar|arquivo):[^\\/:*?"<>|]{1,200}$/
 
 export function exigirIdMod(valor: unknown): string {
   if (typeof valor === 'string' && ID.test(valor)) return valor
-  throw new ErroApp('Mod inválido. Atualize a lista.')
+  throw new ErroApp(t('p.organizacao.modInvalidoAtualizeALista'))
 }
 
 export async function mudarEtiqueta(

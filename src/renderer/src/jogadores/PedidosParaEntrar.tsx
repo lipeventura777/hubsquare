@@ -3,6 +3,7 @@ import type { ErroTela, PedidoParaEntrar } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { CabecaJogador, CardPainel } from '../componentes/paineis'
 import { Botao } from '../componentes/ui'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
 // Jogadores › "Pedidos para entrar" (Fase M4): quem aceitou o convite e pediu para entrar na
 // whitelist. Aprovar põe o nick na whitelist (comando com o servidor ligado; senão o
@@ -32,8 +33,8 @@ export function PedidosParaEntrar(): React.JSX.Element | null {
 
   if (!pedidos.length && !erro) return null
   return (
-    <CardPainel titulo={`Pedidos para entrar (${pedidos.length})`}>
-      <ul className="flex flex-col gap-2" aria-label="Pedidos para entrar">
+    <CardPainel titulo={t('pedidosParaEntrar.pedidosParaEntrar', { length: pedidos.length })}>
+      <ul className="flex flex-col gap-2" aria-label={t('pedidosParaEntrar.pedidosParaEntrar2')}>
         {pedidos.map((p) => (
           <li
             key={p.uuid}
@@ -44,7 +45,7 @@ export function PedidosParaEntrar(): React.JSX.Element | null {
               <div className="text-[13px] font-bold">{p.nick}</div>
               {p.recado && <div className="text-[13px] break-words">“{p.recado}”</div>}
               <div className="text-xs text-muted">
-                Pediu em {new Date(p.em).toLocaleString('pt-BR')}
+                {t('pedidosParaEntrar.pediuEm')} {new Date(p.em).toLocaleString(idiomaAtual())}
               </div>
             </div>
             <Botao
@@ -53,7 +54,7 @@ export function PedidosParaEntrar(): React.JSX.Element | null {
               disabled={ocupado === p.uuid}
               onClick={() => void decidir(p.uuid, true)}
             >
-              Aprovar
+              {t('pedidosParaEntrar.aprovar')}
             </Botao>
             <Botao
               tamanho="pequeno"
@@ -61,7 +62,7 @@ export function PedidosParaEntrar(): React.JSX.Element | null {
               disabled={ocupado === p.uuid}
               onClick={() => void decidir(p.uuid, false)}
             >
-              Recusar
+              {t('pedidosParaEntrar.recusar')}
             </Botao>
           </li>
         ))}

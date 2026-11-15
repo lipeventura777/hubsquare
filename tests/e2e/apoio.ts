@@ -174,6 +174,10 @@ export const test = base.extend<{
         `${info.title.replace(/[^\w]+/g, '-').slice(0, 40)}-${nome}-${randomUUID().slice(0, 8)}`
       )
       mkdirSync(pasta, { recursive: true })
+      // Fase I1: o app abre em português, como uma instalação que já escolheu o idioma. Quem
+      // testa a primeira abertura apaga este arquivo no preparar.
+      mkdirSync(join(pasta, 'appData', 'ServSquare'), { recursive: true })
+      writeFileSync(join(pasta, 'appData', 'ServSquare', 'idioma.json'), '{"idioma":"pt-BR"}')
       preparar?.(pasta)
       const log: string[] = []
       const a = await abrirApp(pasta, simulado, log, argumentos)

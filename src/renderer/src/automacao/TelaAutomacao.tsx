@@ -13,21 +13,38 @@ import {
   Slider
 } from '../componentes/ui'
 import { useEstadoServidor } from '../servidor/comandos'
+import { hora, t } from '../../../shared/i18n'
 
-const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const DIAS_LONGOS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
+const DIAS = [
+  t('telaAutomacao.dom'),
+  t('telaAutomacao.seg'),
+  t('telaAutomacao.ter'),
+  t('telaAutomacao.qua'),
+  t('telaAutomacao.qui'),
+  t('telaAutomacao.sex'),
+  t('telaAutomacao.sab')
+]
+const DIAS_LONGOS = [
+  t('telaAutomacao.domingo'),
+  t('telaAutomacao.segunda'),
+  t('telaAutomacao.terca'),
+  t('telaAutomacao.quarta'),
+  t('telaAutomacao.quinta'),
+  t('telaAutomacao.sexta'),
+  t('telaAutomacao.sabado')
+]
 
 function daquiA(ms: number, agora: number): string {
   const min = Math.max(0, Math.round((ms - agora) / 60000))
-  if (min < 1) return 'menos de 1 minuto'
+  if (min < 1) return t('telaAutomacao.menosDe1Minuto')
   if (min < 60) return `${min} min`
   const h = Math.floor(min / 60)
-  return `${h} h${min % 60 ? ` ${min % 60} min` : ''}`
+  return `${h} h${min % 60 ? t('telaAutomacao.min', { v: min % 60 }) : ''}`
 }
 
 function quando(ms: number): string {
   const d = new Date(ms)
-  return `${DIAS_LONGOS[d.getDay()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return `${DIAS_LONGOS[d.getDay()]}, ${hora(d)}`
 }
 
 // Tela Automação (Fase 19). Cada aba salva só a parte dela.
@@ -85,20 +102,17 @@ export function TelaAutomacao({ aba }: { aba: string }): React.JSX.Element {
 
   return (
     <PaginaAjustes>
-      <p className="text-xs text-muted">
-        As automações só funcionam com o HubSquare aberto. Ele pode ficar minimizado na bandeja,
-        perto do relógio. Tudo o que elas fazem aparece em Registro de eventos › Ações do app.
-      </p>
+      <p className="text-xs text-muted">{t('telaAutomacao.asAutomacoesSoFuncionamCom')}</p>
 
       {aba === 'Desligar quando vazio' && (
-        <Secao titulo="Desligar quando vazio">
+        <Secao titulo={t('telaAutomacao.desligarQuandoVazio')}>
           <LinhaControle
-            rotulo="Desligar quando ninguém estiver jogando"
+            rotulo={t('telaAutomacao.desligarQuandoNinguemEstiverJogando')}
             ligado={rascunho.vazio.ligado}
             aoMudar={(v) => mudar('vazio', { ligado: v })}
           />
           <Slider
-            rotulo="Depois de quanto tempo vazio"
+            rotulo={t('telaAutomacao.depoisDeQuantoTempoVazio')}
             valor={rascunho.vazio.minutos}
             min={5}
             max={120}
@@ -106,24 +120,23 @@ export function TelaAutomacao({ aba }: { aba: string }): React.JSX.Element {
             aoMudar={(v) => mudar('vazio', { minutos: v })}
             formatar={(v) => `${v} min`}
           />
-          <p className="text-[13px] text-muted">
-            O tempo só conta com o servidor ligado e ninguém conectado, e recomeça quando alguém
-            entra. Ele desliga do jeito normal, com backup.
-          </p>
+          <p className="text-[13px] text-muted">{t('telaAutomacao.oTempoSoContaCom')}</p>
           {dados.config.vazio.ligado && ligado && (
             <p className="text-[13px]">
               {dados.vazioDesligaEm
-                ? `Desliga em ${daquiA(dados.vazioDesligaEm, agora)} se ninguém entrar.`
-                : 'Tem gente online: a contagem começa quando todos saírem.'}
+                ? t('telaAutomacao.desligaEmSeNinguemEntrar', {
+                    daquiA: daquiA(dados.vazioDesligaEm, agora)
+                  })
+                : t('telaAutomacao.temGenteOnlineAContagem')}
             </p>
           )}
         </Secao>
       )}
 
       {aba === 'Reinício' && (
-        <Secao titulo="Reinício agendado">
+        <Secao titulo={t('telaAutomacao.reinicioAgendado')}>
           <LinhaControle
-            rotulo="Reiniciar em dias e horário fixos"
+            rotulo={t('telaAutomacao.reiniciarEmDiasEHorario')}
             ligado={rascunho.reinicio.ligado}
             aoMudar={(v) => mudar('reinicio', { ligado: v })}
           />
@@ -145,7 +158,7 @@ export function TelaAutomacao({ aba }: { aba: string }): React.JSX.Element {
             ))}
           </div>
           <label className="flex items-center gap-3 text-[13px]">
-            Horário
+            {t('telaAutomacao.horario')}
             <Campo
               type="time"
               value={rascunho.reinicio.hora}
@@ -153,57 +166,52 @@ export function TelaAutomacao({ aba }: { aba: string }): React.JSX.Element {
               className="w-32"
             />
           </label>
-          <p className="text-[13px] text-muted">
-            Os jogadores recebem um aviso no chat 5 minutos e 1 minuto antes. O reinício é do jeito
-            normal, com backup.
-          </p>
+          <p className="text-[13px] text-muted">{t('telaAutomacao.osJogadoresRecebemUmAviso')}</p>
           {rascunho.reinicio.ligado && !rascunho.reinicio.dias.length && (
-            <Aviso tipo="atencao">Escolha pelo menos um dia.</Aviso>
+            <Aviso tipo="atencao">{t('telaAutomacao.escolhaPeloMenosUmDia')}</Aviso>
           )}
           {dados.proximoReinicio && (
             <p className="text-[13px]">
-              Próximo reinício: {quando(dados.proximoReinicio)}
-              {!ligado && ' (só acontece se o servidor estiver ligado)'}.
+              {t('telaAutomacao.proximoReinicio', { quando: quando(dados.proximoReinicio) })}
+              {!ligado && t('telaAutomacao.soAconteceSeOServidor')}.
             </p>
           )}
         </Secao>
       )}
 
       {aba === 'Backup agendado' && (
-        <Secao titulo="Backup agendado">
+        <Secao titulo={t('telaAutomacao.backupAgendado')}>
           <LinhaControle
-            rotulo="Fazer backup com o servidor ligado"
+            rotulo={t('telaAutomacao.fazerBackupComOServidor')}
             ligado={rascunho.backup.ligado}
             aoMudar={(v) => mudar('backup', { ligado: v })}
           />
           <Slider
-            rotulo="A cada"
+            rotulo={t('telaAutomacao.aCada')}
             valor={rascunho.backup.horas}
             min={1}
             max={48}
             aoMudar={(v) => mudar('backup', { horas: v })}
-            formatar={(v) => `${v} ${v === 1 ? 'hora' : 'horas'}`}
+            formatar={(v) => `${v} ${v === 1 ? t('telaAutomacao.hora') : t('telaAutomacao.horas')}`}
           />
           <Slider
-            rotulo="Manter os últimos"
+            rotulo={t('telaAutomacao.manterOsUltimos')}
             valor={rascunho.backup.manter}
             min={1}
             max={50}
             aoMudar={(v) => mudar('backup', { manter: v })}
             formatar={(v) => `${v} backups`}
           />
-          <p className="text-[13px] text-muted">
-            Sem desligar: o app pausa o salvamento do mundo, manda salvar tudo, copia e volta a
-            salvar. Os jogadores podem sentir um travadinha de poucos segundos. O &quot;manter os
-            últimos&quot; vale para todos os backups, inclusive os de quando o servidor desliga.
-          </p>
+          <p className="text-[13px] text-muted">{t('telaAutomacao.semDesligarOAppPausa')}</p>
           {dados.config.backup.ligado && (
             <p className="text-[13px]">
               {dados.backupRodando
-                ? 'Fazendo o backup agora...'
+                ? t('telaAutomacao.fazendoOBackupAgora')
                 : dados.proximoBackup
-                  ? `Próximo backup em ${daquiA(dados.proximoBackup, agora)}.`
-                  : 'O primeiro backup acontece depois que o servidor ficar ligado por esse tempo.'}
+                  ? t('telaAutomacao.proximoBackupEm', {
+                      daquiA: daquiA(dados.proximoBackup, agora)
+                    })
+                  : t('telaAutomacao.oPrimeiroBackupAconteceDepois')}
             </p>
           )}
         </Secao>
@@ -211,11 +219,15 @@ export function TelaAutomacao({ aba }: { aba: string }): React.JSX.Element {
 
       <div className="flex items-center gap-3">
         <Botao variante="primario" disabled={!mudou || salvando} onClick={salvar}>
-          {salvando ? 'Salvando...' : salvo ? 'Salvo!' : 'Salvar'}
+          {salvando
+            ? t('telaAutomacao.salvando')
+            : salvo
+              ? t('telaAutomacao.salvo')
+              : t('telaAutomacao.salvar')}
         </Botao>
         {mudou && (
           <Botao onClick={() => setRascunho(dados.config)} disabled={salvando}>
-            Desfazer
+            {t('telaAutomacao.desfazer')}
           </Botao>
         )}
       </div>

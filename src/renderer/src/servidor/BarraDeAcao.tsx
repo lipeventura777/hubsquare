@@ -3,12 +3,40 @@ import { NOMES_TIPOS, type EstadoServidor, type InfoServidor } from '../../../sh
 import { IconeCopiar, IconeSeta } from '../componentes/icones'
 import { classesBotao, type Variante } from '../componentes/estilos'
 import { Botao, Menu } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 const BOTAO: Record<EstadoServidor, { texto: string; variante: Variante; clicavel: boolean }> = {
-  desligado: { texto: 'Ligar', variante: 'primario', clicavel: true },
-  ligando: { texto: 'Ligando', variante: 'atencao', clicavel: false },
-  ligado: { texto: 'Desligar', variante: 'perigo', clicavel: true },
-  desligando: { texto: 'Desligando', variante: 'atencao', clicavel: false }
+  desligado: { texto: t('barraDeAcao.ligar'), variante: 'primario', clicavel: true },
+  ligando: { texto: t('barraDeAcao.ligando'), variante: 'atencao', clicavel: false },
+  ligado: { texto: t('barraDeAcao.desligar'), variante: 'perigo', clicavel: true },
+  desligando: { texto: t('barraDeAcao.desligando'), variante: 'atencao', clicavel: false }
+}
+
+// LIGAR/DESLIGAR (seção 6.4): o mesmo botão na barra de ação e no bloco da vitrine (Fase V11).
+export function BotaoLigar({
+  estado,
+  aoLigarDesligar
+}: {
+  estado: EstadoServidor
+  aoLigarDesligar: () => void
+}): React.JSX.Element {
+  const botao = BOTAO[estado]
+  return (
+    <button
+      type="button"
+      onClick={botao.clicavel ? aoLigarDesligar : undefined}
+      aria-disabled={!botao.clicavel}
+      // A cor faz transição (classesBotao); em LIGANDO passa um brilho diagonal (seção 8).
+      className={`${classesBotao(botao.variante, 'grande')} ${
+        botao.clicavel ? '' : 'cursor-default'
+      } ${estado === 'ligando' ? 'anim-brilho' : ''}`}
+    >
+      {/* A chave faz o texto novo entrar com fade a cada troca de estado. */}
+      <span key={estado} className={`anim-linha ${botao.clicavel ? '' : 'pontos'}`}>
+        {botao.texto}
+      </span>
+    </button>
+  )
 }
 
 // Barra de ação (seção 6.4): seletor do servidor, botão LIGAR/DESLIGAR com o menu ⋮
@@ -28,7 +56,6 @@ export function BarraDeAcao({
   aoReiniciar: () => void
   aoAbrirPasta: () => void
 }): React.JSX.Element {
-  const botao = BOTAO[estado]
   const [copiado, setCopiado] = useState(false)
 
   async function copiar(): Promise<void> {
@@ -41,7 +68,7 @@ export function BarraDeAcao({
   return (
     <div className="grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-4 border-y-2 border-linha bg-panel px-6">
       <Menu
-        rotulo="Detalhes do servidor"
+        rotulo={t('barraDeAcao.detalhesDoServidor')}
         className="justify-self-start"
         paraCima
         abrirParaDireita
@@ -49,17 +76,17 @@ export function BarraDeAcao({
         classeBotao="flex h-12 w-[280px] items-center gap-3 border border-accent px-2 text-left transition-colors duration-(--dur-fast) hover:bg-tile-active disabled:cursor-not-allowed disabled:opacity-50"
         painel={
           <dl className="grid w-72 grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-            <dt className="text-muted">Tipo</dt>
+            <dt className="text-muted">{t('barraDeAcao.tipo')}</dt>
             <dd>{NOMES_TIPOS[info.tipo]}</dd>
-            <dt className="text-muted">Versão</dt>
+            <dt className="text-muted">{t('barraDeAcao.versao')}</dt>
             <dd>{info.versao}</dd>
-            <dt className="text-muted">Java</dt>
+            <dt className="text-muted">{t('barraDeAcao.java')}</dt>
             <dd>{info.java}</dd>
-            <dt className="text-muted">Pasta</dt>
+            <dt className="text-muted">{t('barraDeAcao.pasta')}</dt>
             <dd className="break-all">{info.pasta}</dd>
             <dd className="col-span-2 mt-2">
               <Botao tamanho="pequeno" onClick={aoAbrirPasta}>
-                Abrir pasta do servidor
+                {t('barraDeAcao.abrirPastaDoServidor')}
               </Botao>
             </dd>
           </dl>
@@ -79,27 +106,18 @@ export function BarraDeAcao({
       </Menu>
 
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={botao.clicavel ? aoLigarDesligar : undefined}
-          aria-disabled={!botao.clicavel}
-          // A cor faz transição (classesBotao); em LIGANDO passa um brilho diagonal (seção 8).
-          className={`${classesBotao(botao.variante, 'grande')} ${
-            botao.clicavel ? '' : 'cursor-default'
-          } ${estado === 'ligando' ? 'anim-brilho' : ''}`}
-        >
-          {/* A chave faz o texto novo entrar com fade a cada troca de estado. */}
-          <span key={estado} className={`anim-linha ${botao.clicavel ? '' : 'pontos'}`}>
-            {botao.texto}
-          </span>
-        </button>
+        <BotaoLigar estado={estado} aoLigarDesligar={aoLigarDesligar} />
         <Menu
-          rotulo="Mais ações"
+          rotulo={t('barraDeAcao.maisAcoes')}
           paraCima
           classeBotao={`${classesBotao('secundario')} h-[52px] w-11 px-0 text-lg`}
           itens={[
-            { rotulo: 'Reiniciar', aoClicar: aoReiniciar, desabilitado: estado !== 'ligado' },
-            { rotulo: 'Abrir pasta do servidor', aoClicar: aoAbrirPasta }
+            {
+              rotulo: t('barraDeAcao.reiniciar'),
+              aoClicar: aoReiniciar,
+              desabilitado: estado !== 'ligado'
+            },
+            { rotulo: t('barraDeAcao.abrirPastaDoServidor'), aoClicar: aoAbrirPasta }
           ]}
         >
           ⋮
@@ -115,15 +133,17 @@ export function BarraDeAcao({
             <button
               type="button"
               onClick={copiar}
-              aria-label="Copiar endereço"
-              title={copiado ? 'Copiado!' : 'Copiar endereço'}
+              aria-label={t('barraDeAcao.copiarEndereco')}
+              title={copiado ? t('barraDeAcao.copiado') : t('barraDeAcao.copiarEndereco')}
               className="flex h-8 w-8 shrink-0 items-center justify-center hover:bg-tile-active"
             >
               <IconeCopiar className="h-4 w-4" />
             </button>
           </>
         ) : (
-          <span className="text-muted">{estado === 'ligado' ? 'Sem endereço' : 'Desligado'}</span>
+          <span className="text-muted">
+            {estado === 'ligado' ? t('barraDeAcao.semEndereco') : t('barraDeAcao.desligado')}
+          </span>
         )}
       </div>
     </div>

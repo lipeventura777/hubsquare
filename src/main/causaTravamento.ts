@@ -1,51 +1,44 @@
+import { t } from '../shared/i18n'
 // Explicação simples da causa provável de um relatório de travamento (crash-reports/*.txt).
 // Testada em tests/causaTravamento.test.ts. A ordem importa: a primeira regra que bate vence.
 
 const REGRAS: { teste: RegExp; causa: (m: RegExpMatchArray) => string }[] = [
   {
     teste: /OutOfMemoryError/,
-    causa: () =>
-      'O servidor ficou sem memória (RAM). Aumente a RAM em Opções ou diminua a distância de visão.'
+    causa: () => t('p.causaTravamento.oServidorFicouSemMemoria')
   },
   {
     teste: /No space left on device|not enough space on the disk/i,
-    causa: () => 'O disco ficou cheio. Libere espaço no PC e ligue o servidor de novo.'
+    causa: () => t('p.causaTravamento.oDiscoFicouCheioLibere')
   },
   {
     teste: /BindException|Address already in use|FAILED TO BIND/i,
-    causa: () =>
-      'A porta do servidor já estava em uso. Feche outro servidor ou programa que use a mesma porta.'
+    causa: () => t('p.causaTravamento.aPortaDoServidorJa')
   },
   {
     teste: /UnsupportedClassVersionError/,
-    causa: () =>
-      'Um plugin, mod ou o próprio servidor precisa de outra versão do Java. Confira se ele é feito para esta versão do jogo.'
+    causa: () => t('p.causaTravamento.umPluginModOuO')
   },
   {
     teste: /Could not load '?plugins[\\/]([^'\s]+\.jar)/,
-    causa: (m) =>
-      `O plugin "${m[1]}" não carregou. Ele pode ser de outra versão do jogo; atualize ou remova o plugin.`
+    causa: (m) => t('p.causaTravamento.oPluginNaoCarregouEle', { v: m[1] })
   },
   {
     teste: /Error occurred while enabling (\S+)/,
-    causa: (m) =>
-      `O plugin "${m[1]}" deu erro ao ligar. Atualize ou remova o plugin e ligue de novo.`
+    causa: (m) => t('p.causaTravamento.oPluginDeuErroAo', { v: m[1] })
   },
   {
     teste:
       /Incompatible mods? found|ModResolutionException|Missing or unsupported mandatory dependencies|Mod (\S+) requires/i,
-    causa: () =>
-      'Há um mod incompatível ou faltando outro mod de que ele precisa. Confira as versões dos mods.'
+    causa: () => t('p.causaTravamento.haUmModIncompativelOu')
   },
   {
     teste: /Watchdog|The server has stopped responding|single server tick took/i,
-    causa: () =>
-      'O servidor ficou parado tempo demais num único passo e foi fechado. Costuma ser um plugin pesado ou muita coisa no mundo ao mesmo tempo.'
+    causa: () => t('p.causaTravamento.oServidorFicouParadoTempo')
   },
   {
     teste: /Exception reading .*level\.dat|Failed to load level|Couldn't load chunk|RegionFile/i,
-    causa: () =>
-      'O mundo parece danificado. Restaure uma cópia de segurança na tela Cópias de segurança.'
+    causa: () => t('p.causaTravamento.oMundoPareceDanificadoRestaure')
   }
 ]
 

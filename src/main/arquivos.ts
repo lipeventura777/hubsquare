@@ -15,6 +15,7 @@ import { ErroApp, detalhar } from './erros'
 import { nivelDoMundo, pastasDoMundo } from './mundo'
 import { lerEstado } from './servidor'
 import { ARQUIVO_INFO } from './servidores'
+import { t } from '../shared/i18n'
 
 // Tela Arquivos (DESIGN.md, 6.22). Todo caminho vindo da tela passa por caminhoNoServidor:
 // nada aqui lê, grava, apaga ou renomeia fora da pasta do servidor ativo.
@@ -24,16 +25,13 @@ async function caminho(info: InfoServidor, valor: unknown): Promise<string> {
     return await caminhoNoServidor(info.pasta, valor)
   } catch (e) {
     if (!(e instanceof CaminhoRecusado)) throw e
-    throw new ErroApp(
-      'Esse caminho fica fora da pasta do servidor (ou tem um nome que o Windows não aceita), então o app não abre.',
-      `${String(valor)}\n${e.message}`
-    )
+    throw new ErroApp(t('p.arquivos.esseCaminhoFicaForaDa'), `${String(valor)}\n${e.message}`)
   }
 }
 
 function nomeSimples(valor: unknown): string {
   if (typeof valor !== 'string' || !valor.trim() || /[\\/]/.test(valor)) {
-    throw new ErroApp('Digite só o nome, sem barras.')
+    throw new ErroApp(t('p.arquivos.digiteSoONomeSem'))
   }
   return valor.trim()
 }
@@ -50,12 +48,12 @@ async function protegido(info: InfoServidor, alvo: string): Promise<boolean> {
 }
 
 async function exigirLivre(info: InfoServidor, alvo: string): Promise<void> {
-  if (alvo === resolve(info.pasta)) throw new ErroApp('A pasta do servidor não pode ser mudada.')
+  if (alvo === resolve(info.pasta)) throw new ErroApp(t('p.arquivos.aPastaDoServidorNao'))
   if (await protegido(info, alvo)) {
     throw new ErroApp(
       basename(alvo).toLowerCase() === ARQUIVO_INFO
-        ? 'Esse arquivo é do ServSquare e não pode ser apagado nem renomeado.'
-        : 'Essa é a pasta do mundo que está rodando. Desligue o servidor e tente de novo.'
+        ? t('p.arquivos.esseArquivoEDoServsquare')
+        : t('p.arquivos.essaEAPastaDo')
     )
   }
 }
@@ -68,7 +66,7 @@ export async function listarArquivos(info: InfoServidor, valor: unknown): Promis
   try {
     nomes = await readdir(pasta)
   } catch (e) {
-    throw new ErroApp('Não consegui abrir essa pasta. Ela pode ter sido apagada.', detalhar(e))
+    throw new ErroApp(t('p.arquivos.naoConseguiAbrirEssaPasta'), detalhar(e))
   }
   const itens: ItemArquivo[] = []
   for (const nome of nomes) {
@@ -89,12 +87,10 @@ export async function listarArquivos(info: InfoServidor, valor: unknown): Promis
 
 export async function lerArquivoTexto(info: InfoServidor, valor: unknown): Promise<string> {
   const arquivo = await caminho(info, valor)
-  if (!ehTexto(arquivo)) throw new ErroApp('O editor só abre arquivos de texto de configuração.')
+  if (!ehTexto(arquivo)) throw new ErroApp(t('p.arquivos.oEditorSoAbreArquivos'))
   const s = await stat(arquivo)
   if (s.size > LIMITE_TEXTO) {
-    throw new ErroApp(
-      'Esse arquivo passa de 1 MB, grande demais para o editor. Baixe e abra fora do app.'
-    )
+    throw new ErroApp(t('p.arquivos.esseArquivoPassaDe1'))
   }
   return readFile(arquivo, 'utf8')
 }
@@ -106,11 +102,11 @@ export async function salvarArquivoTexto(
   texto: unknown
 ): Promise<boolean> {
   const arquivo = await caminho(info, valor)
-  if (!ehTexto(arquivo)) throw new ErroApp('O editor só salva arquivos de texto de configuração.')
+  if (!ehTexto(arquivo)) throw new ErroApp(t('p.arquivos.oEditorSoSalvaArquivos'))
   if (typeof texto !== 'string' || Buffer.byteLength(texto) > LIMITE_TEXTO) {
-    throw new ErroApp('O texto passa de 1 MB, grande demais para o editor.')
+    throw new ErroApp(t('p.arquivos.oTextoPassaDe1'))
   }
-  if (!existsSync(arquivo)) throw new ErroApp('Esse arquivo não existe mais. Atualize a lista.')
+  if (!existsSync(arquivo)) throw new ErroApp(t('p.arquivos.esseArquivoNaoExisteMais'))
   await gravarComSeguranca(arquivo, texto)
   return lerEstado() !== 'desligado'
 }
@@ -125,22 +121,19 @@ export async function renomearArquivo(
   const nome = nomeSimples(novoNome)
   const destino = await caminho(info, relativoAoServidor(info.pasta, join(dirname(alvo), nome)))
   if (existsSync(destino) && destino.toLowerCase() !== alvo.toLowerCase()) {
-    throw new ErroApp(`Já existe "${nome}" nesta pasta. Escolha outro nome.`)
+    throw new ErroApp(t('p.arquivos.jaExisteNestaPastaEscolha', { nome }))
   }
   try {
     await rename(alvo, destino)
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui renomear. Se o servidor estiver usando esse arquivo, desligue e tente de novo.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.arquivos.naoConseguiRenomearSeO'), detalhar(e))
   }
 }
 
 export async function criarPasta(info: InfoServidor, valor: unknown, nome: unknown): Promise<void> {
   const pai = await caminho(info, valor)
   const destino = await caminho(info, relativoAoServidor(info.pasta, join(pai, nomeSimples(nome))))
-  if (existsSync(destino)) throw new ErroApp('Já existe algo com esse nome nesta pasta.')
+  if (existsSync(destino)) throw new ErroApp(t('p.arquivos.jaExisteAlgoComEsse'))
   await mkdir(destino)
 }
 
@@ -151,10 +144,7 @@ export async function apagarArquivo(info: InfoServidor, valor: unknown): Promise
   try {
     await rm(alvo, { recursive: true })
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui apagar. Se o servidor estiver usando esse arquivo, desligue e tente de novo.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.arquivos.naoConseguiApagarSeO'), detalhar(e))
   }
 }
 
@@ -165,8 +155,8 @@ export async function baixarArquivo(
   janela: BrowserWindow | null
 ): Promise<boolean> {
   const arquivo = await caminho(info, valor)
-  if (!(await stat(arquivo)).isFile()) throw new ErroApp('Só dá para baixar arquivos, não pastas.')
-  const opcoes = { title: 'Salvar cópia', defaultPath: basename(arquivo) }
+  if (!(await stat(arquivo)).isFile()) throw new ErroApp(t('p.arquivos.soDaParaBaixarArquivos'))
+  const opcoes = { title: t('p.arquivos.salvarCopia'), defaultPath: basename(arquivo) }
   const escolha = janela
     ? await dialog.showSaveDialog(janela, opcoes)
     : await dialog.showSaveDialog(opcoes)
@@ -185,7 +175,7 @@ export async function enviarArquivos(
   const pasta = await caminho(info, valor)
   const lista = Array.isArray(origens) ? origens : []
   if (!lista.length || !lista.every((o) => typeof o === 'string' && isAbsolute(o))) {
-    throw new ErroApp('Arraste arquivos do Windows para a lista.')
+    throw new ErroApp(t('p.arquivos.arrasteArquivosDoWindowsPara'))
   }
   const destinos = await Promise.all(
     (lista as string[]).map(async (o) => ({
@@ -195,15 +185,16 @@ export async function enviarArquivos(
   )
   const repetidos = destinos.filter((d) => existsSync(d.destino)).map((d) => basename(d.destino))
   if (repetidos.length) {
-    throw new ErroApp(
-      `Já existe nesta pasta: ${repetidos.join(', ')}. Apague ou renomeie antes de enviar de novo.`
-    )
+    throw new ErroApp(t('p.arquivos.jaExisteNestaPastaApague', { join: repetidos.join(', ') }))
   }
   for (const { origem, destino } of destinos) {
     try {
       await cp(origem, destino, { recursive: true, errorOnExist: true, force: false })
     } catch (e) {
-      throw new ErroApp(`Não consegui copiar "${basename(origem)}".`, detalhar(e))
+      throw new ErroApp(
+        t('p.arquivos.naoConseguiCopiar', { basename: basename(origem) }),
+        detalhar(e)
+      )
     }
   }
 }

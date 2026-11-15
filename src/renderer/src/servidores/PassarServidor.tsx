@@ -10,6 +10,7 @@ import {
 import { MensagemErro } from '../componentes/MensagemErro'
 import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import { Aviso, Botao, CaixaSelecao, Campo, Dialogo, OpcaoRadio } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Passar o servidor (Fase M7): gerar o .hubserver para um amigo hospedar, e receber um de volta.
 
@@ -57,10 +58,14 @@ export function DialogoPassar({
   return (
     <Dialogo
       aberto
-      titulo={`Passar ${servidor.nome} para outro amigo`}
+      titulo={t('passarServidor.passarParaOutroAmigo', { nome: servidor.nome })}
       aoCancelar={() => aoFechar(!!pronto)}
       acao={{
-        rotulo: pronto ? 'Fechar' : gerando ? 'Gerando...' : 'Gerar arquivo .hubserver',
+        rotulo: pronto
+          ? t('passarServidor.fechar')
+          : gerando
+            ? t('passarServidor.gerando')
+            : t('passarServidor.gerarArquivoHubserver'),
         ocupado: gerando,
         desabilitado: !pronto && (!previa || !para.trim()),
         aoClicar: gerar
@@ -70,25 +75,21 @@ export function DialogoPassar({
         {pronto ? (
           <Aviso tipo="sucesso">
             <span>
-              Pronto: <b>{pronto}</b>. Mande o arquivo para o seu amigo. Ele abre em ServSquare ›
-              Servidores › Receber servidor (.hubserver). Quando ele mandar de volta, abra do mesmo
-              jeito e escolha &quot;Atualizar o meu servidor com este mundo&quot;.
+              {t('passarServidor.pronto')} <b>{pronto}</b>
+              {t('passarServidor.mandeOArquivoParaO')}
             </span>
           </Aviso>
         ) : (
           <>
             <Aviso tipo="atencao">
-              <span>
-                Enquanto seu amigo hospeda, não ligue este servidor aqui, ou os dois mundos vão se
-                separar.
-              </span>
+              <span>{t('passarServidor.enquantoSeuAmigoHospedaNao')}</span>
             </Aviso>
             <label className="flex flex-col gap-1">
-              Quem vai hospedar?
+              {t('passarServidor.quemVaiHospedar')}
               <Campo
                 value={para}
                 maxLength={32}
-                placeholder="Nome do amigo"
+                placeholder={t('passarServidor.nomeDoAmigo')}
                 onChange={(e) => setPara(e.target.value)}
                 autoFocus
               />
@@ -97,27 +98,27 @@ export function DialogoPassar({
             {previa && (
               <>
                 <p>
-                  Tamanho: cerca de <b>{tamanho(previa.tamanho)}</b> antes de compactar.
+                  {t('passarServidor.tamanhoCercaDe')} <b>{tamanho(previa.tamanho)}</b>{' '}
+                  {t('passarServidor.antesDeCompactar')}
                 </p>
                 <div>
-                  <p className="font-bold">Vai no arquivo</p>
+                  <p className="font-bold">{t('passarServidor.vaiNoArquivo')}</p>
                   <ul className="mt-1 list-disc pl-5">
                     {previa.vai.map((v) => (
                       <li key={v}>{v}</li>
                     ))}
                     {previa.mods > 0 && (
-                      <li>{previa.mods} mods/plugins como link oficial (o amigo baixa)</li>
+                      <li>
+                        {t('passarServidor.modsPluginsComoLinkOficial', { mods: previa.mods })}
+                      </li>
                     )}
                     {previa.manuais > 0 && (
-                      <li>
-                        {previa.manuais} mods baixados à mão: só a página oficial (o amigo baixa
-                        pelo assistente)
-                      </li>
+                      <li>{t('passarServidor.modsBaixadosAMaoSo', { manuais: previa.manuais })}</li>
                     )}
                   </ul>
                 </div>
                 <div>
-                  <p className="font-bold">Fica neste PC</p>
+                  <p className="font-bold">{t('passarServidor.ficaNestePc')}</p>
                   <ul className="mt-1 list-disc pl-5 text-muted">
                     {previa.fica.map((f) => (
                       <li key={f}>{f}</li>
@@ -126,7 +127,7 @@ export function DialogoPassar({
                 </div>
                 {previa.semLink.length > 0 && (
                   <p className="text-muted">
-                    Sem link oficial (o amigo precisa pôr à mão): {previa.semLink.join(', ')}
+                    {t('passarServidor.semLinkOficialOAmigo')} {previa.semLink.join(', ')}
                   </p>
                 )}
               </>
@@ -163,7 +164,7 @@ export function ReceberServidor({ bloqueado }: { bloqueado: boolean }): React.JS
     const a = r.valor
     setAnalise(a)
     setModo(a.mesmo ? (a.mesmo.motivoSemAtualizar ? 'copia' : 'atualizar') : 'novo')
-    setNome(a.mesmo ? `${a.nome} (cópia)`.slice(0, 32) : a.nome)
+    setNome(a.mesmo ? t('passarServidor.copia', { nome: a.nome }).slice(0, 32) : a.nome)
     setEula(false)
     setErroDialogo(null)
   }
@@ -188,7 +189,7 @@ export function ReceberServidor({ bloqueado }: { bloqueado: boolean }): React.JS
   return (
     <>
       <Botao onClick={escolher} disabled={bloqueado || abrindo} className="w-full">
-        {abrindo ? 'Abrindo...' : 'Receber servidor (.hubserver)'}
+        {abrindo ? t('passarServidor.abrindo') : t('passarServidor.receberServidorHubserver')}
       </Botao>
       {erro && (
         <div className="mt-3">
@@ -197,14 +198,14 @@ export function ReceberServidor({ bloqueado }: { bloqueado: boolean }): React.JS
       )}
       <Dialogo
         aberto={analise !== null}
-        titulo="Receber servidor"
+        titulo={t('passarServidor.receberServidor')}
         aoCancelar={() => !recebendo && setAnalise(null)}
         acao={{
           rotulo: recebendo
-            ? 'Recebendo...'
+            ? t('passarServidor.recebendo')
             : modo === 'atualizar'
-              ? 'Fazer backup e atualizar'
-              : 'Criar servidor',
+              ? t('passarServidor.fazerBackupEAtualizar')
+              : t('passarServidor.criarServidor'),
           variante: modo === 'atualizar' ? 'perigo' : undefined,
           ocupado: recebendo,
           desabilitado: criaNovo && (!eula || !nome.trim()),
@@ -214,28 +215,33 @@ export function ReceberServidor({ bloqueado }: { bloqueado: boolean }): React.JS
         {analise && (
           <div className="flex flex-col gap-3 text-[13px]">
             <p>
-              Em <b>{analise.arquivo}</b>: o servidor <b>{analise.nome}</b> (
-              {NOMES_TIPOS[analise.tipo]} {analise.versao}), com {analise.mods} mods/plugins para
-              baixar pelos links oficiais.
+              {t('passarServidor.em')} <b>{analise.arquivo}</b>
+              {t('passarServidor.oServidor')} <b>{analise.nome}</b>{' '}
+              {t('passarServidor.comModsPluginsParaBaixar', {
+                v: NOMES_TIPOS[analise.tipo],
+                versao: analise.versao,
+                mods: analise.mods
+              })}
               {analise.manuais > 0 &&
-                ` ${analise.manuais} arquivos precisam ser baixados à mão (o app abre a janela Downloads necessários).`}
+                t('passarServidor.arquivosPrecisamSerBaixadosA', { manuais: analise.manuais })}
             </p>
             {analise.semLink.length > 0 && (
               <p className="text-muted">
-                Sem link oficial (ponha à mão depois): {analise.semLink.join(', ')}
+                {t('passarServidor.semLinkOficialPonhaA')} {analise.semLink.join(', ')}
               </p>
             )}
             {analise.mesmo && (
               <div className="flex flex-col gap-1">
                 <p>
-                  Esse é o seu servidor <b>{analise.mesmo.nome}</b>, que voltou.
+                  {t('passarServidor.esseEOSeuServidor')} <b>{analise.mesmo.nome}</b>
+                  {t('passarServidor.queVoltou')}
                 </p>
                 <OpcaoRadio
                   nome="modo-receber"
                   marcada={modo === 'atualizar'}
                   aoEscolher={() => !analise.mesmo?.motivoSemAtualizar && setModo('atualizar')}
                 >
-                  Atualizar o meu servidor com este mundo (backup protegido antes)
+                  {t('passarServidor.atualizarOMeuServidorCom')}
                 </OpcaoRadio>
                 {analise.mesmo.motivoSemAtualizar && (
                   <p className="pl-6 text-xs text-muted">{analise.mesmo.motivoSemAtualizar}</p>
@@ -245,35 +251,32 @@ export function ReceberServidor({ bloqueado }: { bloqueado: boolean }): React.JS
                   marcada={modo === 'copia'}
                   aoEscolher={() => setModo('copia')}
                 >
-                  Criar uma cópia (outro servidor, separado do meu)
+                  {t('passarServidor.criarUmaCopiaOutroServidor')}
                 </OpcaoRadio>
               </div>
             )}
             {modo === 'atualizar' && (
               <p>
-                O mundo, as configurações e as listas de jogadores de <b>{analise.mesmo?.nome}</b>{' '}
-                vão ser trocados pelos do arquivo. Antes, o app faz um backup protegido (com
-                cadeado) em Cópias de segurança.
+                {t('passarServidor.oMundoAsConfiguracoesE')} <b>{analise.mesmo?.nome}</b>{' '}
+                {t('passarServidor.vaoSerTrocadosPelosDo')}
               </p>
             )}
             {criaNovo && (
               <>
                 <label className="flex flex-col gap-1">
-                  Nome do servidor
+                  {t('passarServidor.nomeDoServidor')}
                   <Campo value={nome} maxLength={32} onChange={(e) => setNome(e.target.value)} />
                 </label>
-                <p className="text-xs text-muted">
-                  Você vira o dono: os convites são seus (gere em Conexão › Convites).
-                </p>
+                <p className="text-xs text-muted">{t('passarServidor.voceViraODonoOs')}</p>
                 <CaixaSelecao marcada={eula} aoMudar={setEula} disabled={recebendo}>
-                  Li e aceito o{' '}
+                  {t('passarServidor.liEAceitoO')}{' '}
                   <a
                     href="https://aka.ms/MinecraftEULA"
                     target="_blank"
                     rel="noreferrer"
                     className="underline"
                   >
-                    EULA do Minecraft
+                    {t('passarServidor.eulaDoMinecraft')}
                   </a>
                 </CaixaSelecao>
               </>

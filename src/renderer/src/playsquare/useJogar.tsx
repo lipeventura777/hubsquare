@@ -9,6 +9,7 @@ import type {
 } from '../../../shared/tipos'
 import { classesBotao } from '../componentes/estilos'
 import { Aviso, Botao, CaixaSelecao, Dialogo } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Fluxo do Jogar (Fases P1 a P4), usado pelas telas Instalações e Jogar: chama o processo
 // principal, mostra o progresso e, conforme a situação, o diálogo certo (falta o launcher,
@@ -105,22 +106,18 @@ function DialogoJogar({
     return (
       <Dialogo
         aberto
-        titulo="Mods que o servidor não aceita"
+        titulo={t('useJogar.modsQueOServidorNao')}
         aoCancelar={aoFechar}
-        acao={{ rotulo: 'Tirei, tentar de novo', aoClicar: () => aoTentar() }}
+        acao={{ rotulo: t('useJogar.tireiTentarDeNovo'), aoClicar: () => aoTentar() }}
       >
-        <p className="text-[13px]">
-          O dono do servidor pediu para não usarem estes mods, que estão na pasta mods da instalação
-          {i.nome}. É um combinado entre amigos, não um antitrapaça: o PlaySquare só não abre o
-          servidor com eles ativos. Tire eles da pasta (ou desative em Conteúdo) e tente de novo:
-        </p>
+        <p className="text-[13px]">{t('useJogar.oDonoDoServidorPediu', { nome: i.nome })}</p>
         <ul className="my-2 list-disc pl-5 font-mono text-[13px]">
           {r.arquivos.map((a) => (
             <li key={a}>{a}</li>
           ))}
         </ul>
         <Botao className="self-start" onClick={aoAbrirPasta}>
-          Abrir pasta
+          {t('useJogar.abrirPasta')}
         </Botao>
       </Dialogo>
     )
@@ -129,21 +126,18 @@ function DialogoJogar({
     return (
       <Dialogo
         aberto
-        titulo="Falta o Minecraft Launcher"
+        titulo={t('useJogar.faltaOMinecraftLauncher')}
         aoCancelar={aoFechar}
-        acao={{ rotulo: 'Já instalei, tentar de novo', aoClicar: () => aoTentar() }}
+        acao={{ rotulo: t('useJogar.jaInstaleiTentarDeNovo'), aoClicar: () => aoTentar() }}
       >
-        <p className="text-[13px]">
-          O PlaySquare abre o jogo pelo Minecraft Launcher oficial, com a sua conta. Instale o
-          launcher pelo site oficial, entre na sua conta uma vez e volte aqui.
-        </p>
+        <p className="text-[13px]">{t('useJogar.oPlaysquareAbreOJogo')}</p>
         <a
           href={LINK_LAUNCHER}
           target="_blank"
           rel="noreferrer"
           className={`${classesBotao('destaque')} mt-3 self-start`}
         >
-          Baixar o Minecraft Launcher
+          {t('useJogar.baixarOMinecraftLauncher')}
         </a>
       </Dialogo>
     )
@@ -152,21 +146,17 @@ function DialogoJogar({
     return (
       <Dialogo
         aberto
-        titulo="Copiar suas configurações do jogo?"
+        titulo={t('useJogar.copiarSuasConfiguracoesDoJogo')}
         aoCancelar={aoFechar}
         acao={{
-          rotulo: 'Copiar e jogar',
+          rotulo: t('useJogar.copiarEJogar'),
           variante: 'primario',
           aoClicar: () => aoTentar({ copiarOpcoes: true })
         }}
       >
-        <p className="text-[13px]">
-          A instalação {i.nome} tem a própria pasta. Quer trazer as teclas, o vídeo e o som que você
-          já usa no Minecraft normal (o arquivo options.txt da pasta .minecraft)? Seus mundos não
-          são copiados.
-        </p>
+        <p className="text-[13px]">{t('useJogar.aInstalacaoTemAPropria', { nome: i.nome })}</p>
         <Botao className="mt-3 self-start" onClick={() => aoTentar({ copiarOpcoes: false })}>
-          Não, começar do padrão
+          {t('useJogar.naoComecarDoPadrao')}
         </Botao>
       </Dialogo>
     )
@@ -175,23 +165,20 @@ function DialogoJogar({
     return (
       <Dialogo
         aberto
-        titulo="Feche o Minecraft Launcher"
+        titulo={t('useJogar.fecheOMinecraftLauncher')}
         aoCancelar={aoFechar}
-        acao={{ rotulo: 'Já fechei', aoClicar: () => aoTentar() }}
+        acao={{ rotulo: t('useJogar.jaFechei'), aoClicar: () => aoTentar() }}
       >
-        <p className="text-[13px]">
-          Feche o Minecraft Launcher para o HubSquare preparar a instalação {i.nome}. Aberto, ele
-          desfaria a mudança. Depois de preparar, o HubSquare abre o launcher de novo sozinho.
-        </p>
+        <p className="text-[13px]">{t('useJogar.fecheOMinecraftLauncherPara', { nome: i.nome })}</p>
       </Dialogo>
     )
   }
   return (
     <Dialogo
       aberto
-      titulo="Tudo pronto"
+      titulo={t('useJogar.tudoPronto')}
       aoCancelar={aoFechar}
-      acao={{ rotulo: 'OK', aoClicar: aoFechar }}
+      acao={{ rotulo: t('useJogar.ok'), aoClicar: aoFechar }}
     >
       <p className="text-[13px]">{r.frase}</p>
       {r.avisos.map((a) => (
@@ -233,10 +220,14 @@ function DialogoAtualizar({
   return (
     <Dialogo
       aberto
-      titulo={c.versaoAplicada ? 'O servidor mudou os mods' : `Instalar ${i.nome}`}
+      titulo={
+        c.versaoAplicada
+          ? t('useJogar.oServidorMudouOsMods')
+          : t('useJogar.instalar', { nome: i.nome })
+      }
       aoCancelar={aoFechar}
       acao={{
-        rotulo: 'Atualizar e jogar',
+        rotulo: t('useJogar.atualizarEJogar'),
         variante: 'primario',
         aoClicar: () => aoAtualizar({ atualizar: true, recusados: [...recusados] })
       }}
@@ -244,15 +235,22 @@ function DialogoAtualizar({
       <div className="flex flex-col gap-3 text-[13px]">
         <p>
           {c.versaoAplicada
-            ? `Versão ${c.versaoAplicada} → ${c.versaoDisponivel}. Para entrar, a instalação precisa ficar igual ao servidor.`
-            : 'O app vai baixar o que o servidor pede, dos sites oficiais e com o hash conferido.'}
+            ? t('useJogar.versaoParaEntrarAInstalacao', {
+                versaoAplicada: c.versaoAplicada,
+                versaoDisponivel: c.versaoDisponivel
+              })
+            : t('useJogar.oAppVaiBaixarO')}
         </p>
-        {lista('Entra', c.entra)}
-        {lista('Sai', c.sai)}
-        {!c.entra.length && !c.sai.length && <p className="text-muted">Nenhum arquivo muda.</p>}
+        {lista(t('useJogar.entra'), c.entra)}
+        {lista(t('useJogar.sai'), c.sai)}
+        {!c.entra.length && !c.sai.length && (
+          <p className="text-muted">{t('useJogar.nenhumArquivoMuda')}</p>
+        )}
         {c.opcionais.length > 0 && (
           <div className="flex flex-col gap-1">
-            <div className="text-xs font-bold text-muted">Recomendados (opcionais)</div>
+            <div className="text-xs font-bold text-muted">
+              {t('useJogar.recomendadosOpcionais')}
+            </div>
             {c.opcionais.map((o) => (
               <CaixaSelecao
                 key={o.path}
@@ -273,13 +271,11 @@ function DialogoAtualizar({
         )}
         {c.semLink.length > 0 && (
           <Aviso tipo="atencao">
-            Estes mods o app não pode baixar por você: {c.semLink.join(', ')}. Peça o link ao dono.
+            {t('useJogar.estesModsOAppNao')} {c.semLink.join(', ')}
+            {t('useJogar.pecaOLinkAoDono')}
           </Aviso>
         )}
-        <p className="text-xs text-muted">
-          Seus mods, mundos, prints e configurações ficam como estão. Só muda o que veio do
-          servidor.
-        </p>
+        <p className="text-xs text-muted">{t('useJogar.seusModsMundosPrintsE')}</p>
       </div>
     </Dialogo>
   )

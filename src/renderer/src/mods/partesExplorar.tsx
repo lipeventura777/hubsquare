@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useIndicador } from '../componentes/movimento'
 import { Botao, CaixaSelecao, Campo, Selecao } from '../componentes/ui'
 import { IconeProjeto } from './TelaMods'
+import { t } from '../../../shared/i18n'
 
 // Peças do Explorar (Fase 23), usadas também pela aba Instalados (Fase 23.2):
 // abas por tipo, barra de busca, etiquetas de filtro, painel de filtros, cards e esqueleto.
@@ -105,7 +106,7 @@ export function BarraDeBusca<O extends string>({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Botao aria-expanded={painel} onClick={aoAlternarPainel}>
-        {painel ? '« Filtros' : 'Filtros »'}
+        {painel ? t('partesExplorar.filtros') : t('partesExplorar.filtros2')}
       </Botao>
       <form
         className="flex min-w-[240px] flex-1 gap-2"
@@ -124,23 +125,23 @@ export function BarraDeBusca<O extends string>({
         />
         {aoProcurar && (
           <Botao variante="primario" type="submit">
-            Procurar
+            {t('partesExplorar.procurar')}
           </Botao>
         )}
       </form>
       <Selecao
-        aria-label="Ordenar por"
+        aria-label={t('partesExplorar.ordenarPor')}
         value={ordem}
         onChange={(e) => aoOrdenar(e.target.value as O)}
         className="w-56"
       >
         {ordens.map((o) => (
           <option key={o.valor} value={o.valor}>
-            Ordenar: {o.rotulo}
+            {t('partesExplorar.ordenar', { rotulo: o.rotulo })}
           </option>
         ))}
       </Selecao>
-      <div role="group" aria-label="Mostrar resultados em" className="flex">
+      <div role="group" aria-label={t('partesExplorar.mostrarResultadosEm')} className="flex">
         {(['grade', 'lista'] as const).map((v) => (
           <Botao
             key={v}
@@ -149,7 +150,7 @@ export function BarraDeBusca<O extends string>({
             aria-pressed={vista === v}
             onClick={() => aoMudarVista(v)}
           >
-            {v === 'grade' ? 'Grade' : 'Lista'}
+            {v === 'grade' ? t('partesExplorar.grade') : t('partesExplorar.lista')}
           </Botao>
         ))}
       </div>
@@ -166,20 +167,23 @@ export function EtiquetasDeFiltro({
 }): React.JSX.Element | null {
   if (!itens.length) return null
   return (
-    <div className="flex flex-wrap items-center gap-2" aria-label="Filtros ativos">
+    <div
+      className="flex flex-wrap items-center gap-2"
+      aria-label={t('partesExplorar.filtrosAtivos')}
+    >
       {itens.map((e) => (
         <button
           key={e.rotulo}
           type="button"
           onClick={e.aoTirar}
-          aria-label={`Tirar o filtro ${e.rotulo}`}
+          aria-label={t('partesExplorar.tirarOFiltro', { rotulo: e.rotulo })}
           className="flex h-7 items-center gap-2 border border-linha bg-panel-2 px-2 text-xs transition-colors duration-(--dur-fast) hover:border-muted"
         >
-          {e.rotulo} <span aria-hidden="true">×</span>
+          {e.rotulo} <span aria-hidden="true">{t('partesExplorar.texto')}</span>
         </button>
       ))}
       <button type="button" className="text-xs text-accent underline" onClick={aoLimpar}>
-        Limpar filtros
+        {t('partesExplorar.limparFiltros')}
       </button>
     </div>
   )
@@ -188,7 +192,7 @@ export function EtiquetasDeFiltro({
 export function PainelDeFiltros({ children }: { children: React.ReactNode }): React.JSX.Element {
   return (
     <aside
-      aria-label="Filtros"
+      aria-label={t('partesExplorar.filtros3')}
       className="anim-item flex w-60 shrink-0 flex-col gap-5 border border-linha bg-panel p-4"
     >
       {children}
@@ -288,7 +292,7 @@ export function CardProjeto({
           {selecao && (
             <span className={grade ? 'pt-0.5' : 'self-center'}>
               <CaixaSelecao marcada={selecao.marcada} aoMudar={selecao.aoMudar}>
-                <span className="sr-only">Selecionar {titulo}</span>
+                <span className="sr-only">{t('partesExplorar.selecionar', { titulo })}</span>
               </CaixaSelecao>
             </span>
           )}
@@ -335,7 +339,7 @@ export function EsqueletoDeCards({
   return (
     <div
       role="status"
-      aria-label="Carregando"
+      aria-label={t('partesExplorar.carregando')}
       className={vista === 'grade' ? GRADE : 'flex flex-col gap-2'}
     >
       {Array.from({ length: quantos }, (_, i) => (

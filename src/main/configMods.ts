@@ -10,6 +10,7 @@ import { ErroApp, detalhar } from './erros'
 import { metaDoJar } from './metaJar'
 import { dentroDe } from './mundo'
 import { pastaLivre } from './pastaLivre'
+import { t } from '../shared/i18n'
 
 // Arquivos de config de cada mod (Fase 25): achar, mostrar como formulário e salvar trocando só
 // os valores. Antes de salvar ou de "Restaurar padrão", uma cópia vai para os backups.
@@ -41,7 +42,7 @@ const rel = (info: InfoServidor, c: string): string => relative(info.pasta, c).s
 export async function configsDoMod(info: InfoServidor, arquivo: unknown): Promise<string[]> {
   const extras = EXTRAS_TIPOS[info.tipo]
   if (!extras || typeof arquivo !== 'string' || /[\\/]/.test(arquivo)) {
-    throw new ErroApp('Mod inválido. Atualize a lista.')
+    throw new ErroApp(t('p.configMods.modInvalidoAtualizeALista'))
   }
   const jar = [
     join(info.pasta, extras, arquivo),
@@ -90,7 +91,7 @@ async function exigirConfig(info: InfoServidor, valor: unknown): Promise<string>
     existsSync(abs)
   )
     return abs
-  throw new ErroApp('Não encontrei esse arquivo de configuração. Atualize a lista.')
+  throw new ErroApp(t('p.configMods.naoEncontreiEsseArquivoDe'))
 }
 
 const hash = (t: string): string => createHash('sha1').update(t).digest('hex')
@@ -98,7 +99,7 @@ const hash = (t: string): string => createHash('sha1').update(t).digest('hex')
 export async function lerConfigMod(info: InfoServidor, caminho: unknown): Promise<ConfigLida> {
   const abs = await exigirConfig(info, caminho)
   if ((await stat(abs)).size > LIMITE_TEXTO) {
-    throw new ErroApp('Esse arquivo passa de 1 MB. Abra pelo "Editar como texto" na tela Arquivos.')
+    throw new ErroApp(t('p.configMods.esseArquivoPassaDe1'))
   }
   const texto = await readFile(abs, 'utf8')
   return {
@@ -131,18 +132,19 @@ export async function salvarConfigMod(
   const abs = await exigirConfig(info, caminho)
   const texto = await readFile(abs, 'utf8')
   if (hash(texto) !== hashLido) {
-    throw new ErroApp(
-      'Esse arquivo mudou desde que foi aberto (o mod pode ter regravado). Abra de novo e refaça a mudança.'
-    )
+    throw new ErroApp(t('p.configMods.esseArquivoMudouDesdeQue'))
   }
   if (!mudancas || typeof mudancas !== 'object' || Array.isArray(mudancas)) {
-    throw new ErroApp('Nada para salvar.')
+    throw new ErroApp(t('p.configMods.nadaParaSalvar'))
   }
   let novo: string
   try {
     novo = aplicarMudancas(texto, formatoDe(abs)!, mudancas as Record<string, unknown>)
   } catch (e) {
-    throw new ErroApp(e instanceof Error ? e.message : 'Algum valor não serve.', detalhar(e))
+    throw new ErroApp(
+      e instanceof Error ? e.message : t('p.configMods.algumValorNaoServe'),
+      detalhar(e)
+    )
   }
   if (novo === texto) return !pastaLivre(info)
   await copiarParaBackup(info, abs)
@@ -159,10 +161,7 @@ export async function restaurarConfigPadrao(
   try {
     await copiarParaBackup(info, abs)
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui fazer a cópia do arquivo, então ele não foi apagado.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.configMods.naoConseguiFazerACopia'), detalhar(e))
   }
   await rm(abs, { force: true })
   return !pastaLivre(info)

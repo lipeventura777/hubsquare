@@ -6,6 +6,7 @@ import { Esqueleto } from '../componentes/movimento'
 import { Botao, Campo, Interruptor } from '../componentes/ui'
 import { Previa, Respostas, previa, type Central } from './pecas'
 import { textoDaRegra } from './textosComandos'
+import { t as tx } from '../../../shared/i18n'
 
 // Aba Regras do jogo (Fase 26): todas as regras da versão (da árvore de comandos do servidor),
 // com o valor atual lido do servidor. As consultas aparecem no console como comandos normais.
@@ -64,16 +65,18 @@ export function RegrasDoJogo({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <Campo
-          aria-label="Procurar regra"
-          placeholder="Procurar regra (ex.: inventário, fogo, dormir)"
+          aria-label={tx('regrasDoJogo.procurarRegra')}
+          placeholder={tx('regrasDoJogo.procurarRegraExInventarioFogo')}
           value={termo}
           onChange={(e) => setTermo(e.target.value)}
           className="max-w-[420px] flex-1"
         />
         <Botao tamanho="pequeno" disabled={!central.ligado || lendo} onClick={ler}>
-          {lendo ? 'Lendo...' : 'Ler de novo do servidor'}
+          {lendo ? tx('regrasDoJogo.lendo') : tx('regrasDoJogo.lerDeNovoDoServidor')}
         </Botao>
-        <span className="text-xs text-muted">{regras.length} regras nesta versão</span>
+        <span className="text-xs text-muted">
+          {tx('regrasDoJogo.regrasNestaVersao', { length: regras.length })}
+        </span>
       </div>
       <Respostas respostas={respostas} />
       {erro && <MensagemErro erro={erro} />}
@@ -137,7 +140,7 @@ export function RegrasDoJogo({
                       })
                     }}
                   >
-                    Salvar
+                    {tx('regrasDoJogo.salvar')}
                   </Botao>
                 </div>
               )}

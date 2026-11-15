@@ -24,7 +24,9 @@ Regra simples: correção = último número (1.1.**1**), funcionalidade nova = d
 npm run dist
 ```
 
-Sai em `release/HubSquare-Setup-1.2.0.exe`. O `.exe` **nunca** entra no git (o `.gitignore` barra).
+Sai em `release/HubSquare-Setup-1.2.0.exe`, com o `release/SHA256SUMS.txt` (anexe os dois na release).
+Confira os detalhes do `.exe` (Propriedades › Detalhes: nome, versão, autor e copyright) e atualize o
+`CHANGELOG.md` (mova o que está em "Unreleased" para a versão nova). O `.exe` **nunca** entra no git (o `.gitignore` barra).
 
 ## 3. Commit e tag
 

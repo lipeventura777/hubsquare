@@ -24,14 +24,15 @@ import { Botao, Dialogo, LinhaControle, Selecao } from '../componentes/ui'
 import { AbaEstatisticas } from './AbaEstatisticas'
 import { AbaInventario } from './AbaInventario'
 import { ZonaDePerigo } from './ZonaDePerigo'
+import { t, tNome } from '../../../shared/i18n'
 
 const ABAS = ['Visão geral', 'Inventário', 'Estatísticas'] as const
-const SO_ONLINE = 'Disponível com o jogador online'
+const SO_ONLINE = t('detalhesJogador.disponivelComOJogadorOnline')
 
 const DIMENSOES: Record<string, string> = {
-  'minecraft:overworld': 'Mundo normal',
-  'minecraft:the_nether': 'Nether',
-  'minecraft:the_end': 'The End'
+  'minecraft:overworld': t('detalhesJogador.mundoNormal'),
+  'minecraft:the_nether': t('detalhesJogador.nether'),
+  'minecraft:the_end': t('detalhesJogador.theEnd')
 }
 
 // Detalhes do jogador (DESIGN.md, 6.13 a 6.17 e 6.21). Lê o .dat (só leitura); com o jogador
@@ -101,7 +102,7 @@ export function DetalhesJogador({
     <div className="min-h-0 flex-1 overflow-auto">
       <div className="mx-auto flex max-w-[1100px] flex-col gap-4 p-10">
         <Botao tamanho="pequeno" className="self-start" onClick={aoVoltar}>
-          ← Jogadores
+          {t('detalhesJogador.jogadores')}
         </Botao>
 
         <header className="flex flex-wrap items-center gap-4">
@@ -114,7 +115,7 @@ export function DetalhesJogador({
                   online ? 'bg-online text-on-dark' : 'bg-panel-2 text-muted'
                 }`}
               >
-                {online ? 'Online' : 'Offline'}
+                {online ? t('detalhesJogador.online') : t('detalhesJogador.offline')}
               </span>
             </div>
             {detalhes?.uuid && (
@@ -122,8 +123,8 @@ export function DetalhesJogador({
                 {detalhes.uuid}
                 <button
                   type="button"
-                  title="Copiar UUID"
-                  aria-label="Copiar UUID"
+                  title={t('detalhesJogador.copiarUuid')}
+                  aria-label={t('detalhesJogador.copiarUuid')}
                   onClick={() => window.api.copiar(detalhes.uuid)}
                   className="flex h-8 w-8 items-center justify-center hover:bg-tile-active"
                 >
@@ -133,7 +134,7 @@ export function DetalhesJogador({
             )}
           </div>
           <label className="flex flex-col gap-1 text-[13px]">
-            Modo de jogo
+            {t('detalhesJogador.modoDeJogo')}
             <Selecao
               value={dados?.modo ?? ''}
               disabled={!online}
@@ -162,7 +163,7 @@ export function DetalhesJogador({
                 aba === a ? 'border-accent text-texto' : 'border-transparent text-muted'
               }`}
             >
-              {a}
+              {tNome(a)}
             </button>
           ))}
         </div>
@@ -179,12 +180,12 @@ export function DetalhesJogador({
           <div className="grid gap-4 min-[1100px]:grid-cols-[2fr_1fr]">
             <div className="flex flex-col gap-4">
               <CardPainel
-                titulo="Saúde e experiência"
+                titulo={t('detalhesJogador.saudeEExperiencia')}
                 acoes={
                   <Botao
                     tamanho="pequeno"
-                    title="Atualizar"
-                    aria-label="Atualizar"
+                    title={t('detalhesJogador.atualizar')}
+                    aria-label={t('detalhesJogador.atualizar')}
                     disabled={atualizando}
                     onClick={() => void carregar()}
                   >
@@ -201,22 +202,26 @@ export function DetalhesJogador({
                   />
                 ) : (
                   <p className="text-[13px] text-muted">
-                    Sem dados ainda. Eles aparecem depois que o jogador entrar no servidor.
+                    {t('detalhesJogador.semDadosAindaElesAparecem')}
                   </p>
                 )}
               </CardPainel>
 
-              <CardPainel titulo="Informação">
+              <CardPainel titulo={t('detalhesJogador.informacao')}>
                 <Acordeao
                   itens={[
-                    { titulo: 'Posição atual', icone: <IconeMundos />, local: dados?.posicao },
                     {
-                      titulo: 'Local de renascimento',
+                      titulo: t('detalhesJogador.posicaoAtual'),
+                      icone: <IconeMundos />,
+                      local: dados?.posicao
+                    },
+                    {
+                      titulo: t('detalhesJogador.localDeRenascimento'),
                       icone: <IconeServidor />,
                       local: dados?.renascimento
                     },
                     {
-                      titulo: 'Local da última morte',
+                      titulo: t('detalhesJogador.localDaUltimaMorte'),
                       icone: <IconeCoracao />,
                       local: dados?.ultimaMorte
                     }
@@ -235,23 +240,23 @@ export function DetalhesJogador({
               </CardPainel>
             </div>
 
-            <CardPainel titulo="Controle" className="self-start">
+            <CardPainel titulo={t('detalhesJogador.controle')} className="self-start">
               <div className="flex flex-col gap-2">
                 <LinhaControle
                   icone={<IconeJogadores />}
-                  rotulo="Na whitelist"
+                  rotulo={t('detalhesJogador.naWhitelist')}
                   ligado={detalhes.whitelist}
                   aoMudar={(v) => mudarLista('whitelist', v)}
                 />
                 <LinhaControle
                   icone={<IconeJogadores />}
-                  rotulo="Banido"
+                  rotulo={t('detalhesJogador.banido')}
                   ligado={detalhes.banido}
                   aoMudar={(v) => mudarLista('banidos', v)}
                 />
                 <LinhaControle
                   icone={<IconeServidor />}
-                  rotulo="Operador"
+                  rotulo={t('detalhesJogador.operador')}
                   ligado={detalhes.op}
                   aoMudar={(v) => mudarLista('ops', v)}
                 />
@@ -266,10 +271,10 @@ export function DetalhesJogador({
 
       <Dialogo
         aberto={matando}
-        titulo={`Matar ${nome}?`}
+        titulo={t('detalhesJogador.matar', { nome })}
         aoCancelar={() => setMatando(false)}
         acao={{
-          rotulo: 'Matar',
+          rotulo: t('detalhesJogador.matar2'),
           variante: 'perigo',
           aoClicar: () => {
             setMatando(false)
@@ -277,7 +282,7 @@ export function DetalhesJogador({
           }
         }}
       >
-        O jogador morre na hora e deixa cair os itens, como numa morte normal no jogo.
+        {t('detalhesJogador.oJogadorMorreNaHora')}
       </Dialogo>
     </div>
   )
@@ -299,10 +304,12 @@ function SaudeExperiencia({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <span className="text-center text-[13px] font-bold">Nível {dados.nivel}</span>
+        <span className="text-center text-[13px] font-bold">
+          {t('detalhesJogador.nivel', { nivel: dados.nivel })}
+        </span>
         <div
           role="progressbar"
-          aria-label="Progresso de experiência"
+          aria-label={t('detalhesJogador.progressoDeExperiencia')}
           aria-valuenow={Math.round(dados.progresso * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -321,7 +328,7 @@ function SaudeExperiencia({
             title={dica}
             onClick={aoMatar}
           >
-            Matar
+            {t('detalhesJogador.matar2')}
           </Botao>
           <Botao
             variante="atencao"
@@ -330,12 +337,22 @@ function SaudeExperiencia({
             title={dica}
             onClick={() => aoAgir({ tipo: 'faminto' })}
           >
-            Deixar faminto
+            {t('detalhesJogador.deixarFaminto')}
           </Botao>
         </div>
         <div className="flex flex-col gap-1">
-          <Icones valor={dados.vida} rotulo="Vida" icone={IconeCoracao} cor="text-vida" />
-          <Icones valor={dados.fome} rotulo="Fome" icone={IconeComida} cor="text-fome" />
+          <Icones
+            valor={dados.vida}
+            rotulo={t('detalhesJogador.vida')}
+            icone={IconeCoracao}
+            cor="text-vida"
+          />
+          <Icones
+            valor={dados.fome}
+            rotulo={t('detalhesJogador.fome')}
+            icone={IconeComida}
+            cor="text-fome"
+          />
         </div>
         <div className="flex gap-2">
           <Botao
@@ -345,7 +362,7 @@ function SaudeExperiencia({
             title={dica}
             onClick={() => aoAgir({ tipo: 'curar' })}
           >
-            Curar
+            {t('detalhesJogador.curar')}
           </Botao>
           <Botao
             variante="primario"
@@ -354,7 +371,7 @@ function SaudeExperiencia({
             title={dica}
             onClick={() => aoAgir({ tipo: 'alimentar' })}
           >
-            Alimentar
+            {t('detalhesJogador.alimentar')}
           </Botao>
         </div>
       </div>
@@ -377,7 +394,11 @@ function Icones({
 }): React.JSX.Element {
   const meios = Math.round(valor)
   return (
-    <div role="img" aria-label={`${rotulo}: ${meios / 2} de 10`} className={`flex ${cor}`}>
+    <div
+      role="img"
+      aria-label={t('detalhesJogador.de10', { rotulo, v: meios / 2 })}
+      className={`flex ${cor}`}
+    >
       {Array.from({ length: 10 }, (_, i) => {
         const parte = Math.max(0, Math.min(2, meios - i * 2))
         return (
@@ -404,12 +425,16 @@ function LinhaLocal({
   online: boolean
   aoTeleportar: (local: Local) => void
 }): React.JSX.Element {
-  if (!local) return <p className="text-[13px] text-muted">Sem dados</p>
+  if (!local) return <p className="text-[13px] text-muted">{t('detalhesJogador.semDados')}</p>
   return (
     <div className="flex items-center justify-between gap-3 text-[13px]">
       <span>
         <span className="font-mono">
-          X {local.x.toFixed(2)} · Y {local.y.toFixed(2)} · Z {local.z.toFixed(2)}
+          {t('detalhesJogador.xYZ', {
+            toFixed: local.x.toFixed(2),
+            toFixed2: local.y.toFixed(2),
+            toFixed3: local.z.toFixed(2)
+          })}
         </span>
         <span className="block text-xs text-muted">
           {DIMENSOES[local.dimensao] ?? local.dimensao}
@@ -422,7 +447,7 @@ function LinhaLocal({
         title={online ? undefined : SO_ONLINE}
         onClick={() => aoTeleportar(local)}
       >
-        Teleportar
+        {t('detalhesJogador.teleportar')}
       </Botao>
     </div>
   )

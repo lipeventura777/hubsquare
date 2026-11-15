@@ -43,6 +43,7 @@ import {
 } from './servidor'
 import { lerLista, lerUsercache } from './whitelist'
 import { lerNbt, limparNaRaiz } from './zipSeguro'
+import { t } from '../shared/i18n'
 
 // Quem está online, descoberto pelas linhas do console.
 let online: string[] = []
@@ -176,7 +177,7 @@ async function arquivoDoJogador(
 async function jogadorSalvo(info: InfoServidor, valor: unknown): Promise<JogadorResumo> {
   const nome = validarJogador(valor)
   const resumo = (await listarTodos(info)).find((j) => j.nome.toLowerCase() === nome.toLowerCase())
-  if (!resumo) throw new ErroApp(`O jogador "${nome}" nunca entrou neste servidor.`)
+  if (!resumo) throw new ErroApp(t('p.jogadores.oJogadorNuncaEntrouNeste', { nome }))
   if (resumo.online) await salvarEEsperar()
   return resumo
 }
@@ -190,10 +191,7 @@ async function lerNbtDoJogador(
   try {
     return lerNbt(await readFile(caminho))
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui ler os dados deste jogador. O arquivo dele pode estar danificado.',
-      String(e)
-    )
+    throw new ErroApp(t('p.jogadores.naoConseguiLerOsDados'), String(e))
   }
 }
 
@@ -246,10 +244,7 @@ export async function estatisticasJogador(
   try {
     brutas = resumirEstatisticas(JSON.parse(await readFile(caminho, 'utf8')))
   } catch (e) {
-    throw new ErroApp(
-      'Não consegui ler as estatísticas deste jogador. O arquivo pode estar danificado.',
-      String(e)
-    )
+    throw new ErroApp(t('p.jogadores.naoConseguiLerAsEstatisticas'), String(e))
   }
   if (!brutas) return null
   const { idioma, iconeItem, iconeEntidade } = await recursosDaVersao(info.versao)
@@ -293,11 +288,11 @@ export async function excluirDadosJogador(
   const opcoes = Array.isArray(opcoesValor)
     ? OPCOES_EXCLUSAO.filter((o) => opcoesValor.includes(o))
     : []
-  if (!opcoes.length) throw new ErroApp('Marque pelo menos uma opção para apagar.')
-  if (lerEstado() !== 'desligado') throw new ErroApp('Desligue o servidor e tente de novo.')
+  if (!opcoes.length) throw new ErroApp(t('p.jogadores.marquePeloMenosUmaOpcao'))
+  if (lerEstado() !== 'desligado') throw new ErroApp(t('p.jogadores.desligueOServidorETente'))
   const resumo = await jogadorSalvo(info, valor)
   if (!UUID.test(resumo.uuid)) {
-    throw new ErroApp('Não sei o UUID deste jogador, então não acho os arquivos dele.')
+    throw new ErroApp(t('p.jogadores.naoSeiOUuidDeste'))
   }
   return comServidorDesligado(async () => {
     await compactarMundo(info, undefined, 'jogadores')
@@ -316,17 +311,14 @@ export async function excluirDadosJogador(
       await writeFile(temporario, limparNaRaiz(await readFile(dat), campos))
       await rename(temporario, dat)
     } catch (e) {
-      throw new ErroApp(
-        'Não consegui apagar os dados do jogador. O backup do mundo foi feito antes, na tela Cópias de segurança.',
-        detalhar(e)
-      )
+      throw new ErroApp(t('p.jogadores.naoConseguiApagarOsDados'), detalhar(e))
     }
   })
 }
 
 export function acaoJogador(valor: unknown, acao: unknown): void {
   const nome = validarJogador(valor)
-  if (!estaOnline(nome)) throw new ErroApp('Disponível com o jogador online.')
+  if (!estaOnline(nome)) throw new ErroApp(t('p.jogadores.disponivelComOJogadorOnline'))
   enviarComando(comandoDaAcao(nome, acao))
 }
 

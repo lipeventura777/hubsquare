@@ -6,6 +6,7 @@ import {
   type TipoConteudo,
   type TipoId
 } from '../shared/tipos'
+import { t } from '../shared/i18n'
 
 // Explicação de compatibilidade no jogo do jogador (Fase P3): uma frase curta dizendo se vai
 // funcionar e por quê. Sem rede nem arquivos (testada em tests/compatRegras.test.ts).
@@ -26,8 +27,9 @@ const deMods = (l: TipoId): boolean => l === 'fabric' || l === 'forge' || l === 
 
 // Iris no Fabric e no NeoForge; Oculus (porte do Iris) no Forge.
 export function modDeShader(loader: TipoId): { id: string; nome: string } | null {
-  if (loader === 'fabric' || loader === 'neoforge') return { id: 'iris', nome: 'Iris' }
-  if (loader === 'forge') return { id: 'oculus', nome: 'Oculus' }
+  if (loader === 'fabric' || loader === 'neoforge')
+    return { id: 'iris', nome: t('p.compatRegras.iris') }
+  if (loader === 'forge') return { id: 'oculus', nome: t('p.compatRegras.oculus') }
   return null
 }
 
@@ -39,70 +41,58 @@ export function compatibilidade(e: EntradaCompat): Compat {
   const alvo = `${NOMES_TIPOS[e.loader]} ${e.versao}`
   const nao = (frase: string, aviso: Compat['aviso'], bloqueia = false): Compat => ({
     vai: false,
-    frase: `Não vai funcionar: ${frase}`,
+    frase: t('p.compatRegras.naoVaiFuncionar', { frase }),
     aviso,
     bloqueia
   })
   const sim = (frase: string, aviso: Compat['aviso'] = null): Compat => ({
     vai: true,
-    frase: `Vai funcionar: ${frase}`,
+    frase: t('p.compatRegras.vaiFuncionar', { frase }),
     aviso,
     bloqueia: false
   })
   const servidor = e.jogador.servidor
 
-  if (e.noServidor) return sim(`veio do servidor ${servidor ?? ''}`.trim() + '.')
+  if (e.noServidor)
+    return sim(t('p.compatRegras.veioDoServidor', { v: servidor ?? '' }).trim() + '.')
   if (e.tipo === 'mod' && !deMods(e.loader)) {
-    return nao(
-      'mods precisam de Fabric, Forge ou NeoForge, e esta instalação é Vanilla.',
-      'loader',
-      true
-    )
+    return nao(t('p.compatRegras.modsPrecisamDeFabricForge'), 'loader', true)
   }
   if (e.tipo === 'shader' && !modDeShader(e.loader)) {
-    return nao(
-      'shaders precisam do Iris ou do Oculus, que pedem Fabric, Forge ou NeoForge. Esta instalação é Vanilla.',
-      'loader',
-      true
-    )
+    return nao(t('p.compatRegras.shadersPrecisamDoIrisOu'), 'loader', true)
   }
   if (e.tipo === 'plugin' || e.tipo === 'datapack') {
     return nao(
       e.tipo === 'plugin'
-        ? 'plugins rodam só em servidores Paper.'
-        : 'datapacks ficam dentro de cada mundo. Adicione pelo ServSquare, no servidor.',
+        ? t('p.compatRegras.pluginsRodamSoEmServidores')
+        : t('p.compatRegras.datapacksFicamDentroDeCada'),
       'loader',
       true
     )
   }
-  if (!e.temVersao) return nao(`não tem versão para ${alvo}.`, 'versao', true)
+  if (!e.temVersao) return nao(t('p.compatRegras.naoTemVersaoPara', { alvo }), 'versao', true)
   if (servidor && proibido(e.nomes, e.jogador.proibidos)) {
-    return nao(
-      `o servidor ${servidor} proibiu este mod. É um combinado entre amigos: com ele ativo, o PlaySquare não deixa entrar no servidor.`,
-      'proibido'
-    )
+    return nao(t('p.compatRegras.oServidorProibiuEsteMod', { servidor }), 'proibido')
   }
   if (e.tipo === 'mod' && e.ambiente === 'servidor') {
-    return nao('este mod roda só no servidor. No seu jogo, ele não faz nada.', 'soServidor')
+    return nao(t('p.compatRegras.esteModRodaSoNo'), 'soServidor')
   }
   // Só quando a fonte diz que roda dos dois lados (mod à mão, sem essa informação, não avisa).
   if (e.tipo === 'mod' && servidor && e.ambiente === 'ambos') {
-    return nao(
-      `este mod precisa estar também no servidor ${servidor}, e lá ele não está. Jogando sozinho, funciona.`,
-      'precisaServidor'
-    )
+    return nao(t('p.compatRegras.esteModPrecisaEstarTambem', { servidor }), 'precisaServidor')
   }
   if (e.tipo === 'shader') {
     const mod = modDeShader(e.loader)!
     return sim(
       e.temModDeShader
-        ? `usa o ${mod.nome}, que já está na instalação. Shaders pesam no PC: se o jogo ficar lento, desligue em Opções › Vídeo › Shaders.`
-        : `este shader precisa do ${mod.nome}, que será instalado junto. Shaders pesam no PC: se o jogo ficar lento, desligue em Opções › Vídeo › Shaders.`,
+        ? t('p.compatRegras.usaOQueJaEsta', { nome: mod.nome })
+        : t('p.compatRegras.esteShaderPrecisaDoQue', { nome: mod.nome }),
       'shader'
     )
   }
-  if (e.tipo === 'resourcepack') return sim(`compatível com o Minecraft ${e.versao}.`)
-  return sim(`compatível com ${alvo}.`)
+  if (e.tipo === 'resourcepack')
+    return sim(t('p.compatRegras.compativelComOMinecraft', { versao: e.versao }))
+  return sim(t('p.compatRegras.compativelCom', { alvo }))
 }
 
 // options.txt: liga os resource packs do servidor por cima dos do jogador, na ordem do servidor

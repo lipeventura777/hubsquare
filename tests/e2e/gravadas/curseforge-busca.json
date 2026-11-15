@@ -7,7 +7,12 @@
       "summary": "View Items and Recipes",
       "downloadCount": 412345678,
       "thumbsUpCount": 1234,
-      "links": { "websiteUrl": "https://www.curseforge.com/minecraft/mc-mods/jei", "wikiUrl": null, "issuesUrl": null, "sourceUrl": null },
+      "links": {
+        "websiteUrl": "https://www.curseforge.com/minecraft/mc-mods/jei",
+        "wikiUrl": null,
+        "issuesUrl": null,
+        "sourceUrl": null
+      },
       "logo": null,
       "screenshots": [],
       "authors": [{ "name": "mezz" }],

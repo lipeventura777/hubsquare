@@ -1,5 +1,6 @@
 // Tipos usados pelos dois lados do app: processo principal e tela.
 import type { Fonte } from './fontes'
+import { t } from './i18n'
 
 export type TipoId = 'paper' | 'vanilla' | 'fabric' | 'forge' | 'neoforge'
 
@@ -40,6 +41,16 @@ export interface InfoServidor {
   idFixo?: string
   // Fase M7: passado para um amigo hospedar. Ligar aqui pede confirmação até o mundo voltar.
   emprestado?: { com: string; desde: string }
+  // Fase V10: fundo das telas deste servidor. Sem valor: igual ao app.
+  fundo?: FundoServidor
+}
+
+// Fase V10: o fundo do servidor ativo para a tela (escolha guardada e o que vale agora).
+export interface FundoDoServidor {
+  escolha: FundoServidor | null
+  temInstalacao: boolean // existe a instalação deste servidor no PlaySquare
+  instalacao: EscolhaFundo | null // o fundo dela (null = igual ao app)
+  efetivo: EscolhaFundo | null // o que vale nas telas do servidor (null = o do app)
 }
 
 export interface ContextoJogador {
@@ -61,19 +72,19 @@ export interface ModpackDoServidor {
 export const MODOS = ['survival', 'creative', 'adventure', 'spectator'] as const
 export type ModoDeJogo = (typeof MODOS)[number]
 export const NOMES_MODOS: Record<ModoDeJogo, string> = {
-  survival: 'Sobrevivência',
-  creative: 'Criativo',
-  adventure: 'Aventura',
-  spectator: 'Espectador'
+  survival: t('s.tipos.sobrevivencia'),
+  creative: t('s.tipos.criativo'),
+  adventure: t('s.tipos.aventura'),
+  spectator: t('s.tipos.espectador')
 }
 
 export const DIFICULDADES = ['peaceful', 'easy', 'normal', 'hard'] as const
 export type Dificuldade = (typeof DIFICULDADES)[number]
 export const NOMES_DIFICULDADES: Record<Dificuldade, string> = {
-  peaceful: 'Pacífico',
-  easy: 'Fácil',
-  normal: 'Normal',
-  hard: 'Difícil'
+  peaceful: t('s.tipos.pacifico'),
+  easy: t('s.tipos.facil'),
+  normal: t('s.tipos.normal'),
+  hard: t('s.tipos.dificil')
 }
 
 export interface Configuracoes {
@@ -158,15 +169,15 @@ export const TIPOS_BACKUP = [
 export type TipoBackup = (typeof TIPOS_BACKUP)[number]
 
 export const NOMES_BACKUP: Record<TipoBackup, string> = {
-  desligar: 'Ao desligar',
-  agendado: 'Agendado',
-  atualizar: 'Antes de atualizar',
-  software: 'Antes de trocar o software',
-  modpack: 'Antes de atualizar o modpack',
-  mundos: 'Antes de mexer nos mundos',
-  restaurar: 'Antes de restaurar',
-  jogadores: 'Antes de apagar dados de jogador',
-  apagar: 'Antes de apagar o servidor'
+  desligar: t('s.tipos.aoDesligar'),
+  agendado: t('s.tipos.agendado'),
+  atualizar: t('s.tipos.antesDeAtualizar'),
+  software: t('s.tipos.antesDeTrocarOSoftware'),
+  modpack: t('s.tipos.antesDeAtualizarOModpack'),
+  mundos: t('s.tipos.antesDeMexerNosMundos'),
+  restaurar: t('s.tipos.antesDeRestaurar'),
+  jogadores: t('s.tipos.antesDeApagarDadosDe'),
+  apagar: t('s.tipos.antesDeApagarOServidor')
 }
 
 export const TEMAS = ['sistema', 'claro', 'escuro'] as const
@@ -204,21 +215,21 @@ export const BIOMAS = [
 ] as const
 export type Bioma = (typeof BIOMAS)[number]
 export const NOMES_BIOMAS: Record<Bioma, string> = {
-  diaClaro: 'Dia claro',
-  dia: 'Dia',
-  noite: 'Noite',
-  mar: 'Mar',
-  nether: 'Nether',
-  cerejeira: 'Cerejeira',
-  caverna: 'Caverna Exuberante',
-  deepDark: 'Deep Dark',
-  deserto: 'Deserto ao pôr do sol',
-  aurora: 'Aurora Nevada',
-  ametista: 'Geodo de Ametista',
-  pantano: 'Pântano de Vagalumes'
+  diaClaro: t('s.tipos.diaClaro'),
+  dia: t('s.tipos.dia'),
+  noite: t('s.tipos.noite'),
+  mar: t('s.tipos.mar'),
+  nether: t('s.tipos.nether'),
+  cerejeira: t('s.tipos.cerejeira'),
+  caverna: t('s.tipos.cavernaExuberante'),
+  deepDark: t('s.tipos.deepDark'),
+  deserto: t('s.tipos.desertoAoPorDoSol'),
+  aurora: t('s.tipos.auroraNevada'),
+  ametista: t('s.tipos.geodoDeAmetista'),
+  pantano: t('s.tipos.pantanoDeVagalumes')
 }
 
-import type { EscolhaFundo } from './fundoRegras'
+import type { EscolhaFundo, FundoServidor } from './fundoRegras'
 
 export interface Aparencia {
   tema: Tema // antigo (até a Fase V1); fica no arquivo para versões antigas do app
@@ -573,12 +584,12 @@ export const TIPOS_CONTEUDO = [
 export type TipoConteudo = (typeof TIPOS_CONTEUDO)[number]
 
 export const NOMES_CONTEUDO: Record<TipoConteudo, string> = {
-  mod: 'Mods',
-  plugin: 'Plugins',
-  modpack: 'Modpacks',
-  resourcepack: 'Resource packs',
-  shader: 'Shaders',
-  datapack: 'Datapacks'
+  mod: t('s.tipos.mods'),
+  plugin: t('s.tipos.plugins'),
+  modpack: t('s.tipos.modpacks'),
+  resourcepack: t('s.tipos.resourcePacks'),
+  shader: t('s.tipos.shaders'),
+  datapack: t('s.tipos.datapacks')
 }
 
 // Loaders que o filtro oferece em cada tipo (nomes do Modrinth). Vazio: o tipo não tem loader.
@@ -718,12 +729,12 @@ export const AVISOS = [
 export type TipoAviso = (typeof AVISOS)[number]
 
 export const NOMES_AVISOS: Record<TipoAviso, string> = {
-  soServidor: 'Mod que roda só no servidor',
-  precisaServidor: 'Mod que precisa estar também no servidor',
-  proibido: 'Mod proibido pelo servidor',
-  shader: 'Shaders precisam do Iris ou do Oculus e pesam no PC',
-  loader: 'Loader da instalação não serve',
-  versao: 'Sem versão para esta instalação'
+  soServidor: t('s.tipos.modQueRodaSoNo'),
+  precisaServidor: t('s.tipos.modQuePrecisaEstarTambem'),
+  proibido: t('s.tipos.modProibidoPeloServidor'),
+  shader: t('s.tipos.shadersPrecisamDoIrisOu'),
+  loader: t('s.tipos.loaderDaInstalacaoNaoServe'),
+  versao: t('s.tipos.semVersaoParaEstaInstalacao')
 }
 
 export interface Compat {

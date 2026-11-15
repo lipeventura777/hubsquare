@@ -7,6 +7,7 @@
 // para o "Editar como texto".
 import type { CampoConfig, TipoCampo } from '../shared/tipos'
 import { codificarPropriedade, decodificarPropriedade } from './propriedades'
+import { t as tr } from '../shared/i18n'
 
 export type { CampoConfig }
 
@@ -739,7 +740,7 @@ export function lerCampos(texto: string, formato: Formato): CampoConfig[] {
 }
 
 function texto1(v: string, jeito: { aspas: Aspas }, formato: Formato): string {
-  if (/[\r\n]/.test(v)) throw new Error('Use uma linha só (para mais, use "Editar como texto").')
+  if (/[\r\n]/.test(v)) throw new Error(tr('p.configRegras.useUmaLinhaSo'))
   if (formato === 'properties') return codificarPropriedade(v)
   if (jeito.aspas === "'") {
     if (formato === 'yml') return `'${v.replace(/'/g, "''")}'`
@@ -751,7 +752,7 @@ function texto1(v: string, jeito: { aspas: Aspas }, formato: Formato): string {
 
 function numero(v: string, decimal: boolean): string {
   const s = v.trim()
-  if (!NUMERO.test(s)) throw new Error(`"${v}" não é um número.`)
+  if (!NUMERO.test(s)) throw new Error(tr('p.configRegras.naoEUmNumero', { v }))
   // Config que espera número com vírgula (ex.: 1.0) continua com casa decimal.
   return decimal && !/[.eE]/.test(s) ? `${s}.0` : s
 }
@@ -760,14 +761,16 @@ function serializar(t: Trecho, valor: unknown, formato: Formato): string {
   const j = t.jeito
   switch (j.t) {
     case 'bool':
-      if (typeof valor !== 'boolean') throw new Error(`"${t.campo.chave}" precisa ser sim ou não.`)
+      if (typeof valor !== 'boolean')
+        throw new Error(tr('p.configRegras.precisaSerSimOuNao', { chave: t.campo.chave }))
       return String(valor)
     case 'num':
       return numero(String(valor), j.decimal)
     case 'str':
       return texto1(String(valor ?? ''), j, formato)
     case 'lista': {
-      if (!Array.isArray(valor)) throw new Error(`"${t.campo.chave}" precisa ser uma lista.`)
+      if (!Array.isArray(valor))
+        throw new Error(tr('p.configRegras.precisaSerUmaLista', { chave: t.campo.chave }))
       const itens = valor.map((x) => String(x))
       const um = (x: string): string =>
         j.numerica
@@ -775,13 +778,13 @@ function serializar(t: Trecho, valor: unknown, formato: Formato): string {
           : texto1(x, { aspas: j.aspas || (formato === 'yml' ? '' : '"') }, formato)
       if (j.bloco) {
         if (!itens.length)
-          throw new Error(`A lista "${t.campo.chave}" precisa de pelo menos um item.`)
+          throw new Error(tr('p.configRegras.aListaPrecisaDeUmItem', { chave: t.campo.chave }))
         return itens.map((x) => `${j.bloco!.indent}- ${um(x)}`).join(j.bloco.quebra)
       }
       return `[${itens.map(um).join(', ')}]`
     }
     case 'leitura':
-      throw new Error(`"${t.campo.chave}" só pode ser mudado pelo "Editar como texto".`)
+      throw new Error(tr('p.configRegras.soPeloEditarComoTexto', { chave: t.campo.chave }))
   }
 }
 
@@ -794,7 +797,7 @@ export function aplicarMudancas(
   const trechos = new Map(analisar(texto, formato).map((t) => [t.campo.id, t]))
   const lista = Object.entries(mudancas).map(([id, valor]) => {
     const t = trechos.get(id)
-    if (!t) throw new Error('O arquivo mudou desde que foi aberto. Abra de novo.')
+    if (!t) throw new Error(tr('p.configRegras.oArquivoMudou'))
     return { t, novo: serializar(t, valor, formato) }
   })
   let saida = texto

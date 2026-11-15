@@ -3,6 +3,7 @@ import type { EstadoServidor } from '../../../shared/tipos'
 import { rotuloPequeno } from '../componentes/estilos'
 import { NumeroAnimado, useIndicador } from '../componentes/movimento'
 import { useJogadores, useUso } from '../servidor/comandos'
+import { t, tNome, idiomaAtual } from '../../../shared/i18n'
 
 // Cabeçalho da página (DESIGN.md, seção 6.2): título pequeno em caixa alta, abas
 // e, com o servidor ligado, a faixa CPU │ RAM │ jogadores.
@@ -25,12 +26,12 @@ export function Cabecalho({
   return (
     <header className="relative m-2.5 mb-0 flex h-20 shrink-0 flex-col rounded-[var(--raio-painel)] border border-[var(--vidro-borda)] bg-panel px-6">
       <div className="flex h-8 items-end">
-        <h1 className={rotuloPequeno}>{titulo}</h1>
+        <h1 className={rotuloPequeno}>{tNome(titulo)}</h1>
       </div>
       <div
         ref={conteiner as React.RefObject<HTMLDivElement>}
         role="tablist"
-        aria-label={titulo}
+        aria-label={tNome(titulo)}
         className="relative flex h-12 items-stretch gap-6"
       >
         {abas.map((nome) => {
@@ -47,7 +48,7 @@ export function Cabecalho({
                 ativa ? 'font-bold' : 'text-muted hover:text-texto'
               }`}
             >
-              {nome}
+              {tNome(nome)}
             </button>
           )
         })}
@@ -80,20 +81,20 @@ function FaixaDeStats(): React.JSX.Element {
 
   return (
     <div
-      aria-label="Uso do servidor"
+      aria-label={t('cabecalho.usoDoServidor')}
       className="absolute top-3 right-6 flex items-center gap-2 text-xs font-bold uppercase tracking-[.02em]"
     >
       {item(
-        'CPU',
+        t('cabecalho.cpu'),
         uso ? <NumeroAnimado valor={uso.cpu} formatar={(v) => `${Math.round(v)}%`} /> : '…'
       )}
       <span className="text-muted">│</span>
       {item(
-        'RAM',
+        t('cabecalho.ram'),
         uso ? (
           <NumeroAnimado
             valor={uso.ram / 1024 ** 3}
-            formatar={(v) => `${v.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} GB`}
+            formatar={(v) => `${v.toLocaleString(idiomaAtual(), { maximumFractionDigits: 1 })} GB`}
           />
         ) : (
           '…'
@@ -101,7 +102,7 @@ function FaixaDeStats(): React.JSX.Element {
       )}
       <span className="text-muted">│</span>
       {item(
-        'Jogadores',
+        t('cabecalho.jogadores'),
         <>
           <NumeroAnimado valor={jogadores.length} />/{maximo ?? '…'}
         </>

@@ -4,6 +4,7 @@ import { sugerir, type NoComando } from '../../../shared/comandos'
 import { Flutuante } from '../componentes/Flutuante'
 import { corDaLinha, useJogadores } from './comandos'
 import { animacoesReduzidas } from '../componentes/movimento'
+import { t } from '../../../shared/i18n'
 
 const LIMITE = 5000
 
@@ -167,7 +168,7 @@ export function Console({
         ref={caixa}
         onScroll={aoRolar}
         role="log"
-        aria-label="Console do servidor"
+        aria-label={t('console.consoleDoServidor')}
         className="min-h-0 flex-1 overflow-auto p-3 break-all whitespace-pre-wrap"
       >
         {linhas.map((l) => (
@@ -194,7 +195,7 @@ export function Console({
           <ul
             id="sugestoes-console"
             role="listbox"
-            aria-label="Sugestões"
+            aria-label={t('console.sugestoes')}
             className="max-h-64 min-w-56 border border-linha bg-console py-1 font-mono text-[13px] shadow-xl"
           >
             {sugestoes.opcoes.map((o, i) => (
@@ -212,7 +213,7 @@ export function Console({
               </li>
             ))}
             <li className="px-3 pt-1 text-[11px] text-console-muted">
-              Tab completa · ↑↓ escolhe · Esc fecha
+              {t('console.tabCompletaEscolheEscFecha')}
             </li>
           </ul>
         </Flutuante>
@@ -223,21 +224,23 @@ export function Console({
           lado="cima"
           alinhar="fim"
           role="dialog"
-          rotulo="Comandos favoritos e histórico"
+          rotulo={t('console.comandosFavoritosEHistorico')}
         >
           <div className="flex w-96 max-w-[calc(100vw-16px)] flex-col border border-linha bg-console p-2 font-mono text-[12px] shadow-xl">
             <p className="px-1 pb-1 font-sans text-xs font-bold text-console-muted uppercase">
-              Favoritos
+              {t('console.favoritos')}
             </p>
             {!favoritos.length && (
-              <p className="px-1 pb-2 text-console-muted">Nenhum ainda: use ☆ no histórico.</p>
+              <p className="px-1 pb-2 text-console-muted">
+                {t('console.nenhumAindaUseNoHistorico')}
+              </p>
             )}
             {favoritos.map((f) => (
               <div key={f} className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => favoritar(f, false)}
-                  aria-label="Tirar dos favoritos"
+                  aria-label={t('console.tirarDosFavoritos')}
                   className="text-warning"
                 >
                   ★
@@ -255,7 +258,7 @@ export function Console({
               </div>
             ))}
             <p className="px-1 pt-2 pb-1 font-sans text-xs font-bold text-console-muted uppercase">
-              Histórico
+              {t('console.historico')}
             </p>
             {[...historico]
               .reverse()
@@ -266,7 +269,9 @@ export function Console({
                     type="button"
                     onClick={() => favoritar(h, !favoritos.includes(h))}
                     aria-label={
-                      favoritos.includes(h) ? 'Tirar dos favoritos' : 'Salvar nos favoritos'
+                      favoritos.includes(h)
+                        ? t('console.tirarDosFavoritos')
+                        : t('console.salvarNosFavoritos')
                     }
                     className={favoritos.includes(h) ? 'text-warning' : 'text-console-muted'}
                   >
@@ -302,21 +307,19 @@ export function Console({
           aria-autocomplete="list"
           disabled={!aceita}
           placeholder={
-            aceita
-              ? 'Digite um comando e aperte Enter (Tab completa, ↑↓ histórico)'
-              : 'Ligue o servidor para usar comandos'
+            aceita ? t('console.digiteUmComandoEAperte') : t('console.ligueOServidorParaUsar')
           }
-          aria-label="Comando do servidor"
+          aria-label={t('console.comandoDoServidor')}
           className="h-full flex-1 bg-transparent text-on-dark outline-none placeholder:text-console-muted disabled:opacity-60"
         />
         <button
           type="button"
           aria-expanded={lista}
           onClick={() => setLista(!lista)}
-          title="Comandos favoritos e histórico"
+          title={t('console.comandosFavoritosEHistorico')}
           className="shrink-0 px-1 text-console-muted hover:text-on-dark"
         >
-          ★ Favoritos
+          {t('console.favoritos2')}
         </button>
       </form>
     </div>

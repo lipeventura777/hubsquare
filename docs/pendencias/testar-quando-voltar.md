@@ -316,3 +316,55 @@ Pelo terminal já passou: as regras de página (`tests/paginaRegras.test.ts`), e
 3. [ ] CurseForge (com a sua chave): uma busca bem aberta mostra "Muitos resultados…" e a última página abre.
 4. [ ] Instalados do Cobbleverse (e Conteúdo da instalação dele no PlaySquare): páginas rápidas, a busca acha mods de qualquer página, e selecionar em duas páginas mostra "N selecionados".
 5. [ ] Criar servidor de modpack: a lista de modpacks com páginas.
+
+# Testar quando voltar (Fase V10: fundo próprio no ServSquare)
+
+Pelo terminal já passou: a ordem (servidor > app > bioma padrão) e o "Igual à instalação" seguindo a instalação (`tests/fundoRegras.test.ts`), e de ponta a ponta (`tests/e2e/fundoServidor.e2e.ts`): imagem e bioma por servidor, valendo em Painel e Opções, Servidores com o fundo do app, trocar de servidor troca o fundo, a escolha continua depois de recarregar, "Igual à instalação" acompanhando a mudança no Jogar, e apagar a imagem em uso. Prints em `.teste/prints-v10/`. O que só dá para ver com você:
+
+1. [ ] Painel do servidor do Cobbleverse › Fundo: escolher uma imagem sua (e mexer nos ajustes); andar pelas telas dele (Opções, Console, Mods): o fundo é o mesmo.
+2. [ ] Trocar para "Igual à instalação deste servidor" e mudar o fundo da instalação dele no PlaySquare › Jogar: voltando ao ServSquare, o fundo acompanha.
+3. [ ] Alternar entre servidores na tela Servidores: o fundo troca (com a passagem suave quando é bioma).
+4. [ ] Arrastar uma imagem do Explorador para o topo do Painel.
+
+# Testar quando voltar (Fase V11: modo vitrine)
+
+Pelo terminal já passou (`tests/e2e/vitrine.e2e.ts`): esconder e mostrar pelo botão e pelo Esc nas duas telas, lembrar ao reabrir (por área), LIGAR e JOGAR pelo bloco (com o estado e o erro no próprio bloco), Tab só no que está à mostra, a barra lateral voltando como estava e trocar de tela trazendo o painel. Prints com e sem vitrine em Dia, Cerejeira, Deep Dark e com uma imagem em `.teste/prints-v11/`. O que só dá para ver com você:
+
+1. [ ] Jogar e Painel: "Esconder painel" (olho riscado) e ver a animação (os cards saem para baixo, o banner cresce, o título e a barra lateral recolhem); "Mostrar painel" e Esc trazem tudo de volta.
+2. [ ] Ligar o servidor pela vitrine: "Ligando… 0:05" correndo no bloco e depois "Online · 0/10 jogadores", sem abrir o console.
+3. [ ] Com "Reduzir animações" ligado: troca na hora.
+4. [ ] Com a vitrine ligada, um amigo entra no servidor: o aviso aparece por cima.
+
+## Fase I1: português e inglês
+
+O que já passou pelo terminal: os dois arquivos de textos têm as mesmas 3.123 chaves e as mesmas
+variáveis (`npm test`), nenhum texto visível fixo no código (`npm run lint`), e os fluxos de
+`tests/e2e/idioma.e2e.ts` (primeira abertura, troca sem reiniciar, instalação antiga, formatos).
+Os prints das telas nas duas línguas ficam em `.teste/prints-i1/pt-BR/` e `.teste/prints-i1/en/`.
+O que falta é olhar no Windows de verdade:
+
+1. **Instalador novo** (`release/HubSquare-Setup-<versão>.exe`):
+   - [ ] Logo no começo aparece a escolha de idioma do instalador; escolha **English**.
+   - [ ] As telas do instalador (licença, pasta, fim) vêm em inglês, com a licença MIT.
+   - [ ] Num PC (ou usuário do Windows) que **nunca usou o app**: a primeira tela é a escolha de
+     idioma com **English (US)** já marcado (veio do instalador).
+   - [ ] No PC de sempre (com servidores e instalações): o app abre direto em português, sem
+     perguntar nada.
+2. **Passar por todas as telas em inglês**: ServSquare (todas as telas e abas da barra lateral),
+   PlaySquare (Play, Installations, Browse, Content, Servers, Screenshots, Game settings) e a
+   engrenagem (Theme, Background, Animations, Idioma / Language, About).
+   - [ ] Nada em português que seja do app (nomes de mods, MOTD, console e o que você digitou
+     ficam como vieram).
+   - [ ] Nenhum texto cortado ou botão quebrado em 1280 e em 1920.
+   - [ ] Inventário do jogador: depois de "Download icons" de novo, os nomes dos itens vêm em
+     inglês (os ícones baixados antes da Fase I1 não trazem o arquivo de nomes em inglês).
+   - [ ] Comandos: listas de itens e efeitos em inglês depois de "Get commands" de novo (dados de
+     comandos preparados antes da Fase I1 só têm os nomes em português; em inglês aparece o id).
+3. **Trocar para português** em engrenagem › Idioma / Language:
+   - [ ] A tela muda na hora, sem fechar o app, e volta para a mesma aba.
+   - [ ] **Bandeja** (perto do relógio): botão direito mostra "Abrir / Ligar servidor / Sair" em
+     português; depois de trocar para inglês, "Open / Start server / Quit". A dica do ícone também.
+   - [ ] Com o servidor ligado durante a troca: ele continua ligado e o console continua.
+4. **Painel do celular**: com o app em inglês, abra o painel no celular e confira que a página
+   vem em inglês (e em português depois de trocar).
+5. **Engrenagem › About**: versão, links (Copy funciona) e o aviso da Mojang em maiúsculas.

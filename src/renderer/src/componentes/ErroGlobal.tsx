@@ -2,6 +2,7 @@ import { Component, useEffect, useState } from 'react'
 import type { ErroTela } from '../../../shared/tipos'
 import { MensagemErro } from './MensagemErro'
 import { Botao } from './ui'
+import { t } from '../../../shared/i18n'
 
 // Nenhum erro derruba o app (correção da instalação de modpacks): o que escapar do processo
 // principal ou da tela aparece aqui, no padrão de erro (seção 6.9), em vez de travar ou fechar.
@@ -10,8 +11,7 @@ const textoDe = (e: unknown): string =>
   e instanceof Error ? (e.stack ?? e.message) : typeof e === 'string' ? e : JSON.stringify(e)
 
 const erroDaTela = (e: unknown): ErroTela => ({
-  mensagem:
-    'Algo deu errado nesta tela. Você pode continuar usando o app; se repetir, veja os detalhes.',
+  mensagem: t('erroGlobal.algoDeuErradoNestaTela'),
   detalhes: textoDe(e)
 })
 
@@ -35,7 +35,7 @@ export function ErroGlobal(): React.JSX.Element | null {
       <MensagemErro erro={erro} />
       <div className="flex justify-end px-4 pb-3">
         <Botao tamanho="pequeno" onClick={() => setErro(null)}>
-          Fechar
+          {t('erroGlobal.fechar')}
         </Botao>
       </div>
     </div>
@@ -55,7 +55,7 @@ export class LimiteDeErro extends Component<{ children: React.ReactNode }, { err
         <MensagemErro erro={erroDaTela(this.state.erro)} />
         <div>
           <Botao variante="primario" onClick={() => location.reload()}>
-            Recarregar a tela
+            {t('erroGlobal.recarregarATela')}
           </Botao>
         </div>
       </div>

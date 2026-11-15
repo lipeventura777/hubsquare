@@ -1,6 +1,7 @@
 import { buscarJson } from './rede'
 import { lerChave } from './chaveCurseForge'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // API do CurseForge (docs.curseforge.com/rest-api), com a chave do próprio usuário.
 // Termos (3rd Party API Terms): não guardar nem fazer cache de dados da API. Por isso nada daqui
@@ -59,7 +60,7 @@ export interface ModCF {
 async function chave(): Promise<string> {
   const c = await lerChave()
   if (!c) {
-    throw new ErroApp('Para usar o CurseForge, cole a sua chave da API em Opções › Integrações.')
+    throw new ErroApp(t('p.curseforge.paraUsarOCurseforgeCole'))
   }
   return c
 }

@@ -15,6 +15,7 @@ import {
 import { lerIcone } from './icone'
 import { textoEmprestado } from './passarRegras'
 import { acharItem, definirAtivo, lerIndice, lerInfo, removerItem } from './servidores'
+import { t } from '../shared/i18n'
 
 // Ações da tela Servidores. Regra: só o servidor ativo pode estar ligado, então trocar o ativo
 // com um servidor ligado sempre passa por desligar (com o backup de sempre) antes.
@@ -43,11 +44,11 @@ export async function listarServidores(): Promise<ItemServidor[]> {
 
 export async function ativarServidor(id: unknown): Promise<void> {
   const item = await acharItem(id)
-  if (!item) throw new ErroApp('Esse servidor não está mais na lista.')
+  if (!item) throw new ErroApp(t('p.listaServidores.esseServidorNaoEstaMais'))
   const indice = await lerIndice()
   if (item.id === indice.ativo) return
   if (lerEstado() !== 'desligado') {
-    throw new ErroApp('Outro servidor está ligado. Desligue ele antes de trocar.')
+    throw new ErroApp(t('p.listaServidores.outroServidorEstaLigadoDesligue'))
   }
   await definirAtivo(item.id)
 }
@@ -55,9 +56,9 @@ export async function ativarServidor(id: unknown): Promise<void> {
 // "Desligar X e ligar Y": desliga o ligado do jeito certo, espera o backup, troca e (se pedido) liga.
 export async function trocarServidor(id: unknown, ligarDepois: unknown): Promise<void> {
   const item = await acharItem(id)
-  if (!item) throw new ErroApp('Esse servidor não está mais na lista.')
+  if (!item) throw new ErroApp(t('p.listaServidores.esseServidorNaoEstaMais'))
   if (!(await lerInfo(item))) {
-    throw new ErroApp(`A pasta do servidor "${item.nome}" não foi encontrada.`)
+    throw new ErroApp(t('p.listaServidores.aPastaDoServidorNao', { nome: item.nome }))
   }
   await desligar()
   await esperarTarefas() // o backup feito ao desligar precisa terminar antes
@@ -69,21 +70,16 @@ export async function trocarServidor(id: unknown, ligarDepois: unknown): Promise
 // e só se a pasta estiver dentro de Documentos/ServSquare/servidores.
 export async function apagarServidor(id: unknown, confirmacao: unknown): Promise<void> {
   const item = await acharItem(id)
-  if (!item) throw new ErroApp('Esse servidor não está mais na lista.')
+  if (!item) throw new ErroApp(t('p.listaServidores.esseServidorNaoEstaMais'))
   if (confirmacao !== item.nome) {
-    throw new ErroApp(
-      'O nome digitado não confere. Digite o nome do servidor exatamente como aparece.'
-    )
+    throw new ErroApp(t('p.listaServidores.oNomeDigitadoNaoConfere'))
   }
   const indice = await lerIndice()
   if (item.id === indice.ativo && lerEstado() !== 'desligado') {
-    throw new ErroApp('Desligue o servidor antes de apagar.')
+    throw new ErroApp(t('p.listaServidores.desligueOServidorAntesDe'))
   }
   if (!dentroDe(pastaServidores(), item.pasta) || item.pasta === pastaServidores()) {
-    throw new ErroApp(
-      'A pasta desse servidor fica fora da pasta do ServSquare, então o app não apaga ela sozinho. Apague pelo Explorador, se quiser.',
-      item.pasta
-    )
+    throw new ErroApp(t('p.listaServidores.aPastaDesseServidorFica'), item.pasta)
   }
 
   return comServidorDesligado(async () => {
@@ -92,20 +88,14 @@ export async function apagarServidor(id: unknown, confirmacao: unknown): Promise
       try {
         await compactarMundo(info, undefined, 'apagar') // backup final; ele fica em Documentos/ServSquare/backups
       } catch (e) {
-        throw new ErroApp(
-          'Não consegui fazer o backup final do mundo, então o servidor não foi apagado. Tente de novo.',
-          detalhar(e)
-        )
+        throw new ErroApp(t('p.listaServidores.naoConseguiFazerOBackup'), detalhar(e))
       }
     }
     if (existsSync(item.pasta)) {
       try {
         await rm(item.pasta, { recursive: true, force: true })
       } catch (e) {
-        throw new ErroApp(
-          'Não consegui apagar a pasta do servidor. Feche janelas do Explorador abertas nela e tente de novo.',
-          detalhar(e)
-        )
+        throw new ErroApp(t('p.listaServidores.naoConseguiApagarAPasta'), detalhar(e))
       }
     }
     await removerItem(item.id)

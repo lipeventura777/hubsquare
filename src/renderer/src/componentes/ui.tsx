@@ -1,6 +1,7 @@
 import { Children, Fragment, isValidElement, useEffect, useId, useRef, useState } from 'react'
 import { Flutuante } from './Flutuante'
 import { campo, classesBotao, type Variante } from './estilos'
+import { t } from '../../../shared/i18n'
 
 // Componentes base do DESIGN.md (seções 5 e 6). Cantos retos, cores só pelos tokens.
 
@@ -730,7 +731,7 @@ export function Dialogo({
       <div className="mt-3 text-sm">{children}</div>
       <div className="mt-6 flex justify-end gap-2">
         <Botao onClick={aoCancelar} disabled={acao.ocupado}>
-          Cancelar
+          {t('ui.cancelar')}
         </Botao>
         <Botao
           variante={acao.variante ?? 'primario'}

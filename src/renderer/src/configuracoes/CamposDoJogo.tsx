@@ -10,6 +10,7 @@ import {
 } from '../../../shared/tipos'
 import { CaixaSelecao, Campo, Secao, Selecao, Slider } from '../componentes/ui'
 import { EditorMotd } from './EditorMotd'
+import { t } from '../../../shared/i18n'
 
 // Campos de jogo usados na tela Configurações e no assistente de primeira vez (seção 6.7).
 export function CamposDoJogo({
@@ -27,10 +28,10 @@ export function CamposDoJogo({
 }): React.JSX.Element {
   return (
     <>
-      <Secao titulo="Jogo">
+      <Secao titulo={t('camposDoJogo.jogo')}>
         <div className="grid grid-cols-2 gap-4">
           <label className="flex flex-col gap-1 text-[13px]">
-            Modo de jogo
+            {t('camposDoJogo.modoDeJogo')}
             <Selecao
               value={config.modoDeJogo}
               onChange={(e) => mudar('modoDeJogo', e.target.value as ModoDeJogo)}
@@ -43,7 +44,7 @@ export function CamposDoJogo({
             </Selecao>
           </label>
           <label className="flex flex-col gap-1 text-[13px]">
-            Dificuldade
+            {t('camposDoJogo.dificuldade')}
             <Selecao
               value={config.dificuldade}
               onChange={(e) => mudar('dificuldade', e.target.value as Dificuldade)}
@@ -57,7 +58,7 @@ export function CamposDoJogo({
           </label>
         </div>
         <label className="flex flex-col gap-1 text-[13px]">
-          Máximo de jogadores
+          {t('camposDoJogo.maximoDeJogadores')}
           <Campo
             type="number"
             min={1}
@@ -69,7 +70,7 @@ export function CamposDoJogo({
         </label>
       </Secao>
 
-      <Secao titulo="Mensagem na lista de servidores">
+      <Secao titulo={t('camposDoJogo.mensagemNaListaDeServidores')}>
         <EditorMotd
           valor={config.motd}
           aoMudar={(m) => mudar('motd', m)}
@@ -79,15 +80,15 @@ export function CamposDoJogo({
         />
       </Secao>
 
-      <Secao titulo="Regras">
+      <Secao titulo={t('camposDoJogo.regras')}>
         <CaixaSelecao marcada={config.pvp} aoMudar={(v) => mudar('pvp', v)}>
-          PvP (jogadores podem atacar uns aos outros)
+          {t('camposDoJogo.pvpJogadoresPodemAtacarUns')}
         </CaixaSelecao>
       </Secao>
 
-      <Secao titulo="Desempenho">
+      <Secao titulo={t('camposDoJogo.desempenho')}>
         <Slider
-          rotulo={`RAM do servidor (sugerido para este PC: ${ram.sugerida} GB)`}
+          rotulo={t('camposDoJogo.ramDoServidorSugeridoPara', { sugerida: ram.sugerida })}
           valor={config.ramGb}
           min={ram.min}
           max={ram.max}

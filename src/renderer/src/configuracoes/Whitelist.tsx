@@ -2,39 +2,39 @@ import { useEffect, useState } from 'react'
 import type { Amigo, ErroTela, ListaId, Resultado } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { Botao, Campo, Secao } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 const TEXTOS: Record<
   ListaId,
   { explicacao: string; titulo: string; campo: string; maximo: number; remover: string }
 > = {
   whitelist: {
-    explicacao:
-      'Só quem está nesta lista pode entrar no servidor. Adicione você e seus amigos pelo nome usado no jogo.',
-    titulo: 'Na whitelist',
-    campo: 'Nome no jogo',
+    explicacao: t('whitelist.soQuemEstaNestaLista'),
+    titulo: t('whitelist.naWhitelist'),
+    campo: t('whitelist.nomeNoJogo'),
     maximo: 16,
-    remover: 'Remover'
+    remover: t('whitelist.remover')
   },
   ops: {
-    explicacao: 'Operadores podem usar todos os comandos do servidor. Dê só para quem você confia.',
-    titulo: 'Operadores',
-    campo: 'Nome no jogo',
+    explicacao: t('whitelist.operadoresPodemUsarTodosOs'),
+    titulo: t('whitelist.operadores'),
+    campo: t('whitelist.nomeNoJogo'),
     maximo: 16,
-    remover: 'Tirar OP'
+    remover: t('whitelist.tirarOp')
   },
   banidos: {
-    explicacao: 'Quem está nesta lista não consegue entrar no servidor.',
-    titulo: 'Jogadores banidos',
-    campo: 'Nome no jogo',
+    explicacao: t('whitelist.quemEstaNestaListaNao'),
+    titulo: t('whitelist.jogadoresBanidos'),
+    campo: t('whitelist.nomeNoJogo'),
     maximo: 16,
-    remover: 'Desbanir'
+    remover: t('whitelist.desbanir')
   },
   ipsBanidos: {
-    explicacao: 'Ninguém consegue entrar no servidor a partir destes endereços.',
-    titulo: 'IPs banidos',
-    campo: 'Endereço IP (ex.: 123.45.67.89)',
+    explicacao: t('whitelist.ninguemConsegueEntrarNoServidor'),
+    titulo: t('whitelist.ipsBanidos'),
+    campo: t('whitelist.enderecoIpEx12345'),
     maximo: 15,
-    remover: 'Desbanir'
+    remover: t('whitelist.desbanir')
   }
 }
 
@@ -70,7 +70,7 @@ export function ListaDoServidor({ lista }: { lista: ListaId }): React.JSX.Elemen
 
   return (
     <>
-      <Secao titulo="Adicionar">
+      <Secao titulo={t('whitelist.adicionar')}>
         <p className="text-[13px] text-muted">{textos.explicacao}</p>
         <form onSubmit={adicionar} className="flex gap-2">
           <Campo
@@ -81,7 +81,7 @@ export function ListaDoServidor({ lista }: { lista: ListaId }): React.JSX.Elemen
             onChange={(e) => setValor(e.target.value)}
           />
           <Botao type="submit" variante="primario" disabled={ocupado || !valor.trim()}>
-            Adicionar
+            {t('whitelist.adicionar')}
           </Botao>
         </form>
         {erro && <MensagemErro erro={erro} />}
@@ -89,7 +89,7 @@ export function ListaDoServidor({ lista }: { lista: ListaId }): React.JSX.Elemen
 
       <Secao titulo={`${textos.titulo} (${itens.length})`}>
         {itens.length === 0 ? (
-          <p className="text-[13px] text-muted">Ninguém na lista ainda.</p>
+          <p className="text-[13px] text-muted">{t('whitelist.ninguemNaListaAinda')}</p>
         ) : (
           <ul className="divide-y divide-linha border border-linha bg-panel">
             {itens.map((a, i) => (

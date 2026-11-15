@@ -13,6 +13,7 @@ import { MensagemErro } from '../componentes/MensagemErro'
 import { BarraProgresso } from '../componentes/movimento'
 import { CardPainel } from '../componentes/paineis'
 import { Botao, Dialogo, OpcaoRadio } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Tela Mods (Fase 17): "Pacote pros amigos" e a atualização do modpack de onde o servidor veio.
 
@@ -37,14 +38,16 @@ function BarraDoProgresso({
 // Texto curto, pronto para colar no Discord.
 function textoDiscord(info: InfoServidor, pacote: PacoteAmigos, endereco: string | null): string {
   const linhas = [
-    `**Como entrar no servidor ${info.nome}**`,
-    `1. Baixe o arquivo "${pacote.arquivo}" que eu mandei aqui.`,
-    '2. No app do Modrinth: clique em "+" › "Importar" e escolha o arquivo. No Prism Launcher: "Adicionar instância" › "Importar" e escolha o arquivo.',
-    `3. Abra a instância criada, vá em Multijogador › Adicionar servidor e use o endereço: ${endereco ?? '(eu mando o endereço quando ligar o servidor)'}`
+    t('modpackEAmigos.comoEntrarNoServidor', { nome: info.nome }),
+    t('modpackEAmigos.n1BaixeOArquivoQue', { arquivo: pacote.arquivo }),
+    t('modpackEAmigos.n2NoAppDoModrinth'),
+    t('modpackEAmigos.n3AbraAInstanciaCriada', {
+      v: endereco ?? t('modpackEAmigos.euMandoOEnderecoQuando')
+    })
   ]
   if (pacote.manuais.length) {
     linhas.push(
-      `Esses mods precisam ser baixados à mão e colocados na pasta "mods" da instância: ${pacote.manuais.join(', ')}`
+      t('modpackEAmigos.essesModsPrecisamSerBaixados', { join: pacote.manuais.join(', ') })
     )
   }
   return linhas.join('\n')
@@ -81,20 +84,18 @@ export function BotaoPacoteAmigos({
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-3">
         <Botao variante="destaque" onClick={gerar} disabled={gerando}>
-          {gerando ? 'Gerando...' : 'Pacote pros amigos'}
+          {gerando ? t('modpackEAmigos.gerando') : t('modpackEAmigos.pacoteProsAmigos')}
         </Botao>
-        <span className="text-xs text-muted">
-          Um arquivo .mrpack com o loader e os mods que seus amigos precisam para entrar.
-        </span>
+        <span className="text-xs text-muted">{t('modpackEAmigos.umArquivoMrpackComO')}</span>
       </div>
       {erro && <MensagemErro erro={erro} />}
 
       <Dialogo
         aberto={!!pacote}
-        titulo="Pacote pronto!"
+        titulo={t('modpackEAmigos.pacotePronto')}
         aoCancelar={() => setPacote(null)}
         acao={{
-          rotulo: copiado ? 'Copiado!' : 'Copiar texto',
+          rotulo: copiado ? t('modpackEAmigos.copiado') : t('modpackEAmigos.copiarTexto'),
           variante: 'destaque',
           aoClicar: () => {
             navigator.clipboard.writeText(texto)
@@ -105,30 +106,28 @@ export function BotaoPacoteAmigos({
         {pacote && (
           <div className="flex flex-col gap-3 text-[13px]">
             <p>
-              <b>{pacote.arquivo}</b> foi salvo com {pacote.mods}{' '}
-              {pacote.mods === 1 ? 'mod' : 'mods'}. Os mods do Modrinth não vão dentro do arquivo: o
-              app do amigo baixa direto de lá.
+              <b>{pacote.arquivo}</b> {t('modpackEAmigos.foiSalvoCom', { mods: pacote.mods })}{' '}
+              {pacote.mods === 1 ? t('modpackEAmigos.mod') : t('modpackEAmigos.mods')}
+              {t('modpackEAmigos.osModsDoModrinthNao')}
             </p>
             {pacote.extras > 0 && (
               <p>
-                Também vão {pacote.extras}{' '}
-                {pacote.extras === 1 ? 'item escolhido' : 'itens escolhidos'} no Explorar (shaders,
-                resource packs ou mods só do jogador), cada um na sua pasta.
+                {t('modpackEAmigos.tambemVao', { extras: pacote.extras })}{' '}
+                {pacote.extras === 1 ? 'item escolhido' : t('modpackEAmigos.itensEscolhidos')}{' '}
+                {t('modpackEAmigos.noExplorarShadersResourcePacks')}
               </p>
             )}
             {pacote.semModrinth.length > 0 && (
               <p className="text-muted">
-                Incluídos no arquivo (não estão no Modrinth, mas a licença deixa):{' '}
-                {pacote.semModrinth.join(', ')}
+                {t('modpackEAmigos.incluidosNoArquivoNaoEstao')} {pacote.semModrinth.join(', ')}
               </p>
             )}
             {pacote.manuais.length > 0 && (
               <p className="text-warning">
-                ⚠ Baixe manualmente (não estão no Modrinth e a licença não deixa incluir):{' '}
-                {pacote.manuais.join(', ')}
+                {t('modpackEAmigos.baixeManualmenteNaoEstaoNo')} {pacote.manuais.join(', ')}
               </p>
             )}
-            <p>Mande o arquivo junto com este texto:</p>
+            <p>{t('modpackEAmigos.mandeOArquivoJuntoCom')}</p>
             <pre className="font-mono max-h-48 overflow-auto bg-console p-3 text-xs whitespace-pre-wrap text-white">
               {texto}
             </pre>
@@ -202,16 +201,18 @@ export function AtualizacaoDoModpack({
   return (
     <>
       <CardPainel
-        titulo={`Modpack ${nova.nome}`}
+        titulo={t('modpackEAmigos.modpack', { nome: nova.nome })}
         acoes={
           <Botao
             variante="primario"
             tamanho="pequeno"
             disabled={!!ocupado || ligado}
-            title={ligado ? 'Desligue o servidor para atualizar o modpack' : undefined}
+            title={ligado ? t('modpackEAmigos.desligueOServidorParaAtualizar') : undefined}
             onClick={planejar}
           >
-            {ocupado === 'planejando' ? 'Verificando...' : 'Atualizar o modpack'}
+            {ocupado === 'planejando'
+              ? t('modpackEAmigos.verificando')
+              : t('modpackEAmigos.atualizarOModpack')}
           </Botao>
         }
       >
@@ -220,8 +221,8 @@ export function AtualizacaoDoModpack({
         </p>
         <p className="mt-1 text-xs text-muted">
           {ligado
-            ? 'Desligue o servidor para atualizar.'
-            : 'O app faz backup antes. O mundo, as configurações que você mudou e os mods que você pôs à parte ficam como estão.'}
+            ? t('modpackEAmigos.desligueOServidorParaAtualizar2')
+            : t('modpackEAmigos.oAppFazBackupAntes')}
         </p>
         {ocupado === 'planejando' && <BarraDoProgresso progresso={progresso} />}
         {erro && (
@@ -233,10 +234,13 @@ export function AtualizacaoDoModpack({
 
       <Dialogo
         aberto={!!plano}
-        titulo={`Atualizar para ${plano?.versaoNova ?? ''}?`}
+        titulo={t('modpackEAmigos.atualizarPara', { v: plano?.versaoNova ?? '' })}
         aoCancelar={() => !ocupado && setPlano(null)}
         acao={{
-          rotulo: ocupado === 'atualizando' ? 'Atualizando...' : 'Atualizar',
+          rotulo:
+            ocupado === 'atualizando'
+              ? t('modpackEAmigos.atualizando')
+              : t('modpackEAmigos.atualizar'),
           variante: 'primario',
           ocupado: ocupado === 'atualizando',
           aoClicar: atualizar
@@ -247,18 +251,19 @@ export function AtualizacaoDoModpack({
             <p>
               {plano.escrever}{' '}
               {plano.escrever === 1
-                ? 'arquivo novo ou atualizado'
-                : 'arquivos novos ou atualizados'}
-              {plano.apagar > 0 && `, ${plano.apagar} que o pack não usa mais (saem)`}.
-              {plano.trocaLoader && ` O loader muda para a versão ${plano.trocaLoader}.`} Antes, o
-              app faz backup do mundo e do resto do servidor.
+                ? t('modpackEAmigos.arquivoNovoOuAtualizado')
+                : t('modpackEAmigos.arquivosNovosOuAtualizados')}
+              {plano.apagar > 0 && t('modpackEAmigos.queOPackNaoUsa', { apagar: plano.apagar })}.
+              {plano.trocaLoader &&
+                t('modpackEAmigos.oLoaderMudaParaA', { trocaLoader: plano.trocaLoader })}{' '}
+              {t('modpackEAmigos.antesOAppFazBackup')}
             </p>
             {plano.conflitos.length > 0 && (
               <>
                 <p className="font-bold">
                   {plano.conflitos.length === 1
-                    ? 'Um arquivo seu bate com o pack. O que fazer?'
-                    : `${plano.conflitos.length} arquivos seus batem com o pack. O que fazer com cada um?`}
+                    ? t('modpackEAmigos.umArquivoSeuBateCom')
+                    : t('modpackEAmigos.arquivosSeusBatemComO', { length: plano.conflitos.length })}
                 </p>
                 <ul className="flex max-h-64 flex-col gap-2 overflow-auto">
                   {plano.conflitos.map((c) => (
@@ -275,7 +280,9 @@ export function AtualizacaoDoModpack({
                             marcada={escolhas[c.caminho] === e}
                             aoEscolher={() => setEscolhas((a) => ({ ...a, [c.caminho]: e }))}
                           >
-                            {e === 'meu' ? 'Manter o meu' : 'Usar o do pack'}
+                            {e === 'meu'
+                              ? t('modpackEAmigos.manterOMeu')
+                              : t('modpackEAmigos.usarODoPack')}
                           </OpcaoRadio>
                         ))}
                       </div>

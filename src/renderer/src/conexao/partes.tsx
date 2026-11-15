@@ -3,6 +3,7 @@ import type { ErroTela, ModoConexao, ResultadoTeste } from '../../../shared/tipo
 import { MensagemErro } from '../componentes/MensagemErro'
 import { IconeCopiar } from '../componentes/icones'
 import { Aviso, Botao, Secao } from '../componentes/ui'
+import { t } from '../../../shared/i18n'
 
 // Endereço em monoespaçada com o botão de destaque "Copiar endereço".
 export function Endereco({ endereco }: { endereco: string }): React.JSX.Element {
@@ -19,7 +20,7 @@ export function Endereco({ endereco }: { endereco: string }): React.JSX.Element 
       <code className="flex-1 font-mono text-base font-bold break-all">{endereco}</code>
       <Botao variante="destaque" onClick={copiar}>
         <IconeCopiar className="h-4 w-4" />
-        {copiado ? 'Copiado!' : 'Copiar endereço'}
+        {copiado ? t('partes.copiado') : t('partes.copiarEndereco')}
       </Botao>
     </div>
   )
@@ -41,9 +42,9 @@ export function Testar({ modo }: { modo: ModoConexao }): React.JSX.Element {
   }
 
   return (
-    <Secao titulo="Teste">
+    <Secao titulo={t('partes.teste')}>
       <Botao onClick={testar} disabled={testando} className="self-start">
-        {testando ? 'Testando...' : 'Testar conexão'}
+        {testando ? t('partes.testando') : t('partes.testarConexao')}
       </Botao>
       {resultado && <Aviso tipo={resultado.ok ? 'sucesso' : 'atencao'}>{resultado.mensagem}</Aviso>}
       {erro && <MensagemErro erro={erro} />}
@@ -71,25 +72,23 @@ export function Firewall({
   }
 
   return (
-    <Secao titulo="Firewall do Windows">
+    <Secao titulo={t('partes.firewallDoWindows')}>
       {liberado ? (
-        <Aviso tipo="sucesso">O Java já está liberado no Firewall.</Aviso>
+        <Aviso tipo="sucesso">{t('partes.oJavaJaEstaLiberado')}</Aviso>
       ) : (
         <>
-          <p className="text-[13px] text-muted">
-            O Firewall do Windows pode bloquear seus amigos. O botão cria uma regra que deixa o Java
-            do HubSquare receber conexões. Mudar o Firewall é coisa de administrador, por isso o
-            Windows vai perguntar se você permite.
-          </p>
+          <p className="text-[13px] text-muted">{t('partes.oFirewallDoWindowsPode')}</p>
           <Botao
             variante="atencao"
             onClick={liberar}
             disabled={liberando || liberado === null}
             className="self-start"
           >
-            {liberando ? 'Esperando permissão...' : 'Liberar o Java no Firewall'}
+            {liberando ? t('partes.esperandoPermissao') : t('partes.liberarOJavaNoFirewall')}
           </Botao>
-          {liberado === null && <p className="text-xs text-muted">Crie um servidor primeiro.</p>}
+          {liberado === null && (
+            <p className="text-xs text-muted">{t('partes.crieUmServidorPrimeiro')}</p>
+          )}
         </>
       )}
       {erro && <MensagemErro erro={erro} />}

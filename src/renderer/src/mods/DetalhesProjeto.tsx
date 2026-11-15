@@ -23,11 +23,19 @@ import { DialogoPlano } from './DialogoPlano'
 import { Markdown } from './Markdown'
 import { NOMES_AMBIENTE, nomeLoader } from './nomesModrinth'
 import { IconeProjeto } from './TelaMods'
+import { t, idiomaAtual } from '../../../shared/i18n'
 
-const numero = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })
-const data = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })
+const numero = new Intl.NumberFormat(idiomaAtual(), {
+  notation: 'compact',
+  maximumFractionDigits: 1
+})
+const data = new Intl.DateTimeFormat(idiomaAtual(), { dateStyle: 'short' })
 
-const TIPOS_VERSAO: Record<string, string> = { release: 'Estável', beta: 'Beta', alpha: 'Alfa' }
+const TIPOS_VERSAO: Record<string, string> = {
+  release: t('detalhesProjeto.estavel'),
+  beta: t('detalhesProjeto.beta'),
+  alpha: t('detalhesProjeto.alfa')
+}
 
 // Cabeçalho da página de detalhes (Explorar e Instalados): ícone de 72px, nome e resumo.
 export function CabecalhoDetalhes({
@@ -77,7 +85,7 @@ export function DetalhesDoProjeto({
   info,
   aoVoltar,
   aoMudar,
-  rotuloVoltar = '‹ Voltar ao Explorar',
+  rotuloVoltar = t('detalhesProjeto.voltarAoExplorar'),
   extra,
   semAcaoPrincipal = false,
   fonte = 'modrinth'
@@ -156,7 +164,7 @@ export function DetalhesDoProjeto({
   }
 
   const extras = info.tipo === 'paper' ? 'plugins' : 'mods'
-  const reiniciar = ligado ? ' Com o servidor ligado, ele entra quando o servidor reiniciar.' : ''
+  const reiniciar = ligado ? t('detalhesProjeto.comOServidorLigadoEle') : ''
 
   // ---------- Ações de cada destino ----------
 
@@ -164,7 +172,11 @@ export function DetalhesDoProjeto({
     if (!d) return
     if (d.estado === 'atualizar' && d.arquivo) {
       const arquivo = d.arquivo
-      await rodar('principal', () => api.atualizarMods([arquivo]), `Atualizado.${reiniciar}`)
+      await rodar(
+        'principal',
+        () => api.atualizarMods([arquivo]),
+        t('detalhesProjeto.atualizado', { reiniciar })
+      )
       return aoMudar(true)
     }
     setOcupado('principal')
@@ -180,7 +192,7 @@ export function DetalhesDoProjeto({
     const ok = await rodar(
       'plano',
       () => api.instalarMods(plano.token),
-      `Instalado na pasta ${extras}.${reiniciar}`
+      t('detalhesProjeto.instaladoNaPasta', { extras, reiniciar })
     )
     setPlano(null)
     if (ok) await aoMudar(true)
@@ -197,8 +209,8 @@ export function DetalhesDoProjeto({
             'principal',
             () => api.instalarDatapack(d.id, d.fonte),
             ligado
-              ? 'Datapack copiado. Rode /reload no console ou reinicie o servidor para ativar.'
-              : 'Datapack copiado. Ele ativa quando o servidor ligar.'
+              ? t('detalhesProjeto.datapackCopiadoRodeReloadNo')
+              : t('detalhesProjeto.datapackCopiadoEleAtivaQuando')
           )
         )
           await aoMudar(true)
@@ -208,7 +220,9 @@ export function DetalhesDoProjeto({
           await rodar(
             'principal',
             () => api.usarResourcePack(d.id, d.obrigatorio),
-            `Pronto: o server.properties aponta para este resource pack.${ligado ? ' Vale depois de reiniciar o servidor.' : ''}`
+            t('detalhesProjeto.prontoOServerPropertiesAponta', {
+              v: ligado ? t('detalhesProjeto.valeDepoisDeReiniciarO') : ''
+            })
           )
         )
           await aoMudar(true)
@@ -219,8 +233,11 @@ export function DetalhesDoProjeto({
             'principal',
             () => api.adicionarAosAmigos(d.id, d.tipo),
             jogo
-              ? `Instalado na instalação ${info.nome}.${d.tipo === 'shader' ? ' O mod de shaders veio junto.' : ''}`
-              : 'Adicionado. Gere o Pacote pros amigos de novo (aba Instalados) para mandar a versão nova.'
+              ? t('detalhesProjeto.instaladoNaInstalacao', {
+                  nome: info.nome,
+                  v: d.tipo === 'shader' ? t('detalhesProjeto.oModDeShadersVeio') : ''
+                })
+              : t('detalhesProjeto.adicionadoGereOPacotePros')
           )
         )
           await aoMudar(true)
@@ -230,7 +247,7 @@ export function DetalhesDoProjeto({
           await rodar(
             'principal',
             () => api.criarInstalacaoDeModpack(d.id),
-            'Instalação criada. Ela aparece em Instalações.'
+            t('detalhesProjeto.instalacaoCriadaElaApareceEm')
           )
           return
         }
@@ -242,37 +259,49 @@ export function DetalhesDoProjeto({
 
   const rotulosJogo: Record<string, Record<string, string>> = {
     servidor: {
-      instalar: 'Instalar no meu jogo',
-      instalado: 'No meu jogo',
-      atualizar: 'Atualizar'
+      instalar: t('detalhesProjeto.instalarNoMeuJogo'),
+      instalado: t('detalhesProjeto.noMeuJogo'),
+      atualizar: t('detalhesProjeto.atualizar')
     },
-    amigos: { instalar: 'Instalar no meu jogo', instalado: 'No meu jogo', atualizar: 'Atualizar' },
-    modpack: { instalar: 'Criar instalação com este modpack' },
-    incompativel: { instalar: 'Não serve para esta instalação' }
+    amigos: {
+      instalar: t('detalhesProjeto.instalarNoMeuJogo'),
+      instalado: t('detalhesProjeto.noMeuJogo'),
+      atualizar: t('detalhesProjeto.atualizar')
+    },
+    modpack: { instalar: t('detalhesProjeto.criarInstalacaoComEsteModpack') },
+    incompativel: { instalar: t('detalhesProjeto.naoServeParaEstaInstalacao') }
   }
   const rotulos: Record<string, Record<string, string>> = jogo
     ? rotulosJogo
     : {
-        servidor: { instalar: 'Instalar', instalado: 'Instalado', atualizar: 'Atualizar' },
-        datapack: { instalar: 'Instalar no mundo', instalado: 'Instalado', atualizar: 'Atualizar' },
+        servidor: {
+          instalar: t('detalhesProjeto.instalar'),
+          instalado: t('detalhesProjeto.instalado'),
+          atualizar: t('detalhesProjeto.atualizar')
+        },
+        datapack: {
+          instalar: t('detalhesProjeto.instalarNoMundo'),
+          instalado: t('detalhesProjeto.instalado'),
+          atualizar: t('detalhesProjeto.atualizar')
+        },
         resourcepack: {
-          instalar: 'Usar como resource pack do servidor',
-          instalado: 'Em uso no servidor',
-          atualizar: 'Atualizar no servidor'
+          instalar: t('detalhesProjeto.usarComoResourcePackDo'),
+          instalado: t('detalhesProjeto.emUsoNoServidor'),
+          atualizar: t('detalhesProjeto.atualizarNoServidor')
         },
         amigos: {
-          instalar: 'Adicionar ao Pacote pros amigos',
-          instalado: 'No Pacote pros amigos',
-          atualizar: 'Atualizar no pacote'
+          instalar: t('detalhesProjeto.adicionarAoPacoteProsAmigos'),
+          instalado: t('detalhesProjeto.noPacoteProsAmigos'),
+          atualizar: t('detalhesProjeto.atualizarNoPacote')
         },
-        modpack: { instalar: 'Criar servidor com este modpack' },
-        incompativel: { instalar: 'Não serve para este servidor' }
+        modpack: { instalar: t('detalhesProjeto.criarServidorComEsteModpack') },
+        incompativel: { instalar: t('detalhesProjeto.naoServeParaEsteServidor') }
       }
   const rotulo =
     ocupado === 'principal'
       ? d.destino === 'servidor' && d.estado === 'instalar'
-        ? 'Verificando...'
-        : 'Instalando...'
+        ? t('detalhesProjeto.verificando')
+        : t('detalhesProjeto.instalando')
       : (rotulos[d.destino][d.estado] ?? rotulos[d.destino].instalar)
   const semVersao = d.destino !== 'modpack' && d.destino !== 'incompativel' && !d.versoes.length
   const desabilitado =
@@ -294,9 +323,9 @@ export function DetalhesDoProjeto({
         titulo={d.titulo}
         resumo={d.descricao}
         linha={[
-          projeto.autor && `por ${projeto.autor}`,
-          `${numero.format(d.downloads)} downloads`,
-          `${numero.format(d.seguidores)} seguidores`,
+          projeto.autor && t('detalhesProjeto.porAutor', { autor: projeto.autor }),
+          t('detalhesProjeto.downloads', { n: numero.format(d.downloads) }),
+          t('detalhesProjeto.seguidores', { n: numero.format(d.seguidores) }),
           d.ambiente && NOMES_AMBIENTE[d.ambiente]
         ]
           .filter(Boolean)
@@ -308,8 +337,11 @@ export function DetalhesDoProjeto({
         <FraseCompat compat={d.compat} />
         {semVersao && (
           <p className="text-[13px] text-warning">
-            ⚠ Não há versão para o Minecraft {info.versao}
-            {d.destino === 'servidor' ? ` com ${nomeLoader(info.tipo)}` : ''}.
+            {t('detalhesProjeto.naoHaVersaoParaO', { versao: info.versao })}
+            {d.destino === 'servidor'
+              ? t('detalhesProjeto.com', { nomeLoader: nomeLoader(info.tipo) })
+              : ''}
+            .
           </p>
         )}
         <div className="flex flex-wrap items-center gap-2">
@@ -321,7 +353,7 @@ export function DetalhesDoProjeto({
               rel="noreferrer"
               className={classesBotao('primario')}
             >
-              Baixe pelo site
+              {t('detalhesProjeto.baixePeloSite')}
             </a>
           )}
           {!semAcaoPrincipal && !(d.baixarPeloSite && d.estado !== 'instalado') && (
@@ -338,7 +370,7 @@ export function DetalhesDoProjeto({
           {/* Na aba Instalados, o Remover vem pelo `extra`. */}
           {!extra && d.destino === 'datapack' && d.estado !== 'instalar' && (
             <Botao variante="perigo" disabled={!!ocupado} onClick={() => setRemovendo(true)}>
-              Remover do mundo
+              {t('detalhesProjeto.removerDoMundo')}
             </Botao>
           )}
           {d.destino === 'resourcepack' && d.estado !== 'instalar' && (
@@ -349,13 +381,13 @@ export function DetalhesDoProjeto({
                   await rodar(
                     'parar',
                     () => api.pararResourcePack(),
-                    'O servidor não manda mais resource pack.'
+                    t('detalhesProjeto.oServidorNaoMandaMais')
                   )
                 )
                   await aoMudar(d.noPacote)
               }}
             >
-              Parar de usar no servidor
+              {t('detalhesProjeto.pararDeUsarNoServidor')}
             </Botao>
           )}
           {/* Resource pack também pode ir para o pacote; nos outros, o principal já é o pacote. */}
@@ -368,13 +400,17 @@ export function DetalhesDoProjeto({
                     await rodar(
                       'amigos',
                       () => api.removerDosAmigos(d.id),
-                      jogo ? 'Saiu da instalação.' : 'Saiu do Pacote pros amigos.'
+                      jogo
+                        ? t('detalhesProjeto.saiuDaInstalacao')
+                        : t('detalhesProjeto.saiuDoPacoteProsAmigos')
                     )
                   )
                     await aoMudar(d.destino === 'resourcepack' && d.estado !== 'instalar')
                 }}
               >
-                {jogo ? 'Tirar do meu jogo' : 'Tirar do Pacote pros amigos'}
+                {jogo
+                  ? t('detalhesProjeto.tirarDoMeuJogo')
+                  : t('detalhesProjeto.tirarDoPacoteProsAmigos')}
               </Botao>
             ) : (
               d.destino === 'resourcepack' && (
@@ -386,13 +422,15 @@ export function DetalhesDoProjeto({
                       await rodar(
                         'amigos',
                         () => api.adicionarAosAmigos(d.id, d.tipo),
-                        'Adicionado ao Pacote pros amigos, na pasta resourcepacks.'
+                        t('detalhesProjeto.adicionadoAoPacoteProsAmigos')
                       )
                     )
                       await aoMudar(true)
                   }}
                 >
-                  {ocupado === 'amigos' ? 'Adicionando...' : 'Adicionar ao Pacote pros amigos'}
+                  {ocupado === 'amigos'
+                    ? t('detalhesProjeto.adicionando')
+                    : t('detalhesProjeto.adicionarAoPacoteProsAmigos')}
                 </Botao>
               )
             ))}
@@ -410,18 +448,16 @@ export function DetalhesDoProjeto({
                   'obrigatorio',
                   () => api.usarResourcePack(d.id, v),
                   v
-                    ? 'Agora é obrigatório: quem recusar o pacote não entra.'
-                    : 'Agora é opcional: cada jogador escolhe se baixa.'
+                    ? t('detalhesProjeto.agoraEObrigatorioQuemRecusar')
+                    : t('detalhesProjeto.agoraEOpcionalCadaJogador')
                 )
             }}
           >
-            Obrigatório para entrar (quem recusar o pacote não entra)
+            {t('detalhesProjeto.obrigatorioParaEntrarQuemRecusar')}
           </CaixaSelecao>
         )}
         {d.tipo === 'shader' && !jogo && (
-          <p className="text-xs text-muted">
-            Para usar shaders, seus amigos precisam de um mod de shaders no jogo (como o Iris).
-          </p>
+          <p className="text-xs text-muted">{t('detalhesProjeto.paraUsarShadersSeusAmigos')}</p>
         )}
         {ocupado && jogo && d.tipo === 'modpack' ? (
           <AndamentoModpack progresso={progresso} />
@@ -454,11 +490,14 @@ export function DetalhesDoProjeto({
       <div className="grid gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_300px]">
         <div className="flex min-w-0 flex-col gap-6">
           {imagem && (
-            <section aria-label="Galeria" className="flex flex-col gap-2">
+            <section aria-label={t('detalhesProjeto.galeria')} className="flex flex-col gap-2">
               <figure className="flex flex-col gap-1">
                 <img
                   src={imagem.url}
-                  alt={imagem.titulo ?? `Imagem ${foto + 1} de ${d.titulo}`}
+                  alt={
+                    imagem.titulo ??
+                    t('detalhesProjeto.imagemDe', { v: foto + 1, titulo: d.titulo })
+                  }
                   className="max-h-[420px] w-full bg-panel-2 object-contain"
                 />
                 {(imagem.titulo || imagem.descricao) && (
@@ -474,7 +513,7 @@ export function DetalhesDoProjeto({
                     <button
                       key={g.url}
                       type="button"
-                      aria-label={`Ver imagem ${i + 1}`}
+                      aria-label={t('detalhesProjeto.verImagem', { v: i + 1 })}
                       aria-pressed={i === foto}
                       onClick={() => setFoto(i)}
                       className={`shrink-0 border-2 ${i === foto ? 'border-accent' : 'border-transparent hover:border-muted'}`}
@@ -487,19 +526,28 @@ export function DetalhesDoProjeto({
             </section>
           )}
 
-          <CardPainel titulo="Descrição">
-            {d.corpo ? <Markdown texto={d.corpo} /> : <p className="text-muted">Sem descrição.</p>}
+          <CardPainel titulo={t('detalhesProjeto.descricao')}>
+            {d.corpo ? (
+              <Markdown texto={d.corpo} />
+            ) : (
+              <p className="text-muted">{t('detalhesProjeto.semDescricao')}</p>
+            )}
           </CardPainel>
 
           <CardPainel
             titulo={
               d.destino === 'modpack'
-                ? 'Versões'
-                : `Versões para ${info.versao}${d.versoes.length ? ` (${d.versoes.length})` : ''}`
+                ? t('detalhesProjeto.versoes')
+                : t('detalhesProjeto.versoesPara', {
+                    versao: info.versao,
+                    v: d.versoes.length ? ` (${d.versoes.length})` : ''
+                  })
             }
           >
             {!d.versoes.length ? (
-              <p className="text-[13px] text-muted">Nenhuma versão compatível com este servidor.</p>
+              <p className="text-[13px] text-muted">
+                {t('detalhesProjeto.nenhumaVersaoCompativelComEste')}
+              </p>
             ) : (
               <ul className="flex flex-col divide-y divide-linha">
                 {d.versoes.map((v, i) => (
@@ -519,7 +567,9 @@ export function DetalhesDoProjeto({
                         {v.changelog ? (
                           <Markdown texto={v.changelog} />
                         ) : (
-                          <p className="text-xs text-muted">Sem notas desta versão.</p>
+                          <p className="text-xs text-muted">
+                            {t('detalhesProjeto.semNotasDestaVersao')}
+                          </p>
                         )}
                       </div>
                     </details>
@@ -531,7 +581,7 @@ export function DetalhesDoProjeto({
         </div>
 
         <aside className="flex flex-col gap-6">
-          <CardPainel titulo="Licença">
+          <CardPainel titulo={t('detalhesProjeto.licenca')}>
             <p className="text-[13px]">
               {d.licenca.url ? (
                 <a
@@ -549,7 +599,7 @@ export function DetalhesDoProjeto({
           </CardPainel>
 
           {d.links.length > 0 && (
-            <CardPainel titulo="Links">
+            <CardPainel titulo={t('detalhesProjeto.links')}>
               <ul className="flex flex-col gap-2 text-[13px]">
                 {d.links.map((l) => (
                   <li key={l.url}>
@@ -571,7 +621,7 @@ export function DetalhesDoProjeto({
                       rel="noreferrer"
                       className="text-accent underline"
                     >
-                      Página no Modrinth
+                      {t('detalhesProjeto.paginaNoModrinth')}
                     </a>
                   </li>
                 )}
@@ -579,9 +629,11 @@ export function DetalhesDoProjeto({
             </CardPainel>
           )}
 
-          <CardPainel titulo="Dependências">
+          <CardPainel titulo={t('detalhesProjeto.dependencias')}>
             {!d.dependencias.length ? (
-              <p className="text-[13px] text-muted">Não precisa de outros projetos.</p>
+              <p className="text-[13px] text-muted">
+                {t('detalhesProjeto.naoPrecisaDeOutrosProjetos')}
+              </p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {d.dependencias.map((dep) => (
@@ -591,14 +643,18 @@ export function DetalhesDoProjeto({
                       {dep.titulo}
                     </span>
                     <span className="bg-panel-2 px-1.5 text-xs">
-                      {dep.obrigatoria ? 'necessário' : 'opcional'}
+                      {dep.obrigatoria
+                        ? t('detalhesProjeto.necessario')
+                        : t('detalhesProjeto.opcional')}
                     </span>
                   </li>
                 ))}
               </ul>
             )}
             {d.destino === 'servidor' && d.dependencias.some((x) => x.obrigatoria) && (
-              <p className="mt-3 text-xs text-muted">As necessárias são instaladas junto.</p>
+              <p className="mt-3 text-xs text-muted">
+                {t('detalhesProjeto.asNecessariasSaoInstaladasJunto')}
+              </p>
             )}
           </CardPainel>
         </aside>
@@ -607,7 +663,7 @@ export function DetalhesDoProjeto({
       {/* Mods e plugins: mesma confirmação da Fase 16, com as dependências. */}
       <DialogoPlano
         plano={plano}
-        titulo={`Instalar ${d.titulo}?`}
+        titulo={t('detalhesProjeto.instalar2', { titulo: d.titulo })}
         extras={extras}
         ocupado={ocupado === 'plano'}
         progresso={progresso}
@@ -617,10 +673,11 @@ export function DetalhesDoProjeto({
 
       <Dialogo
         aberto={removendo}
-        titulo={`Remover ${d.titulo}?`}
+        titulo={t('detalhesProjeto.remover', { titulo: d.titulo })}
         aoCancelar={() => setRemovendo(false)}
         acao={{
-          rotulo: ocupado === 'remover' ? 'Removendo...' : 'Remover',
+          rotulo:
+            ocupado === 'remover' ? t('detalhesProjeto.removendo') : t('detalhesProjeto.remover2'),
           variante: 'perigo',
           ocupado: ocupado === 'remover',
           aoClicar: async () => {
@@ -632,18 +689,17 @@ export function DetalhesDoProjeto({
                 agendado = r.ok && r.valor
                 return r
               },
-              'Pronto. O arquivo fica 7 dias em Mods › Instalados › Removidos recentemente.'
+              t('detalhesProjeto.prontoOArquivoFica7')
             )
-            if (ok && agendado) setAviso('Será removido ao desligar o servidor.')
+            if (ok && agendado) setAviso(t('detalhesProjeto.seraRemovidoAoDesligarO'))
             setRemovendo(false)
             if (ok) await aoMudar(false)
           }
         }}
       >
         <p>
-          O datapack sai da pasta datapacks do mundo ativo e fica 7 dias em Removidos recentemente.
-          Coisas que ele já criou no mundo podem continuar lá.
-          {ligado && ' Com o servidor ligado, ele só sai quando o servidor desligar.'}
+          {t('detalhesProjeto.oDatapackSaiDaPasta')}
+          {ligado && t('detalhesProjeto.comOServidorLigadoEle2')}
         </p>
       </Dialogo>
     </div>

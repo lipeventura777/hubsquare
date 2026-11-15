@@ -19,6 +19,7 @@ import { urlDeVerdade } from './rede'
 import * as playit from './playit'
 import { eventos, javaDoServidor, lerEstado, PORTA, servidorAtual } from './servidor'
 import { abrirPorta, ipNaoPublico } from './upnp'
+import { t } from '../shared/i18n'
 
 // ---------- Escolha do usuário (modo e endereço do playit) ----------
 
@@ -43,7 +44,7 @@ async function mudarPreferencias(mudancas: Partial<Preferencias>): Promise<void>
 const MODOS: ModoConexao[] = ['playit', 'radmin', 'lan', 'porta']
 
 export async function escolherModo(valor: unknown): Promise<void> {
-  if (!MODOS.includes(valor as ModoConexao)) throw new ErroApp('Escolha uma das opções de conexão.')
+  if (!MODOS.includes(valor as ModoConexao)) throw new ErroApp(t('p.conexao.escolhaUmaDasOpcoesDe'))
   await mudarPreferencias({ modo: valor as ModoConexao })
   await acertarAgente()
 }
@@ -51,9 +52,7 @@ export async function escolherModo(valor: unknown): Promise<void> {
 export async function salvarEnderecoPlayit(valor: unknown): Promise<void> {
   const endereco = typeof valor === 'string' ? valor.trim().toLowerCase() : ''
   if (!/^[a-z0-9.-]{3,253}(:\d{1,5})?$/.test(endereco) || !endereco.includes('.')) {
-    throw new ErroApp(
-      'Endereço inválido. Copie do site do playit.gg o endereço do túnel, por exemplo "nome.joinmc.link".'
-    )
+    throw new ErroApp(t('p.conexao.enderecoInvalidoCopieDoSite'))
   }
   await mudarPreferencias({ enderecoPlayit: endereco })
 }
@@ -156,7 +155,7 @@ export async function regraExiste(info: InfoServidor): Promise<boolean> {
 // Cria a regra de entrada para o java.exe do app. O Windows mostra o aviso de administrador (UAC).
 export async function liberarFirewall(): Promise<void> {
   const info = await servidorAtual()
-  if (!info) throw new ErroApp('Crie um servidor primeiro, na tela "Servidor".')
+  if (!info) throw new ErroApp(t('p.conexao.crieUmServidorPrimeiroNa'))
   const java = await garantirJava(javaDoServidor(info), () => {})
   const regra = nomeRegra(info)
   // Script do PowerShell elevado: apaga a regra antiga com o mesmo nome e cria de novo.
@@ -179,14 +178,9 @@ export async function liberarFirewall(): Promise<void> {
   ])
   if (codigo === 0) return
   if (/cancel/i.test(saida)) {
-    throw new ErroApp(
-      'A permissão de administrador foi recusada. Clique de novo e escolha "Sim" no aviso do Windows.'
-    )
+    throw new ErroApp(t('p.conexao.aPermissaoDeAdministradorFoi'))
   }
-  throw new ErroApp(
-    'Não consegui criar a regra no Firewall do Windows.',
-    `Código: ${codigo}\n${saida}`
-  )
+  throw new ErroApp(t('p.conexao.naoConseguiCriarARegra'), t('p.conexao.codigo', { codigo, saida }))
 }
 
 // ---------- Estado para a tela ----------
@@ -259,33 +253,30 @@ export async function resolverEndereco(endereco: string): Promise<{ host: string
   return { host, porta: 25565 }
 }
 
-const OK = 'Seus amigos já conseguem entrar.'
+const ok = (): string => t('p.conexao.seusAmigosJaConseguemEntrar')
 
 export async function testarConexao(modo: unknown): Promise<ResultadoTeste> {
-  if (lerEstado() !== 'ligado') return { ok: false, mensagem: 'Ligue o servidor antes de testar.' }
+  if (lerEstado() !== 'ligado') return { ok: false, mensagem: t('p.conexao.ligueOServidorAntesDe') }
   const info = await servidorAtual()
   const firewall = info ? await regraExiste(info) : false
-  const avisoFirewall =
-    'O servidor responde neste PC, mas o Firewall do Windows pode bloquear seus amigos. Clique em "Liberar o Java no Firewall".'
+  const avisoFirewall = t('p.conexao.oServidorRespondeNestePc')
 
   if (modo === 'playit') {
     const { enderecoPlayit } = await lerPreferencias()
-    if (!playit.vinculado()) return { ok: false, mensagem: 'Vincule o playit.gg primeiro.' }
-    if (!enderecoPlayit)
-      return { ok: false, mensagem: 'Cole o endereço do túnel do playit.gg primeiro.' }
+    if (!playit.vinculado()) return { ok: false, mensagem: t('p.conexao.vinculeOPlayitGgPrimeiro') }
+    if (!enderecoPlayit) return { ok: false, mensagem: t('p.conexao.coleOEnderecoDoTunel') }
     if (!playit.agenteLigado()) {
       return {
         ok: false,
-        mensagem: 'O agente do playit.gg não está rodando. Desligue e ligue o servidor de novo.'
+        mensagem: t('p.conexao.oAgenteDoPlayitGg')
       }
     }
     const { host, porta } = await resolverEndereco(enderecoPlayit)
     return (await pingMinecraft(host, porta))
-      ? { ok: true, mensagem: `${OK} Endereço: ${enderecoPlayit}` }
+      ? { ok: true, mensagem: t('p.conexao.endereco', { OK: ok(), enderecoPlayit }) }
       : {
           ok: false,
-          mensagem:
-            'O túnel do playit.gg não respondeu. No site do playit.gg, confira se o túnel é "Minecraft Java", aponta para 127.0.0.1 porta 25565 e se o agente aparece online. Logo depois de ligar, espere uns 30 segundos e teste de novo.'
+          mensagem: t('p.conexao.oTunelDoPlayitGg')
         }
   }
 
@@ -296,14 +287,14 @@ export async function testarConexao(modo: unknown): Promise<ResultadoTeste> {
         ok: false,
         mensagem:
           modo === 'radmin'
-            ? 'Radmin VPN fechado ou desconectado. Abra o Radmin VPN e entre na mesma rede que seus amigos.'
-            : 'Não achei a rede local deste PC. Confira se o Wi-Fi ou o cabo está conectado.'
+            ? t('p.conexao.radminVpnFechadoOuDesconectado')
+            : t('p.conexao.naoAcheiARedeLocal')
       }
     }
     if (!(await pingMinecraft(ip, PORTA))) {
       return {
         ok: false,
-        mensagem: `O servidor não respondeu em ${ip}:${PORTA}. Desligue e ligue o servidor de novo.`
+        mensagem: t('p.conexao.oServidorNaoRespondeuEm', { ip, PORTA })
       }
     }
     if (!firewall) return { ok: false, mensagem: avisoFirewall }
@@ -311,28 +302,29 @@ export async function testarConexao(modo: unknown): Promise<ResultadoTeste> {
       ok: true,
       mensagem:
         modo === 'radmin'
-          ? `${OK} Eles precisam estar na mesma rede do Radmin VPN e usar ${ip}:${PORTA}.`
-          : `${OK} Eles precisam estar no mesmo Wi-Fi ou rede e usar ${ip}:${PORTA}.`
+          ? t('p.conexao.elesPrecisamEstarNaMesma', { OK: ok(), ip, PORTA })
+          : t('p.conexao.elesPrecisamEstarNoMesmo', { OK: ok(), ip, PORTA })
     }
   }
 
   if (modo === 'porta') {
     const ip = await ipPublico()
-    if (!ip)
-      return { ok: false, mensagem: 'Não consegui descobrir o IP público. Confira sua internet.' }
+    if (!ip) return { ok: false, mensagem: t('p.conexao.naoConseguiDescobrirOIp') }
     if (await pingMinecraft(ip, PORTA)) {
       return firewall
-        ? { ok: true, mensagem: `${OK} Endereço: ${ip}:${PORTA}` }
+        ? {
+            ok: true,
+            mensagem: t('p.conexao.endereco', { OK: ok(), enderecoPlayit: `${ip}:${PORTA}` })
+          }
         : { ok: false, mensagem: avisoFirewall }
     }
     return {
       ok: false,
-      mensagem:
-        'O servidor não respondeu pelo IP público. Pode ser a porta que não foi redirecionada no roteador, o firewall ou CGNAT da operadora. Alguns roteadores também não deixam testar de dentro de casa: peça para um amigo tentar.'
+      mensagem: t('p.conexao.oServidorNaoRespondeuPelo')
     }
   }
 
-  throw new ErroApp('Escolha uma das opções de conexão.')
+  throw new ErroApp(t('p.conexao.escolhaUmaDasOpcoesDe'))
 }
 
 // ---------- Abrir porta ----------
@@ -352,31 +344,25 @@ async function ipPublico(): Promise<string | null> {
 
 export async function tentarUpnp(): Promise<ResultadoUpnp> {
   const local = ipLocal()
-  if (!local)
-    throw new ErroApp(
-      'Não achei a rede local deste PC. Confira se o Wi-Fi ou o cabo está conectado.'
-    )
+  if (!local) throw new ErroApp(t('p.conexao.naoAcheiARedeLocal'))
   const publico = await ipPublico()
   let ipDoRoteador: string | null
   try {
     ipDoRoteador = await abrirPorta(PORTA, local)
   } catch (e) {
-    throw new ErroApp(
-      'O roteador não aceitou abrir a porta sozinho (UPnP desligado ou não suportado). Siga o passo a passo abaixo.',
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.conexao.oRoteadorNaoAceitouAbrir'), detalhar(e))
   }
   if (ipDoRoteador && (ipNaoPublico(ipDoRoteador) || (publico && ipDoRoteador !== publico))) {
     return {
       ok: false,
       ipPublico: publico,
-      mensagem: `A porta foi aberta no roteador, mas sua internet parece usar CGNAT (o roteador recebe o IP ${ipDoRoteador}, que não é o seu IP público). Nesse caso, use o playit.gg ou o Radmin VPN.`
+      mensagem: t('p.conexao.aPortaFoiAbertaNo', { ipDoRoteador })
     }
   }
   return {
     ok: true,
     ipPublico: publico,
-    mensagem: `Porta ${PORTA} aberta no roteador para ${local}.`
+    mensagem: t('p.conexao.portaAbertaNoRoteadorPara', { PORTA, local })
   }
 }
 

@@ -8,7 +8,11 @@ registerHooks({
       return proximo(especificador, contexto)
     } catch (erro) {
       if (!especificador.startsWith('.') || /\.\w+$/.test(especificador)) throw erro
-      return proximo(`${especificador}.ts`, contexto)
+      try {
+        return proximo(`${especificador}.ts`, contexto)
+      } catch {
+        return proximo(`${especificador}/index.ts`, contexto)
+      }
     }
   }
 })

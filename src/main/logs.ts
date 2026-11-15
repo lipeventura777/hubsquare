@@ -7,6 +7,7 @@ import type { ArquivoLog, InfoServidor, RelatorioTravamento } from '../shared/ti
 import { caminhoNoServidor } from './caminhoServidor'
 import { causaProvavel } from './causaTravamento'
 import { ErroApp } from './erros'
+import { t } from '../shared/i18n'
 
 // Registro de eventos: logs/latest.log + logs/*.log.gz e crash-reports/*.txt.
 // Só abre arquivos que aparecem nessas listas, sempre pela checagem de caminho da tela Arquivos.
@@ -41,7 +42,7 @@ export const listarTravamentos = (info: InfoServidor): Promise<ArquivoLog[]> =>
 async function lerTextoCompleto(info: InfoServidor, tipo: Tipo, valor: unknown): Promise<string> {
   const nome = typeof valor === 'string' ? valor : ''
   if (!(await listar(info, tipo)).some((a) => a.nome === nome)) {
-    throw new ErroApp('Esse arquivo não existe mais. Atualize a lista.')
+    throw new ErroApp(t('p.logs.esseArquivoNaoExisteMais'))
   }
   const dados = await readFile(await caminhoNoServidor(info.pasta, `${PASTAS[tipo]}/${nome}`))
   return (nome.endsWith('.gz') ? await promisify(gunzip)(dados) : dados).toString('utf8')
@@ -51,7 +52,9 @@ export async function lerLog(info: InfoServidor, nome: unknown): Promise<string>
   const texto = await lerTextoCompleto(info, 'logs', nome)
   if (texto.length <= LIMITE) return texto
   const resto = texto.slice(-LIMITE)
-  return `[ServSquare] Arquivo grande: mostrando só o final. Use "Baixar" para ver tudo.\n${resto.slice(resto.indexOf('\n') + 1)}`
+  return t('p.logs.servsquareArquivoGrandeMostrandoSo', {
+    slice: resto.slice(resto.indexOf('\n') + 1)
+  })
 }
 
 export async function lerTravamento(
@@ -69,10 +72,11 @@ export async function baixarLog(
   nome: unknown,
   janela: BrowserWindow | null
 ): Promise<boolean> {
-  if (tipo !== 'logs' && tipo !== 'travamentos') throw new ErroApp('Tipo de registro desconhecido.')
+  if (tipo !== 'logs' && tipo !== 'travamentos')
+    throw new ErroApp(t('p.logs.tipoDeRegistroDesconhecido'))
   const texto = await lerTextoCompleto(info, tipo, nome)
   const opcoes = {
-    title: 'Salvar cópia',
+    title: t('p.logs.salvarCopia'),
     defaultPath: String(nome)
       .replace(/\.gz$/, '')
       .replace(/\.log$/, '.txt')

@@ -12,6 +12,7 @@ import {
 import * as hangar from './hangar'
 import type { ItemInterno } from './mods'
 import { nomeSeguro } from './modsRegras'
+import { t } from '../shared/i18n'
 
 // Mods e plugins do CurseForge e do Hangar (Fase 24) no mesmo formato de plano do Modrinth.
 // Arquivo que o autor não deixa outros apps baixarem vira "Baixe pelo site" (nunca é baixado).
@@ -119,21 +120,22 @@ export async function montarCurseForge(
     }
   }
   const mods = await cf.mods([...escolhas.keys(), ...semVersao])
-  const titulo = (id: number): string => mods.get(id)?.name ?? `Projeto ${id}`
+  const titulo = (id: number): string => mods.get(id)?.name ?? t('p.modsFontes.projeto', { id })
   const r: Montado = {
     itens: [],
     avisos: [],
-    problemas: semVersao.map(
-      (id) => `"${titulo(id)}" não tem versão para ${nomeDoServidor(info)}.`
+    problemas: semVersao.map((id) =>
+      t('p.modsFontes.naoTemVersaoPara', {
+        titulo: titulo(id),
+        nomeDoServidor: nomeDoServidor(info)
+      })
     ),
     manuais: []
   }
   for (const [id, { a, dependencia }] of escolhas) {
     const m = mods.get(id)
     if (soDoClienteCF(a.gameVersions)) {
-      r.avisos.push(
-        `"${titulo(id)}" é só do jogador: funciona no jogo de cada um, não no servidor. Ele não vai ser instalado.`
-      )
+      r.avisos.push(t('p.modsFontes.eSoDoJogadorFunciona', { titulo: titulo(id) }))
       continue
     }
     if (!m || !cf.podeBaixar(m, a)) {
@@ -142,7 +144,7 @@ export async function montarCurseForge(
     }
     const item = itemCF(m, a, dependencia)
     if (item) r.itens.push(item)
-    else r.problemas.push(`"${titulo(id)}" tem um arquivo que o app não aceita.`)
+    else r.problemas.push(t('p.modsFontes.temUmArquivoQueO', { titulo: titulo(id) }))
   }
   return r
 }
@@ -215,11 +217,11 @@ export async function montarHangar(
     const [p, versoes] = await Promise.all([hangar.projeto(id), hangar.versoes(id)])
     const v = escolherVersaoHangar(versoes, info.versao)
     if (!v) {
-      r.problemas.push(`"${p.name}" não tem versão para o Paper ${info.versao}.`)
+      r.problemas.push(t('p.modsFontes.naoTemVersaoParaO', { name: p.name, versao: info.versao }))
       continue
     }
     const x = itemHangar(p, v, dependencia)
-    if (!x) r.problemas.push(`"${p.name}" tem um arquivo que o app não aceita.`)
+    if (!x) r.problemas.push(t('p.modsFontes.temUmArquivoQueO2', { name: p.name }))
     else if (ehManual(x)) r.manuais.push(x)
     else r.itens.push(x)
     for (const d of v.pluginDependencies.PAPER ?? []) {
@@ -229,8 +231,8 @@ export async function montarHangar(
           fila.push({ id: d.projectId, dependencia: true })
       } else {
         const url = https(d.externalUrl)
-        if (url) r.manuais.push({ titulo: `${d.name} (necessário)`, url })
-        else r.avisos.push(`"${p.name}" precisa do plugin "${d.name}", que não está no Hangar.`)
+        if (url) r.manuais.push({ titulo: t('p.modsFontes.necessario', { name: d.name }), url })
+        else r.avisos.push(t('p.modsFontes.precisaDoPluginQueNao', { name: p.name, name2: d.name }))
       }
     }
   }

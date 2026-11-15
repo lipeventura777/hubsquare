@@ -53,6 +53,7 @@ import {
 } from './servidor'
 import { comPastaLivre, pastaLivre } from './pastaLivre'
 import { registrarPendencias } from './downloadsManuais'
+import { t, idiomaAtual } from '../shared/i18n'
 
 // Tela Mods: mods (Fabric/Forge/NeoForge) e plugins (Paper), só do Modrinth.
 // Toda mudança vira uma "pendência" gravada no servsquare-mods.json. Com o servidor desligado,
@@ -111,9 +112,7 @@ interface Lista {
 function contexto(info: InfoServidor): Contexto {
   const extras = EXTRAS_TIPOS[info.tipo]
   if (!extras) {
-    throw new ErroApp(
-      `O ${NOMES_TIPOS[info.tipo]} não aceita mods nem plugins. Troque o software na tela Software.`
-    )
+    throw new ErroApp(t('p.mods.oNaoAceitaModsNem', { v: NOMES_TIPOS[info.tipo] }))
   }
   return {
     extras,
@@ -170,7 +169,9 @@ async function aplicar(info: InfoServidor): Promise<void> {
     try {
       await aplicarUma(info, lista, p)
     } catch (e) {
-      registrarNoConsole(`[ServSquare] Não consegui mudar ${p.arquivo}: ${detalhar(e)}`)
+      registrarNoConsole(
+        t('p.mods.servsquareNaoConseguiMudar', { arquivo: p.arquivo, detalhar: detalhar(e) })
+      )
       // Uma instalação sem o arquivo baixado não tem como dar certo depois.
       if (p.acao !== 'instalar' || existsSync(join(info.pasta, ESPERA, p.arquivo))) sobraram.push(p)
     }
@@ -367,7 +368,7 @@ export async function listarInstalados(info: InfoServidor): Promise<ListaMods> {
       })
     }
   }
-  resultado.sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'))
+  resultado.sort((a, b) => a.titulo.localeCompare(b.titulo, idiomaAtual()))
   return { itens: resultado, pendentes: lista.pendentes.length, semInternet }
 }
 
@@ -421,19 +422,19 @@ async function montar(
   const projetos = await modrinth.projetos([...escolhas.keys(), ...semVersao])
   const titulo = (id: string): string => projetos.get(id)?.title ?? id
   const avisos: string[] = []
-  const problemas = semVersao.map((id) => `"${titulo(id)}" não tem versão para ${ctx.nome}.`)
+  const problemas = semVersao.map((id) =>
+    t('p.mods.naoTemVersaoPara', { titulo: titulo(id), nome: ctx.nome })
+  )
   const itens: ItemInterno[] = []
   for (const [projetoId, { versao, dependencia }] of escolhas) {
     const projeto = projetos.get(projetoId)
     if (projeto && !ctx.jogador && soDoJogador(projeto.environment, projeto.server_side)) {
-      avisos.push(
-        `"${titulo(projetoId)}" é só do jogador: funciona no jogo de cada um, não no servidor. Ele não vai ser instalado.`
-      )
+      avisos.push(t('p.mods.eSoDoJogadorFunciona', { titulo: titulo(projetoId) }))
       continue
     }
     const arquivo = versao.files.find((f) => f.primary) ?? versao.files[0]
     if (!arquivo || !nomeSeguro(arquivo.filename) || !urlDoModrinth(arquivo.url)) {
-      problemas.push(`"${titulo(projetoId)}" tem um arquivo que o app não aceita.`)
+      problemas.push(t('p.mods.temUmArquivoQueO', { titulo: titulo(projetoId) }))
       continue
     }
     itens.push({
@@ -485,7 +486,7 @@ export async function planejarInstalacao(
     fonte === 'modrinth'
       ? /^[\w-]{1,64}$/.test(id)
       : /^\d{1,12}$/.test(id) && (fonte === 'curseforge' || fonte === 'hangar')
-  if (!valido) throw new ErroApp('Projeto inválido. Escolha um da lista.')
+  if (!valido) throw new ErroApp(t('p.mods.projetoInvalidoEscolhaUmDa'))
   const { itens, avisos, problemas, manuais } =
     fonte === 'curseforge'
       ? await montarCurseForge(info, Number(id), await instaladosPorFonte(info))
@@ -496,7 +497,7 @@ export async function planejarInstalacao(
             manuais: []
           }
   if (!itens.length && !avisos.length && !problemas.length && !manuais.length) {
-    throw new ErroApp(`Esse projeto não tem versão para ${ctx.nome}. Procure outro.`)
+    throw new ErroApp(t('p.mods.esseProjetoNaoTemVersao', { nome: ctx.nome }))
   }
   const token = randomUUID()
   planos.set(token, {
@@ -530,7 +531,7 @@ export async function instalarPlano(
 ): Promise<void> {
   const plano = typeof token === 'string' ? planos.get(token) : undefined
   if (!plano || plano.pasta !== info.pasta) {
-    throw new ErroApp('Essa lista de instalação expirou. Clique em Instalar de novo.')
+    throw new ErroApp(t('p.mods.essaListaDeInstalacaoExpirou'))
   }
   planos.delete(token as string)
   await executar(info, plano, aoProgredir)
@@ -542,7 +543,7 @@ async function executar(
   aoProgredir: (p: Progresso) => void
 ): Promise<void> {
   const manuais = plano.manuais ?? []
-  if (!plano.itens.length && !manuais.length) throw new ErroApp('Nada para instalar.')
+  if (!plano.itens.length && !manuais.length) throw new ErroApp(t('p.mods.nadaParaInstalar'))
   if (plano.itens.length) await executarItens(info, plano, aoProgredir)
   // Fase D: o que o autor não deixa baixar vai para a janela Downloads necessários.
   if (manuais.length) await registrarPendencias(info, manuais)
@@ -587,7 +588,11 @@ async function backupDaPasta(
   aoProgredir: (p: Progresso) => void
 ): Promise<void> {
   if (!existsSync(ctx.pasta)) return
-  aoProgredir({ etapa: `Fazendo backup da pasta ${ctx.extras}`, recebido: 0, total: 0 })
+  aoProgredir({
+    etapa: t('p.mods.fazendoBackupDaPasta', { extras: ctx.extras }),
+    recebido: 0,
+    total: 0
+  })
   const pasta = join(pastaBackups(info), ctx.extras)
   try {
     await mkdir(pasta, { recursive: true })
@@ -599,10 +604,7 @@ async function backupDaPasta(
       .slice(0, -5)
     for (const n of antigos) await rm(join(pasta, n), { force: true })
   } catch (e) {
-    throw new ErroApp(
-      `Não consegui fazer o backup da pasta ${ctx.extras}, então nada foi mudado. Tente de novo.`,
-      detalhar(e)
-    )
+    throw new ErroApp(t('p.mods.naoConseguiFazerOBackup', { extras: ctx.extras }), detalhar(e))
   }
 }
 
@@ -614,7 +616,7 @@ async function exigirArquivo(info: InfoServidor, ctx: Contexto, arquivo: unknown
     const pendente = (await lerLista(info)).pendentes.some((p) => p.arquivo === arquivo)
     if (naPasta || pendente) return arquivo
   }
-  throw new ErroApp(`Não encontrei esse arquivo na pasta ${ctx.extras}. Atualize a lista.`)
+  throw new ErroApp(t('p.mods.naoEncontreiEsseArquivoNa', { extras: ctx.extras }))
 }
 
 export async function alternarMod(
@@ -626,7 +628,7 @@ export async function alternarMod(
   const nome = await exigirArquivo(info, ctx, arquivo)
   // PlaySquare: o que o servidor exige fica ligado (a sincronização poria de volta, de todo jeito).
   if (ativo !== true && info.jogador?.obrigatorios.includes(`${ctx.extras}/${nome}`)) {
-    throw new ErroApp('Esse mod veio do servidor e é obrigatório para entrar nele.')
+    throw new ErroApp(t('p.mods.esseModVeioDoServidor'))
   }
   await mudar(info, async (lista) => {
     // Clicar de novo antes de aplicar só desfaz a mudança anotada.
@@ -703,7 +705,7 @@ async function procurarAtualizacoes(
   const naPasta = (await lerPasta(ctx)).filter((a) => !comPendencia.has(a.nome))
   const { itens, semInternet } = await identificar(naPasta.filter((a) => !deOutraFonte.has(a.nome)))
   if (semInternet) {
-    throw new ErroApp('Não consegui falar com o Modrinth. Confira sua internet e tente de novo.')
+    throw new ErroApp(t('p.mods.naoConseguiFalarComO'))
   }
   // "Travar versão" (Fase 25): esses não aparecem como atualização.
   const travados = new Set((await lerOrganizacao(info)).travados)
@@ -786,7 +788,7 @@ export async function atualizarMods(
   const escolhidas = (await procurarAtualizacoes(info, ctx)).filter(
     (a) => (!pedidos || pedidos.has(a.arquivo)) && !a.manual
   )
-  if (!escolhidas.length) throw new ErroApp('Não há atualização para aplicar. Atualize a lista.')
+  if (!escolhidas.length) throw new ErroApp(t('p.mods.naoHaAtualizacaoParaAplicar'))
 
   const doModrinth = escolhidas.flatMap((a) =>
     a.nova ? [{ projetoId: a.projetoId, versao: a.nova }] : []
@@ -831,7 +833,7 @@ export async function instalarBaixado(
   registro: RegistroMod
 ): Promise<void> {
   const ctx = contexto(info)
-  if (!nomeSeguro(registro.arquivo)) throw new ErroApp('Nome de arquivo inválido.')
+  if (!nomeSeguro(registro.arquivo)) throw new ErroApp(t('p.mods.nomeDeArquivoInvalido'))
   await mudar(info, async (lista) => {
     await mkdir(join(info.pasta, ESPERA), { recursive: true })
     await copyFile(origem, join(info.pasta, ESPERA, registro.arquivo))
@@ -901,7 +903,7 @@ function pastaAnteriores(info: InfoServidor, idMod: string): string {
 async function modDoArquivo(info: InfoServidor, arquivo: unknown): Promise<ModInstalado> {
   const m = (await listarInstalados(info)).itens.find((x) => x.arquivo === arquivo)
   if (!m || m.pendente === 'instalar') {
-    throw new ErroApp('Não encontrei esse arquivo na pasta. Atualize a lista.')
+    throw new ErroApp(t('p.mods.naoEncontreiEsseArquivoNa2'))
   }
   return m
 }
@@ -973,7 +975,7 @@ export async function versoesDoMod(info: InfoServidor, arquivo: unknown): Promis
     idMod: id,
     versoes: versoes.slice(0, 30),
     travado: o.travados.includes(id),
-    anterior: o.anteriores[id]?.versao ?? (o.anteriores[id] ? 'a anterior' : null)
+    anterior: o.anteriores[id]?.versao ?? (o.anteriores[id] ? t('p.mods.aAnterior') : null)
   }
 }
 
@@ -987,13 +989,13 @@ export async function trocarVersao(
   const ctx = contexto(info)
   const m = await modDoArquivo(info, arquivo)
   if (typeof versaoId !== 'string' || !/^[\w-]{1,64}$/.test(versaoId) || !m.projetoId) {
-    throw new ErroApp('Versão inválida. Escolha uma da lista.')
+    throw new ErroApp(t('p.mods.versaoInvalidaEscolhaUmaDa'))
   }
-  if (versaoId === m.versaoId) throw new ErroApp('Essa já é a versão instalada.')
+  if (versaoId === m.versaoId) throw new ErroApp(t('p.mods.essaJaEAVersao'))
   let itens: ItemInterno[]
   if (m.fonte === 'modrinth') {
     const v = await modrinth.versao(versaoId)
-    if (v.project_id !== m.projetoId) throw new ErroApp('Essa versão é de outro projeto.')
+    if (v.project_id !== m.projetoId) throw new ErroApp(t('p.mods.essaVersaoEDeOutro'))
     const r = await montar(
       ctx,
       [{ projetoId: m.projetoId, versao: v }],
@@ -1008,12 +1010,12 @@ export async function trocarVersao(
     ])
     if (!cf.podeBaixar(mod, a)) {
       throw new ErroApp(
-        'O autor não deixa outros apps baixarem essa versão. Baixe pelo site.',
+        t('p.mods.oAutorNaoDeixaOutros'),
         cf.paginaDoArquivo(mod, a.id) ?? undefined
       )
     }
     const item = itemCF(mod, a, false)
-    if (!item) throw new ErroApp('Essa versão tem um arquivo que o app não aceita.')
+    if (!item) throw new ErroApp(t('p.mods.essaVersaoTemUmArquivo'))
     itens = [item]
   } else if (m.fonte === 'hangar') {
     const [p, versoes] = await Promise.all([
@@ -1022,10 +1024,10 @@ export async function trocarVersao(
     ])
     const v = versoes.find((x) => String(x.id) === versaoId)
     const x = v && itemHangar(p, v, false)
-    if (!x) throw new ErroApp('Não achei essa versão no Hangar.')
-    if (ehManual(x)) throw new ErroApp('Essa versão só tem link externo. Baixe pelo site.', x.url)
+    if (!x) throw new ErroApp(t('p.mods.naoAcheiEssaVersaoNo'))
+    if (ehManual(x)) throw new ErroApp(t('p.mods.essaVersaoSoTemLink'), x.url)
     itens = [x]
-  } else throw new ErroApp('Mods instalados à mão não têm outras versões para escolher.')
+  } else throw new ErroApp(t('p.mods.modsInstaladosAMaoNao'))
   await guardarAnterior(info, m.arquivo)
   const novo = itens.find((i) => i.registro.projetoId === m.projetoId)?.arquivo
   await executar(
@@ -1050,9 +1052,7 @@ export async function trocarParaCompativel(
 ): Promise<void> {
   const v = (await versoesDoMod(info, arquivo)).versoes.find((x) => !x.atual)
   if (!v) {
-    throw new ErroApp(
-      `Não achei versão desse mod para ${contexto(info).nome}. Desative ou remova o mod.`
-    )
+    throw new ErroApp(t('p.mods.naoAcheiVersaoDesseMod', { nome: contexto(info).nome }))
   }
   await trocarVersao(info, arquivo, v.id, aoProgredir)
 }
@@ -1065,7 +1065,7 @@ export async function voltarVersao(info: InfoServidor, arquivo: unknown): Promis
   const ant = (await lerOrganizacao(info)).anteriores[id]
   const copia = ant && join(pastaAnteriores(info, id), ant.arquivo)
   if (!ant || !nomeSeguro(ant.arquivo) || !copia || !existsSync(copia)) {
-    throw new ErroApp('Não há versão anterior guardada desse mod.')
+    throw new ErroApp(t('p.mods.naoHaVersaoAnteriorGuardada'))
   }
   await mkdir(join(info.pasta, ESPERA), { recursive: true })
   const espera = join(info.pasta, ESPERA, ant.arquivo)
@@ -1103,8 +1103,7 @@ export async function listarPerfis(info: InfoServidor): Promise<PerfilMods[]> {
 
 export async function salvarPerfil(info: InfoServidor, nome: unknown): Promise<void> {
   const n = typeof nome === 'string' ? nome.trim() : ''
-  if (!NOME_PERFIL.test(n))
-    throw new ErroApp('Use até 32 letras, números ou espaços no nome do perfil.')
+  if (!NOME_PERFIL.test(n)) throw new ErroApp(t('p.mods.useAte32LetrasNumeros'))
   const ativos = (await listarInstalados(info)).itens
     .filter((m) => m.ativo && m.pendente !== 'instalar')
     .map(idDe)
@@ -1127,9 +1126,9 @@ export async function aplicarPerfil(
   info: InfoServidor,
   nome: unknown
 ): Promise<{ mudados: number; faltam: number }> {
-  if (!pastaLivre(info)) throw new ErroApp('Desligue o servidor para trocar de perfil.')
+  if (!pastaLivre(info)) throw new ErroApp(t('p.mods.desligueOServidorParaTrocar'))
   const perfil = (await lerOrganizacao(info)).perfis.find((p) => p.nome === nome)
-  if (!perfil) throw new ErroApp('Esse perfil não existe mais. Atualize a lista.')
+  if (!perfil) throw new ErroApp(t('p.mods.essePerfilNaoExisteMais'))
   const quer = new Set(perfil.ativos)
   const mods = (await listarInstalados(info)).itens.filter((m) => m.pendente !== 'instalar')
   let mudados = 0
@@ -1148,14 +1147,12 @@ export async function aplicarPerfil(
 // O id do mod (do .jar) costuma ser o mesmo nome curto (slug) do projeto no Modrinth.
 export async function planejarPorModId(info: InfoServidor, modId: unknown): Promise<PlanoMods> {
   const id = typeof modId === 'string' ? modId.toLowerCase() : ''
-  if (!/^[a-z0-9_.-]{1,64}$/.test(id)) throw new ErroApp('Dependência inválida.')
+  if (!/^[a-z0-9_.-]{1,64}$/.test(id)) throw new ErroApp(t('p.mods.dependenciaInvalida'))
   for (const slug of [...new Set([id, id.replace(/_/g, '-')])]) {
     const p = await modrinth.projeto(slug).catch(() => null)
     if (p) return planejarInstalacao(info, p.id, 'modrinth')
   }
-  throw new ErroApp(
-    `Não achei "${id}" no Modrinth. Procure pelo nome no Explorar (Modrinth ou CurseForge).`
-  )
+  throw new ErroApp(t('p.mods.naoAcheiNoModrinthProcure', { id }))
 }
 
 // Vários projetos de uma vez (lista importada). Problemas viram avisos: o resto instala.
