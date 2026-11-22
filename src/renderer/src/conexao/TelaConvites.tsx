@@ -11,7 +11,7 @@ import {
   PaginaAjustes,
   Secao
 } from '../componentes/ui'
-import { IconeCopiar } from '../componentes/icones'
+import { IconeCopiar } from '../icones'
 import { t } from '../../../shared/i18n'
 
 // Conexão › Convites (Fase P2, DESIGN.md seção 6.22.7): o dono gera o convite do servidor ativo.

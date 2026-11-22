@@ -4,14 +4,15 @@ import { readdir, readFile } from 'fs/promises'
 import { join } from 'path'
 import type { InfoServidor, TipoId } from '../shared/tipos'
 import { gravarComSeguranca, lerTexto } from './config'
+import { migrarPasta, raizDocumentos } from './migracao'
 
 // Lista de servidores salvos (índice) e qual está ativo. Fica em servidores.json, na pasta de
-// dados do app. Cada servidor continua com o seu servsquare.json dentro da própria pasta.
+// dados do app. Cada servidor continua com o seu hubsquare.json dentro da própria pasta.
 
-export const ARQUIVO_INFO = 'servsquare.json'
+export const ARQUIVO_INFO = 'hubsquare.json'
 
 export function pastaServidores(): string {
-  return join(app.getPath('documents'), 'ServSquare', 'servidores')
+  return join(raizDocumentos(), 'servidores')
 }
 
 export interface ItemIndice {
@@ -54,7 +55,7 @@ async function migrar(): Promise<Indice> {
         versao: info.versao
       })
     } catch {
-      // pasta sem servsquare.json: criação não terminou ou não é nossa
+      // pasta sem hubsquare.json: criação não terminou ou não é nossa
     }
   }
   return { ativo: servidores[0]?.id ?? null, servidores }
@@ -77,8 +78,9 @@ async function gravar(indice: Indice): Promise<void> {
   await gravarComSeguranca(arquivoIndice(), JSON.stringify(indice, null, 2))
 }
 
-// Junta o item do índice com o servsquare.json da pasta. null se a pasta sumiu.
+// Junta o item do índice com o hubsquare.json da pasta. null se a pasta sumiu.
 export async function lerInfo(item: ItemIndice): Promise<InfoServidor | null> {
+  migrarPasta(item.pasta) // Fase E2: servsquare*.json que sobrou (pasta fora de Documentos, backup...)
   try {
     const info = JSON.parse(await readFile(join(item.pasta, ARQUIVO_INFO), 'utf8'))
     return { ...info, id: item.id, pasta: item.pasta }

@@ -15,7 +15,14 @@ import type {
   TipoId,
   UsoServidor
 } from '../shared/tipos'
-import { gravarComSeguranca, gravarPropriedades, pvpEhRegraDoJogo, ramDoServidor } from './config'
+import {
+  gravarComSeguranca,
+  gravarPropriedades,
+  lerArquivoPropriedades,
+  pvpEhRegraDoJogo,
+  ramDoServidor
+} from './config'
+import { portaDe } from '../shared/redeRegras'
 import { flagsOtimizadas } from './desempenhoRegras'
 import { ErroApp } from './erros'
 import { javaExigido } from './consertoRegras'
@@ -30,13 +37,17 @@ import {
   servidorAtual
 } from './servidores'
 import { ehTipo, tiposDeServidor } from './tipos'
+import { exigirForgeSuportado } from './tipos/forge'
 import { t } from '../shared/i18n'
 
 export { pastaServidores, servidorAtual } from './servidores'
 
 const LIMITE_CONSOLE = 5000
-// shortcut: porta fixa; quando a tela de configurações mudar a porta, ler do server.properties.
-export const PORTA = 25565
+// Fase E3: a porta é a do server.properties (server-port; sem ela, ou inválida, 25565). Tudo que
+// depende da porta (ligar, playit, UPnP, diagnóstico, convites, celular) lê por aqui.
+export async function portaDoServidor(info: InfoServidor): Promise<number> {
+  return portaDe((await lerArquivoPropriedades(info.pasta)).get('server-port'))
+}
 const TEMPO_PARA_DESLIGAR = 30_000
 
 type Enviar = (canal: string, dado: unknown) => void
@@ -104,6 +115,8 @@ export async function aceitarEula(pasta: string): Promise<void> {
 
 // Confere a versão pedida contra a lista do tipo.
 export async function validarVersao(tipo: TipoId, versao: unknown): Promise<string> {
+  // Forge antes da 1.7.10 continua recusado (docs/forge-antigo.md). Assistente, Software, .zip e .hubserver.
+  if (typeof versao === 'string') exigirForgeSuportado(tipo, versao)
   if (
     typeof versao !== 'string' ||
     !(await tiposDeServidor[tipo].listarVersoes()).includes(versao)
@@ -230,7 +243,7 @@ export function comServidorDesligado<T>(tarefa: () => Promise<T>): Promise<T> {
   // já segurar o servidor antes de alguém clicar em Ligar.
   ocupado = true
   const execucao = tarefa().finally(() => (ocupado = false))
-  tarefaAtual = execucao.catch(() => {})
+  tarefaAtual = execucao.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return execucao
 }
 
@@ -380,8 +393,9 @@ export async function ligar(depoisDeConsertar = false): Promise<void> {
       )
     }
     liberadoEmprestado = false
-    if (!(await portaLivre(PORTA))) {
-      throw new ErroApp(t('p.servidor.aPortaJaEstaEm', { PORTA }))
+    const porta = await portaDoServidor(info)
+    if (!(await portaLivre(porta))) {
+      throw new ErroApp(t('p.servidor.aPortaJaEstaEm', { porta }), '', { porta: true })
     }
     java = await garantirJava(javaDoServidor(info), (p) => enviar('download:progresso', p))
     for (const tarefa of antesDeLigar) await tarefa(info)

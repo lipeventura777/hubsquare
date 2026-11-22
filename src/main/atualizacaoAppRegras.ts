@@ -136,3 +136,21 @@ export function lerEstado(json: unknown): EstadoAviso {
     lembrarDepoisAte: typeof d.lembrarDepoisAte === 'number' ? d.lembrarDepoisAte : 0
   }
 }
+
+// Fase L1: pode instalar a versão baixada agora? Nunca com o servidor ligado (ou ligando,
+// desligando), backup em andamento, modpack instalando ou JOGAR preparando: o motivo da espera.
+import type { MotivoEspera } from '../shared/tipos'
+export type { MotivoEspera }
+export interface Ocupacao {
+  servidor: string // EstadoServidor
+  backups: number
+  modpacks: number
+  jogar: number
+}
+export function motivoParaEsperar(o: Ocupacao): MotivoEspera | null {
+  if (o.servidor !== 'desligado') return 'servidor'
+  if (o.backups > 0) return 'backup'
+  if (o.modpacks > 0) return 'modpack'
+  if (o.jogar > 0) return 'jogar'
+  return null
+}

@@ -54,15 +54,16 @@ import {
 import { comPastaLivre, pastaLivre } from './pastaLivre'
 import { registrarPendencias } from './downloadsManuais'
 import { t, idiomaAtual } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Tela Mods: mods (Fabric/Forge/NeoForge) e plugins (Paper), só do Modrinth.
-// Toda mudança vira uma "pendência" gravada no servsquare-mods.json. Com o servidor desligado,
+// Toda mudança vira uma "pendência" gravada no hubsquare-mods.json. Com o servidor desligado,
 // ela é aplicada na hora; ligado, espera o próximo ligar (os .jar abertos pelo Java ficam travados).
 
 // Lista dos mods instalados pelo app (id, versão, hash), usada também pelas Fases 17 e 18.
-const ARQUIVO_LISTA = 'servsquare-mods.json'
+const ARQUIVO_LISTA = 'hubsquare-mods.json'
 // Downloads já conferidos esperam aqui até serem aplicados.
-const ESPERA = '.servsquare-mods-pendentes'
+const ESPERA = '.hubsquare-mods-pendentes'
 const DESATIVADO = '.disabled'
 const MAX_PROJETOS = 40 // trava contra dependências em loop
 
@@ -146,7 +147,7 @@ let cadeia: Promise<unknown> = Promise.resolve()
 
 function enfileirar<T>(tarefa: () => Promise<T>): Promise<T> {
   const resultado = cadeia.then(tarefa)
-  cadeia = resultado.catch(() => {})
+  cadeia = resultado.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return resultado
 }
 
@@ -157,7 +158,10 @@ function mudar(info: InfoServidor, preparar: (lista: Lista) => Promise<void>): P
     await preparar(lista)
     await gravarLista(info, lista)
     // Se o servidor ligou no meio do download, a mudança só espera o próximo ligar.
-    if (pastaLivre(info)) await comPastaLivre(info, () => aplicar(info)).catch(() => {})
+    if (pastaLivre(info))
+      await comPastaLivre(info, () => aplicar(info)).catch(
+        registrarErro('mods.ts', 'aplicar as mudanças de mods com a pasta livre')
+      )
   })
 }
 
@@ -308,7 +312,9 @@ export async function listarInstalados(info: InfoServidor): Promise<ListaMods> {
   const ctx = contexto(info)
   // Sobrou alguma mudança de quando o servidor estava ligado (ex.: o app fechou): aplica agora.
   if (pastaLivre(info)) {
-    await enfileirar(() => comPastaLivre(info, () => aplicar(info))).catch(() => {})
+    await enfileirar(() => comPastaLivre(info, () => aplicar(info))).catch(
+      registrarErro('mods.ts', 'aplicar as mudanças de mods')
+    )
   }
   const lista = await lerLista(info)
   const { itens, semInternet } = await identificar(await lerPasta(ctx))
@@ -564,7 +570,9 @@ async function executarItens(
         destino,
         item.checksum,
         `Baixando ${item.titulo} ${item.versao}`,
-        aoProgredir
+        aoProgredir,
+        undefined,
+        t('p.rede.itemMod', { nome: item.titulo })
       )
       if (!item.registro.sha1) item.registro.sha1 = await sha1(destino)
     }
@@ -800,7 +808,10 @@ export async function atualizarMods(
   const itens = [...novosModrinth, ...escolhidas.flatMap((a) => (a.item ? [a.item] : []))]
   const novos = new Map(itens.map((i) => [i.registro.projetoId, i.arquivo]))
   // Fase 25: cada um guarda a versão de agora, para dar para voltar.
-  for (const a of escolhidas) await guardarAnterior(info, a.arquivo).catch(() => {})
+  for (const a of escolhidas)
+    await guardarAnterior(info, a.arquivo).catch(
+      registrarErro('mods.ts', 'guardar a versão anterior do mod')
+    )
   await executar(
     info,
     {

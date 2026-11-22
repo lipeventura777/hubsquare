@@ -7,16 +7,18 @@ export class ErroApp extends Error {
   readonly falhas?: string[] // arquivos que falharam ("Tentar de novo só os que falharam")
   readonly cancelado?: boolean // o usuário clicou em Cancelar
   readonly emprestado?: boolean // Fase M7: servidor passado a um amigo
+  readonly porta?: boolean // Fase E3: a porta do servidor está em uso
   constructor(
     mensagem: string,
     detalhes = '',
-    extra: { falhas?: string[]; cancelado?: boolean; emprestado?: boolean } = {}
+    extra: { falhas?: string[]; cancelado?: boolean; emprestado?: boolean; porta?: boolean } = {}
   ) {
     super(mensagem)
     this.detalhes = detalhes
     this.falhas = extra.falhas
     this.cancelado = extra.cancelado
     this.emprestado = extra.emprestado
+    this.porta = extra.porta
   }
 }
 
@@ -33,7 +35,8 @@ export function paraTela(e: unknown): ErroTela {
       detalhes: e.detalhes || detalhar(e),
       ...(e.falhas && { falhas: e.falhas }),
       ...(e.cancelado && { cancelado: true }),
-      ...(e.emprestado && { emprestado: true })
+      ...(e.emprestado && { emprestado: true }),
+      ...(e.porta && { porta: true })
     }
   }
   return {

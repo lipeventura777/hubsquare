@@ -1,3 +1,4 @@
+import { Logo } from '../componentes/Logo'
 import { useState } from 'react'
 import type { ErroTela } from '../../../shared/tipos'
 import type { ModoApp } from '../../../shared/modoRegras'
@@ -45,6 +46,7 @@ export function BoasVindas({
     <div className="flex h-screen items-center justify-center p-6 text-texto">
       <div className="vidro-painel flex w-full max-w-[760px] flex-col gap-6 p-10">
         <div className="flex flex-col gap-2">
+          <Logo tamanho={72} />
           <h1 className="texto-pixel text-[28px]">{t('boasVindas.bemVindoAoHubsquare')}</h1>
           <p className="text-[13px] text-muted">{t('boasVindas.comoVoceVaiUsarO')}</p>
         </div>

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { ErroTela } from '../../../shared/tipos'
 import { Botao } from './ui'
 import { BotaoRelatorio } from './RelatorioErro'
+import { BotaoRelatar } from './RelatarProblema'
+import { irPara } from '../estrutura/navegar'
 import { t } from '../../../shared/i18n'
 
 // A mensagem vem como "O que aconteceu. O que fazer.": a primeira frase vira o título.
@@ -68,6 +70,15 @@ export function MensagemErro({
           {erroLigar && <p className="mt-1 text-sm">{erroLigar}</p>}
         </>
       )}
+      {erro.porta && (
+        <Botao
+          tamanho="pequeno"
+          className="mt-2"
+          onClick={() => irPara({ area: 'serv', pagina: 'Opções' })}
+        >
+          {t('mensagemErro.trocarAPortaNasOpcoes')}
+        </Botao>
+      )}
       {aoTentarDeNovo && (
         <Botao variante="perigo" tamanho="pequeno" className="mt-2" onClick={aoTentarDeNovo}>
           {t('mensagemErro.tentarDeNovoSoOs')}
@@ -86,6 +97,7 @@ export function MensagemErro({
               {copiado ? t('mensagemErro.copiado') : t('mensagemErro.copiar')}
             </Botao>
             <BotaoRelatorio pequeno />
+            <BotaoRelatar pequeno />
           </div>
         </details>
       )}

@@ -1,4 +1,5 @@
 import { app, clipboard, nativeTheme, shell, BrowserWindow, ipcMain } from 'electron'
+import iconeJanela from '../../resources/hubsquare.ico?asset'
 import { join } from 'path'
 import { mkdirSync } from 'fs'
 import type { InfoServidor, Resultado } from '../shared/tipos'
@@ -82,7 +83,7 @@ import {
   removerDosAmigos,
   usarResourcePack
 } from './explorar'
-import { apagarChave, salvarChave, temChave } from './chaveCurseForge'
+import { temChave } from './chaveCurseForge'
 import {
   adicionarAoHistorico,
   apagarAtalho,
@@ -106,7 +107,6 @@ import {
   travamentoRecente
 } from './listaMods'
 import { mudarEtiqueta, travarVersao } from './organizacao'
-import { chaveFunciona } from './curseforge'
 import {
   desfazerRemocao,
   listarRemovidos,
@@ -190,7 +190,8 @@ import {
   apagarBackups,
   listarBackups,
   protegerBackup,
-  restaurarBackup
+  restaurarBackup,
+  backupsEmAndamento
 } from './backup'
 import { atualizarBandeja, criarBandeja } from './bandeja'
 import { aoMudarIdioma, escolherIdioma, estadoIdioma, iniciarIdioma } from './idioma'
@@ -248,7 +249,8 @@ import {
   salvarProibidos
 } from './convites'
 import { aoMudarJogo, dispensarSessao, estadosDoJogo } from './jogo'
-import { ABRIR_LAUNCHER_LIGADO } from './launcherOficial'
+import { ABRIR_LAUNCHER_LIGADO, corrigirPerfisMigrados } from './launcherOficial'
+import { avisoDaMigracao, migrarSePrecisar } from './migracao'
 import {
   conviteDosArgumentos,
   convitePegou,
@@ -266,6 +268,7 @@ import {
   lembrarDiagnostico,
   opcoesRelatorio
 } from './relatorio'
+import { enviarRelato, mostrarUltimoRelatorio } from './relatar'
 import {
   abrirPaginaVersaoApp,
   avisoVersaoApp,
@@ -273,7 +276,8 @@ import {
   iniciarAvisoVersaoApp,
   lembrarVersaoDepois,
   ligarAvisoVersao,
-  pularVersaoApp
+  pularVersaoApp,
+  instalarVersaoApp
 } from './atualizacaoApp'
 import {
   abrirPastaInstalacao,
@@ -315,10 +319,13 @@ import {
 } from './instalacoes'
 import './uso' // começa a medir CPU e RAM sempre que o servidor liga
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
-// O app virou HubSquare, mas a pasta de dados continua a do ServSquare (%APPDATA%\ServSquare):
-// preferências, PIN do celular, cache e a chave do safeStorage (no "Local State") ficam onde estão.
-// Precisa vir antes de qualquer uso da pasta de dados, inclusive a trava de instância única.
+// Fase E2: a pasta de dados é %APPDATA%\HubSquare. Na primeira abertura depois da atualização,
+// migrarSePrecisar() move %APPDATA%\ServSquare e Documentos\ServSquare para os nomes novos (com
+// preferências, PIN do celular, cache e a chave do safeStorage no "Local State"); se não der, esta
+// sessão usa as pastas antigas. Precisa vir antes de qualquer uso da pasta de dados, inclusive a
+// trava de instância única.
 // Testes (Fase M3): HUBSQUARE_DADOS troca TODAS as pastas do usuário (dados, Documentos,
 // Downloads, Área de Trabalho e a pasta da .minecraft) por subpastas de uma pasta de teste.
 const pastaDeTeste = process.env.HUBSQUARE_DADOS
@@ -328,8 +335,10 @@ if (pastaDeTeste) {
     app.setPath(nome, join(pastaDeTeste, nome))
   }
   process.env.APPDATA = app.getPath('appData')
+  // Fase L1: o electron-updater guarda a versão baixada em %LOCALAPPDATA%\<app>-updater.
+  process.env.LOCALAPPDATA = join(pastaDeTeste, 'localAppData')
 }
-app.setPath('userData', join(app.getPath('appData'), 'ServSquare'))
+app.setPath('userData', migrarSePrecisar())
 // Fase I1: o idioma vem antes de qualquer texto do processo principal.
 iniciarIdioma()
 // Fase V4: o protocolo das imagens de fundo precisa ser registrado antes de o app ficar pronto.
@@ -348,6 +357,17 @@ async function instalandoModpack<T>(tarefa: () => Promise<T>): Promise<T> {
   }
 }
 
+// JOGAR preparando (Fase L1): a atualização do app não instala no meio.
+let preparandoJogo = 0
+async function preparando<T>(tarefa: () => Promise<T>): Promise<T> {
+  preparandoJogo++
+  try {
+    return await tarefa()
+  } finally {
+    preparandoJogo--
+  }
+}
+
 // Nenhum erro derruba o app: o que escapar vai para o log (pasta de dados › logs › erros.log) e
 // aparece na tela no padrão de erro, em vez de fechar a janela ou deixá-la travada.
 function erroSemTratamento(e: unknown): void {
@@ -355,7 +375,7 @@ function erroSemTratamento(e: unknown): void {
 `
   void mkdir(join(app.getPath('userData'), 'logs'), { recursive: true })
     .then(() => appendFile(join(app.getPath('userData'), 'logs', 'erros.log'), linha))
-    .catch(() => {})
+    .catch(() => {}) // é o próprio registro: sem ele não há onde anotar
   for (const j of BrowserWindow.getAllWindows()) j.webContents.send('app:erro', paraTela(e))
 }
 process.on('uncaughtException', erroSemTratamento)
@@ -390,12 +410,12 @@ const modoPronto = app.whenReady().then(() => decidirAoAbrir(process.argv))
 let verificacaoIniciada = false
 async function ligarServicosDoServ(): Promise<void> {
   // Painel pelo celular: só liga se o usuário ativou em Integrações › Celular.
-  iniciarCelular().catch(() => {})
+  iniciarCelular().catch(registrarErro('index.ts', 'iniciar o painel do celular'))
   // Avisos de atualização: só verifica (ao abrir e a cada 6 h), se o usuário deixou ligado.
   if (!verificacaoIniciada) iniciarVerificacao()
   verificacaoIniciada = true
   // Só de leitura: liga se algum servidor tiver convite ativo.
-  retomarConvites().catch(() => {})
+  retomarConvites().catch(registrarErro('index.ts', 'retomar os convites'))
 }
 
 async function suspenderServicosDoServ(): Promise<void> {
@@ -409,6 +429,18 @@ function abrirJanela(): void {
   janela.focus()
 }
 
+// Item Relatar problema da bandeja (Fase R1): abre a janela e o diálogo. Janela nova espera
+// a tela carregar antes de pedir.
+function abrirRelatar(): void {
+  const nova = !janela || janela.isDestroyed()
+  abrirJanela()
+  const j = janela
+  if (!j) return
+  if (nova || j.webContents.isLoading()) {
+    j.webContents.once('did-finish-load', () => j.webContents.send('app:relatar'))
+  } else j.webContents.send('app:relatar')
+}
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1100,
@@ -416,6 +448,7 @@ function createWindow(): void {
     minWidth: 800,
     minHeight: 500,
     title: 'HubSquare',
+    icon: iconeJanela, // a logo nova (o .ico tem a pequena e a completa)
     // Mesma cor do --bg-app dos tokens, para não piscar outra cor ao abrir.
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1e1e1e' : '#f2f2f2',
     show: false,
@@ -470,16 +503,24 @@ function avisarJanelas(canal: string, dado: unknown): void {
 }
 
 app.whenReady().then(async () => {
-  electronApp.setAppUserModelId('com.servsquare.app')
+  electronApp.setAppUserModelId('com.hubsquare.app')
+  void corrigirPerfisMigrados() // Fase E2: gameDir dos perfis, se o launcher estiver fechado
   // Fase V4: o protocolo das imagens de fundo e a migração dos fundos antigos (uma vez).
   servirFundos()
   // Aplica o tema salvo antes de abrir a janela. Se o arquivo estiver estragado, segue o padrão.
   aplicarTema((await lerAparencia().catch(() => null))?.bioma ?? 'dia')
-  await migrarFundosDasInstalacoes().catch(() => {})
+  await migrarFundosDasInstalacoes().catch(
+    registrarErro('index.ts', 'migrar os fundos das instalações')
+  )
   // Modo do app (Fase M6): os serviços do ServSquare (painel do celular, convites e avisos de
   // atualização de servidor) só ligam no modo completo. No amigo e nas boas-vindas, nada escuta.
   if ((await modoPronto) === 'completo') await ligarServicosDoServ()
-  iniciarAvisoVersaoApp()
+  iniciarAvisoVersaoApp(() => ({
+    servidor: lerEstado(),
+    backups: backupsEmAndamento,
+    modpacks: modpacksInstalando,
+    jogar: preparandoJogo
+  }))
 
   // F12 abre o DevTools em desenvolvimento; Ctrl+R é ignorado na versão final.
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
@@ -488,6 +529,7 @@ app.whenReady().then(async () => {
   const progresso = (p: unknown): void => avisarJanelas('download:progresso', p)
 
   ipcMain.handle('app:versao', () => app.getVersion())
+  ipcMain.handle('app:avisoMigracao', () => avisoDaMigracao())
   ipcMain.handle('servidor:atual', () => tentar(servidorAtual))
   ipcMain.handle('servidor:versoes', (_e, tipo: unknown) => tentar(() => listarVersoes(tipo)))
   ipcMain.handle('servidor:criar', (_e, pedido: unknown) =>
@@ -673,12 +715,8 @@ app.whenReady().then(async () => {
     comServidor((i) => instalarDatapack(i, id, fonte, progresso))
   )
 
-  // Chave da API do CurseForge (Fase 24): só entra, nunca volta para a tela.
+  // Chave da API do CurseForge (Fase L1): só a do build; a tela só sabe se ela existe.
   ipcMain.handle('curseforge:temChave', () => tentar(temChave))
-  ipcMain.handle('curseforge:salvarChave', (_e, chave: unknown) =>
-    tentar(() => salvarChave(chave, chaveFunciona))
-  )
-  ipcMain.handle('curseforge:apagarChave', () => tentar(apagarChave))
   ipcMain.handle('modpacks:analisarCurseForge', (_e, id: unknown) =>
     tentar(() => analisarDoCurseForge(id, progresso))
   )
@@ -839,6 +877,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('appVersao:baixar', () => tentar(abrirPaginaVersaoApp))
   ipcMain.handle('appVersao:lembrarDepois', () => tentar(lembrarVersaoDepois))
   ipcMain.handle('appVersao:pular', () => tentar(pularVersaoApp))
+  ipcMain.handle('appVersao:instalar', () => tentar(instalarVersaoApp))
   ipcMain.handle('appVersao:ligado', () => tentar(avisoVersaoLigado))
   ipcMain.handle('appVersao:ligar', (_e, v: unknown) => tentar(() => ligarAvisoVersao(v)))
 
@@ -890,7 +929,7 @@ app.whenReady().then(async () => {
     tentar(() => escolherImagemInstalacao(id, BrowserWindow.fromWebContents(e.sender)))
   )
   ipcMain.handle('instalacoes:jogar', (_e, id: unknown, opcoes: unknown) =>
-    tentar(() => jogar(id, opcoes, progresso))
+    tentar(() => preparando(() => jogar(id, opcoes, progresso)))
   )
 
   // Convites (Fase P2). Dono: do servidor ativo. Amigo: código, link ou arquivo.
@@ -934,6 +973,8 @@ app.whenReady().then(async () => {
   ipcMain.handle('relatorio:opcoes', () => tentar(opcoesRelatorio))
   ipcMain.handle('relatorio:gerar', (_e, pedido: unknown) => tentar(() => gerarRelatorio(pedido)))
   ipcMain.handle('relatorio:abrirPasta', () => tentar(abrirPastaDoRelatorio))
+  ipcMain.handle('relatar:enviar', (_e, pedido: unknown) => tentar(() => enviarRelato(pedido)))
+  ipcMain.handle('relatar:mostrarArquivo', () => tentar(async () => mostrarUltimoRelatorio()))
   ipcMain.handle('diagnostico:consertar', (_e, conserto: unknown) =>
     tentar(() => consertarDono(conserto))
   )
@@ -1008,7 +1049,7 @@ app.whenReady().then(async () => {
     tentar(() => definirMemoria(id, ram))
   )
   ipcMain.handle('jogo:ligarEJogar', (_e, id: unknown, opcoes: unknown) =>
-    tentar(() => ligarServidorEJogar(id, opcoes, progresso))
+    tentar(() => preparando(() => ligarServidorEJogar(id, opcoes, progresso)))
   )
   ipcMain.handle('jogo:fundo', (_e, id: unknown, escolha: unknown) =>
     tentar(() => definirFundoInstalacao(id, escolha))
@@ -1049,7 +1090,7 @@ app.whenReady().then(async () => {
       return r
     })
   )
-  iniciarDownloadsManuais().catch(() => {})
+  iniciarDownloadsManuais().catch(registrarErro('index.ts', 'iniciar os downloads manuais'))
   // Modo do app (Fase M6). Trocar só muda a tela e os serviços: nenhum dado é apagado.
   ipcMain.on('idioma:obter', (e) => (e.returnValue = estadoIdioma()))
   ipcMain.handle('idioma:escolher', (_e, valor: unknown) => tentar(() => escolherIdioma(valor)))
@@ -1086,7 +1127,7 @@ app.whenReady().then(async () => {
   })
 
   createWindow()
-  criarBandeja({ abrir: abrirJanela, sair: () => app.quit() })
+  criarBandeja({ abrir: abrirJanela, relatar: abrirRelatar, sair: () => app.quit() })
 })
 
 // Sair (pela bandeja ou pelo Windows): impede o servidor de ligar, desliga do jeito certo,

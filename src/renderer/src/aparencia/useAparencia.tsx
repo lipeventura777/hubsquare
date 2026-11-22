@@ -1,10 +1,17 @@
 import { voltouDoIdioma } from '../idioma'
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { ajustarContraste, amostrarImagem, aplicarAccent, aplicarBioma } from './tema'
-import { ARTE } from '../fundo/biomas'
+import { ARTE, LOGO } from '../fundo/biomas'
 import { definirModo } from '../fundo/pausa'
 import { modoInicial } from '../../../shared/animacaoRegras'
-import { hex, luminancia, type Rgb } from '../../../shared/contrasteRegras'
+import { hex, luminancia, rgbDeTexto, superficies, type Rgb } from '../../../shared/contrasteRegras'
+import {
+  OFICIAIS,
+  VARIAVEIS,
+  nomeDaLogo,
+  paletaDaLogo,
+  type PaletaLogo
+} from '../../../shared/logoCoresRegras'
 import { camadaDeLuz, tomDoVidro, urlDoFundo, type EscolhaFundo } from '../../../shared/fundoRegras'
 import type { Aparencia, ErroTela, Screenshot } from '../../../shared/tipos'
 
@@ -38,6 +45,8 @@ interface ContextoAparencia {
   erro: ErroTela | null
   mudar: (mudancas: Partial<Omit<Aparencia, 'fundo'>>) => void
   usarScreenshot: (nome: string) => Promise<string | null>
+  // A paleta da logo que acompanha o fundo de agora (a prévia mostra mesmo com "Oficiais").
+  paletaFundo: PaletaLogo
 }
 
 const Contexto = createContext<ContextoAparencia | null>(null)
@@ -92,6 +101,9 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
     }
   }
   const salvarDepois = useRef<NodeJS.Timeout | undefined>(undefined)
+  const [paletaFundo, setPaletaFundo] = useState<PaletaLogo>(OFICIAIS)
+  // As cores do nome na barra lateral (mesmo tom das faces, 4,5:1); null: as oficiais do nome.
+  const [nomeFundo, setNomeFundo] = useState<{ hub: string; square: string } | null>(null)
 
   useEffect(() => {
     window.api.lerAparencia().then((r) => (r.ok ? setAparencia(r.valor) : setErro(r.erro)))
@@ -136,12 +148,43 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
           : aparencia.bioma
       aplicarBioma(bioma, aparencia.vidroLeve)
       const accent = aplicarAccent(area === 'play' ? aparencia.destaquePlay : aparencia.destaque)
-      ajustarContraste(amostra.length ? amostra : ARTE[bioma].paleta.map(hex), accent)
+      const fundos = amostra.length ? amostra : ARTE[bioma].paleta.map(hex)
+      ajustarContraste(fundos, accent)
+      // Logo e nome: o vidro da barra lateral sobre este fundo (para o contraste do nome).
+      const estilo = getComputedStyle(document.documentElement)
+      const sobre = superficies(
+        { cores: [rgbDeTexto(estilo.getPropertyValue('--vidro-rgb'))], textos: [] },
+        Number(estilo.getPropertyValue('--vidro-alfa')),
+        fundos
+      )
+      // As cores da cena do bioma; imagem do usuário não tem paleta própria (cores oficiais).
+      const cena = imagemApp ? null : LOGO[bioma]
+      const paleta = paletaDaLogo({ modo: 'fundo', cena })
+      setPaletaFundo(paleta)
+      setNomeFundo(cena ? nomeDaLogo(paleta, sobre) : null)
     })
     return () => {
       ativo = false
     }
   }, [aparencia, area, falhou, fundoTela])
+
+  // Cores da logo dentro do app: com "Oficiais", as variáveis saem e vale o padrão do SVG.
+  const coresLogo = aparencia?.coresLogo
+  useEffect(() => {
+    const raiz = document.documentElement
+    for (const [k, v] of Object.entries(VARIAVEIS)) {
+      if (coresLogo === 'fundo') raiz.style.setProperty(v, paletaFundo[k as keyof PaletaLogo])
+      else raiz.style.removeProperty(v)
+    }
+    const nome = coresLogo === 'fundo' ? nomeFundo : null
+    for (const [v, cor] of [
+      ['--logo-nome-hub', nome?.hub],
+      ['--logo-nome-square', nome?.square]
+    ] as const) {
+      if (cor) raiz.style.setProperty(v, cor)
+      else raiz.style.removeProperty(v)
+    }
+  }, [paletaFundo, nomeFundo, coresLogo])
 
   const windowsReduzAnimacoes = useWindowsReduzAnimacoes()
   const reduzir = windowsReduzAnimacoes || !!aparencia?.reduzirAnimacoes
@@ -197,7 +240,8 @@ export function AparenciaProvider({ children }: { children: React.ReactNode }): 
         windowsReduzAnimacoes,
         erro,
         mudar,
-        usarScreenshot
+        usarScreenshot,
+        paletaFundo
       }}
     >
       {children}

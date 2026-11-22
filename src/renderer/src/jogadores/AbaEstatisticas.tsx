@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ErroTela, EstatisticasJogador, LinhaEstatistica } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeCoracao, IconeJogadores, IconeLigar, IconeRegistro } from '../componentes/icones'
+import { IconeCoracao, IconeJogadores, IconeLigar, IconeRegistro } from '../icones'
 import { Esqueleto } from '../componentes/movimento'
 import { CardPainel } from '../componentes/paineis'
 import { Botao, EstadoVazio } from '../componentes/ui'

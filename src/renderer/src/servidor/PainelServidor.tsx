@@ -73,7 +73,6 @@ export function PainelServidor({
         aviso={aviso}
         vitrine={vitrine}
         estado={estado}
-        erroDoServidor={erro}
         aoLigarDesligar={() => void ligarDesligar()}
       />
       <div

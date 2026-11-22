@@ -52,6 +52,7 @@ import { guardarImagem, pastaFundos } from './fundos'
 import type { FundoServidor } from '../shared/fundoRegras'
 import { acharItem, ARQUIVO_INFO, lerIndice, lerInfo, registrar } from './servidores'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Passar o servidor (Fase M7). "Passar para outro amigo" gera um .hubserver (zip) com o mundo,
 // as configurações e as listas de jogadores, e os mods só como link oficial + hash. Nada de .jar,
@@ -235,7 +236,7 @@ export async function passarServidor(
     // Fase V10: a imagem do fundo vai junto (se ela ainda existir neste PC).
     const imagemFundo =
       info.fundo?.tipo === 'imagem' ? join(pastaFundos(), info.fundo.imagem) : null
-    const montagem = join(tmpdir(), `servsquare-hubserver-${randomUUID()}`)
+    const montagem = join(tmpdir(), `hubsquare-hubserver-${randomUUID()}`)
     const zip = `${montagem}.zip` // o tar escolhe o formato pela extensão
     try {
       await mkdir(montagem, { recursive: true })
@@ -267,8 +268,8 @@ export async function passarServidor(
     } catch (e) {
       throw new ErroApp(t('p.passarServidor.naoConseguiGerarOArquivo'), detalhar(e))
     } finally {
-      await rm(montagem, { recursive: true, force: true }).catch(() => {})
-      await rm(zip, { force: true }).catch(() => {})
+      await rm(montagem, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
+      await rm(zip, { force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
     }
     await atualizarInfo(info, { idFixo, emprestado: { com, desde: new Date().toISOString() } })
     return { arquivo: basename(destino), tamanho: (await stat(destino)).size }
@@ -355,7 +356,7 @@ export async function analisarHubserver(
 // Extrai numa pasta temporária (o zip é conferido de novo: pode ter mudado desde a análise).
 async function extrair(arquivo: string): Promise<string> {
   await listarEntradas(arquivo)
-  const pasta = join(tmpdir(), `servsquare-hubserver-${randomUUID()}`)
+  const pasta = join(tmpdir(), `hubsquare-hubserver-${randomUUID()}`)
   await mkdir(pasta, { recursive: true })
   try {
     await tar(['-xf', arquivo, '-C', pasta])
@@ -364,7 +365,7 @@ async function extrair(arquivo: string): Promise<string> {
     }
     return pasta
   } catch (e) {
-    await rm(pasta, { recursive: true, force: true }).catch(() => {})
+    await rm(pasta, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
     if (e instanceof ErroApp) throw e
     throw new ErroApp(t('p.passarServidor.naoConseguiAbrirEsseArquivo2'), detalhar(e))
   }
@@ -470,12 +471,16 @@ async function criarDoPacote(
     await writeFile(join(provisoria, ARQUIVO_INFO), JSON.stringify(info, null, 2))
     await rename(provisoria, pasta)
     const id = await registrar({ nome, pasta, tipo: p.tipo, versao }, lerEstado() === 'desligado')
-    await limparCacheDe(p.mods).catch(() => {})
-    await registrarPendencias({ ...info, id, pasta }, p.manuais).catch(() => {})
+    await limparCacheDe(p.mods).catch(() => {}) // cache de downloads; tenta de novo na próxima limpeza
+    await registrarPendencias({ ...info, id, pasta }, p.manuais).catch(
+      registrarErro('passarServidor.ts', 'registrar os downloads manuais do servidor recebido')
+    )
     return { ...info, id, pasta }
   } finally {
-    await rm(provisoria, { recursive: true, force: true }).catch(() => {})
-    if (extraido) await rm(extraido, { recursive: true, force: true }).catch(() => {})
+    await rm(provisoria, { recursive: true, force: true }).catch(
+      registrarErro('passarServidor.ts', 'apagar a pasta provisória do servidor recebido')
+    )
+    if (extraido) await rm(extraido, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
   }
 }
 
@@ -527,13 +532,15 @@ async function atualizarMeu(
       // Mods que o amigo pôs e este servidor não tem: baixados pelos links oficiais.
       const faltam = p.mods.filter((f) => !existsSync(join(info.pasta, f.path)))
       await baixarArquivos(faltam, info.pasta, avisar)
-      await limparCacheDe(faltam).catch(() => {})
+      await limparCacheDe(faltam).catch(() => {}) // cache de downloads; tenta de novo na próxima limpeza
       const novo: InfoServidor = { ...info, idFixo: idFixoDe(info), emprestado: undefined }
       await atualizarInfo(info, { idFixo: novo.idFixo, emprestado: undefined })
-      await registrarPendencias(novo, p.manuais).catch(() => {})
+      await registrarPendencias(novo, p.manuais).catch(
+        registrarErro('passarServidor.ts', 'registrar os downloads manuais do servidor atualizado')
+      )
       return novo
     } finally {
-      await rm(extraido, { recursive: true, force: true }).catch(() => {})
+      await rm(extraido, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
     }
   })
 }

@@ -8,7 +8,7 @@ import { MC } from './simulado'
 // some por fora. Prints em .teste/prints-v4/.
 
 const PRINTS = join(__dirname, '..', '..', '.teste', 'prints-v4')
-const IMAGEM = join(__dirname, '..', '..', 'build', 'icon.png') // arte do próprio app
+const IMAGEM = join(__dirname, '..', '..', 'build', 'logo', 'png', 'hubsquare-512.png') // arte do próprio app
 // O arquivo só aparece depois da primeira mudança salva: ausente conta como vazio.
 const lerJson = (f: string): Record<string, unknown> => {
   try {
@@ -31,7 +31,7 @@ test('fundo do app: bioma com desfazer, imagem minha, Jogar igual ao app e image
   await criarPeloAssistente(j, 'Servidor Visual', MC)
   const html = j.locator('html')
   await expect(html).toHaveAttribute('data-bioma', 'dia')
-  const dados = join(a.pasta, 'appData', 'ServSquare')
+  const dados = join(a.pasta, 'appData', 'HubSquare')
 
   await j.getByRole('button', { name: 'Aparência' }).click()
   await j.getByRole('tab', { name: 'Fundo' }).click()

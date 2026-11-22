@@ -9,7 +9,7 @@ import {
 } from '../../../shared/tipos'
 import { BarraDeEtapas } from '../assistente/Assistente'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeMods } from '../componentes/icones'
+import { IconeMods } from '../icones'
 import { classesBotao } from '../componentes/estilos'
 import { Esqueleto } from '../componentes/movimento'
 import { CardPainel } from '../componentes/paineis'

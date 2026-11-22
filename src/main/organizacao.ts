@@ -10,7 +10,7 @@ import { t } from '../shared/i18n'
 // Os mods são identificados por "fonte:projeto" (ou "arquivo:nome" quando não há fonte), para
 // a etiqueta e o perfil continuarem valendo depois de uma atualização.
 
-const ARQUIVO = 'servsquare-organizacao.json'
+const ARQUIVO = 'hubsquare-organizacao.json'
 
 export interface Anterior {
   arquivo: string // nome do .jar guardado
@@ -54,7 +54,7 @@ export function editarOrganizacao<T>(info: InfoServidor, mudar: (o: Organizacao)
     await gravarComSeguranca(join(info.pasta, ARQUIVO), JSON.stringify(o, null, 2))
     return valor
   })
-  fila = r.catch(() => {})
+  fila = r.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return r
 }
 

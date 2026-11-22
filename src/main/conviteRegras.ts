@@ -369,7 +369,7 @@ export function situacaoDoPedido(p: PedidosServidor, uuid: string): SituacaoPedi
   return p.respostas[uuid] ?? 'desconhecido'
 }
 
-// Arquivo guardado (servsquare-pedidos.json): qualquer coisa estranha volta ao vazio.
+// Arquivo guardado (hubsquare-pedidos.json): qualquer coisa estranha volta ao vazio.
 export function lerPedidos(json: unknown): PedidosServidor {
   const d = (json ?? {}) as Partial<PedidosServidor>
   const pendentes = Array.isArray(d.pendentes)

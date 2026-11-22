@@ -1,3 +1,5 @@
+import { Logo } from '../componentes/Logo'
+import { OFICIAIS, estiloDaPaleta } from '../../../shared/logoCoresRegras'
 import { useEffect, useRef, useState } from 'react'
 import type { Bioma, ErroTela, ImagemFundo } from '../../../shared/tipos'
 import { mesmaEscolha, urlDoFundo, type EscolhaFundo } from '../../../shared/fundoRegras'
@@ -74,7 +76,63 @@ function AbaTema(): React.JSX.Element {
 
       <CorDaArea campo="destaque" titulo={t('telaAparencia.corDoServsquare')} />
       <CorDaArea campo="destaquePlay" titulo={t('telaAparencia.corDoPlaysquare')} />
+
+      <LogoDoApp />
     </>
+  )
+}
+
+// Logo dentro do app: mostrar na barra lateral e as cores (oficiais ou acompanhando o fundo),
+// com a prévia das duas opções sobre o fundo de agora. Fora do app ela é sempre a oficial.
+function LogoDoApp(): React.JSX.Element {
+  const { aparencia, mudar, paletaFundo } = useAparencia()
+  if (!aparencia) return <></>
+  const opcoes = [
+    { modo: 'fundo' as const, nome: t('telaAparencia.coresDoFundo'), paleta: paletaFundo },
+    { modo: 'oficiais' as const, nome: t('telaAparencia.coresOficiais'), paleta: OFICIAIS }
+  ]
+  return (
+    <Secao titulo={t('telaAparencia.logo')}>
+      <LinhaControle
+        rotulo={t('telaAparencia.mostrarLogoNaBarra')}
+        ligado={aparencia.logoNaBarra}
+        aoMudar={(v) => mudar({ logoNaBarra: v })}
+      >
+        {t('telaAparencia.mostrarLogoDica')}
+      </LinhaControle>
+      <div role="radiogroup" aria-label={t('telaAparencia.coresDaLogo')}>
+        <p className="text-[13px] font-bold">{t('telaAparencia.coresDaLogo')}</p>
+        {opcoes.map((o) => (
+          <OpcaoRadio
+            key={o.modo}
+            nome="cores-logo"
+            marcada={aparencia.coresLogo === o.modo}
+            aoEscolher={() => mudar({ coresLogo: o.modo })}
+          >
+            {o.nome}
+          </OpcaoRadio>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-3">
+        {opcoes.map((o) => (
+          <figure
+            key={o.modo}
+            data-previa-logo={o.modo}
+            style={estiloDaPaleta(o.paleta)}
+            className={`flex flex-col items-center gap-2 rounded-(--raio-item) border bg-sidebar px-5 py-3 ${
+              aparencia.coresLogo === o.modo ? 'border-accent' : 'border-linha'
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <Logo tamanho={64} />
+              <Logo tamanho={32} />
+            </span>
+            <figcaption className="text-xs text-muted">{o.nome}</figcaption>
+          </figure>
+        ))}
+      </div>
+      <p className="text-xs text-muted">{t('telaAparencia.coresLogoDica')}</p>
+    </Secao>
   )
 }
 

@@ -11,8 +11,9 @@ import {
 import { validarAutomacao } from '../../../shared/automacao'
 import { useAparencia } from '../aparencia/useAparencia'
 import { MensagemErro } from '../componentes/MensagemErro'
+import { Esqueleto } from '../componentes/movimento'
 import { tamanho as formatarTamanho } from '../componentes/formato'
-import { IconeCadeado } from '../componentes/icones'
+import { IconeAtencao, IconeCadeado } from '../icones'
 import {
   Aviso,
   Botao,
@@ -37,6 +38,7 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
   const { screenshots } = useAparencia()
   const [info, setInfo] = useState<InfoServidor | null>(null)
   const [backups, setBackups] = useState<Backup[]>([])
+  const [carregou, setCarregou] = useState(false)
   const [confirmando, setConfirmando] = useState<Backup | null>(null)
   const [restaurando, setRestaurando] = useState(false)
   const [restaurado, setRestaurado] = useState<Backup | null>(null)
@@ -49,7 +51,11 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
   const [ocupado, setOcupado] = useState(false)
 
   const carregar = useCallback((): void => {
-    window.api.listarBackups().then((r) => (r.ok ? setBackups(r.valor) : setErro(r.erro)))
+    window.api.listarBackups().then((r) => {
+      if (r.ok) setBackups(r.valor)
+      else setErro(r.erro)
+      setCarregou(true)
+    })
   }, [])
 
   useEffect(() => {
@@ -169,7 +175,9 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
       )}
       {erro && <MensagemErro erro={erro} />}
 
-      {backups.length === 0 ? (
+      {!carregou ? (
+        <Esqueleto linhas={3} forma="cards" />
+      ) : backups.length === 0 ? (
         <p className="text-[13px] text-muted">{t('backups.nenhumBackupAindaOPrimeiro')}</p>
       ) : (
         <div className="flex flex-wrap gap-4">
@@ -301,6 +309,7 @@ export function Backups({ estado }: { estado: EstadoServidor }): React.JSX.Eleme
             {todos && (
               <label className="flex flex-col gap-1">
                 <span className="text-warning">
+                  <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
                   {t('backups.saoTodosOsBackupsDeste')} <b>{info?.nome}</b>
                 </span>
                 <Campo

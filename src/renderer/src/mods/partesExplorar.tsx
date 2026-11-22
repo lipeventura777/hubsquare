@@ -1,3 +1,4 @@
+import { IconeFechar, IconeRecolher } from '../icones'
 import { useState } from 'react'
 import { useIndicador } from '../componentes/movimento'
 import { Botao, CaixaSelecao, Campo, Selecao } from '../componentes/ui'
@@ -71,7 +72,7 @@ export function AbasDeTipo<T extends string>({
       <span
         ref={indicador as React.RefObject<HTMLSpanElement>}
         aria-hidden="true"
-        className="absolute bottom-1 left-0 h-[3px] w-6 bg-accent transition-transform duration-(--dur-base) ease-(--ease-out)"
+        className="absolute bottom-1 left-0 h-[3px] w-6 bg-accent transition-transform duration-(--dur-base) ease-(--ease-entrada)"
       />
     </div>
   )
@@ -106,7 +107,11 @@ export function BarraDeBusca<O extends string>({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Botao aria-expanded={painel} onClick={aoAlternarPainel}>
-        {painel ? t('partesExplorar.filtros') : t('partesExplorar.filtros2')}
+        {painel && <IconeRecolher className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />}
+        {t('partesExplorar.filtros')}
+        {!painel && (
+          <IconeRecolher className="ml-1 inline h-[1em] w-[1em] align-[-0.125em] rotate-180" />
+        )}
       </Botao>
       <form
         className="flex min-w-[240px] flex-1 gap-2"
@@ -179,7 +184,7 @@ export function EtiquetasDeFiltro({
           aria-label={t('partesExplorar.tirarOFiltro', { rotulo: e.rotulo })}
           className="flex h-7 items-center gap-2 border border-linha bg-panel-2 px-2 text-xs transition-colors duration-(--dur-fast) hover:border-muted"
         >
-          {e.rotulo} <span aria-hidden="true">{t('partesExplorar.texto')}</span>
+          {e.rotulo} <IconeFechar className="h-3 w-3" />
         </button>
       ))}
       <button type="button" className="text-xs text-accent underline" onClick={aoLimpar}>
@@ -340,7 +345,7 @@ export function EsqueletoDeCards({
     <div
       role="status"
       aria-label={t('partesExplorar.carregando')}
-      className={vista === 'grade' ? GRADE : 'flex flex-col gap-2'}
+      className={`esqueleto-atraso ${vista === 'grade' ? GRADE : 'flex flex-col gap-2'}`}
     >
       {Array.from({ length: quantos }, (_, i) => (
         <div

@@ -11,7 +11,7 @@ import { MC } from './simulado'
 
 const PRINTS = join(__dirname, '..', '..', '.teste', 'prints-v7')
 const FASE = process.env.PRINTS_V7 ?? 'depois' // "antes" para os prints do código antigo
-const IMAGEM = join(__dirname, '..', '..', 'build', 'icon.png') // arte do próprio app
+const IMAGEM = join(__dirname, '..', '..', 'build', 'logo', 'png', 'hubsquare-512.png') // arte do próprio app
 
 async function vazamentos(j: Page): Promise<string[]> {
   await j.waitForTimeout(500) // animação de entrada da tela
@@ -130,7 +130,7 @@ test('nenhuma imagem, faixa ou fundo vaza dos cantos arredondados', async ({ abr
   await conferir(j, 'Servidores (ServSquare)', achados)
 
   await area(j, 'PlaySquare')
-  const jogo = join(a.pasta, 'documents', 'ServSquare', 'jogo', 'Servidor Cantos', 'screenshots')
+  const jogo = join(a.pasta, 'documents', 'HubSquare', 'jogo', 'Servidor Cantos', 'screenshots')
   mkdirSync(jogo, { recursive: true })
   copyFileSync(IMAGEM, join(jogo, '2026-01-01_12.00.00.png'))
   for (const tela of [

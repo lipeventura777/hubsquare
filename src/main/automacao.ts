@@ -14,6 +14,7 @@ import {
   servidorAtual
 } from './servidor'
 import { idiomaAtual, t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Tela Automação (Fase 19): desligar quando vazio, reinício agendado e backup agendado.
 // Tudo roda neste processo, então só funciona com o app aberto (a bandeja conta).
@@ -212,7 +213,9 @@ async function verificar(): Promise<void> {
 }
 
 setInterval(() => {
-  verificar().catch(() => {})
+  verificar().catch(
+    registrarErro('automacao.ts', 'rodar a automação (desligar vazio, reinício, backup agendado)')
+  )
 }, INTERVALO)
 
 export async function lerAutomacao(info: InfoServidor): Promise<EstadoAutomacao> {

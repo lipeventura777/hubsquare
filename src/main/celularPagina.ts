@@ -13,7 +13,7 @@ export const html = (): string => `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2b2b2b">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icone.png">
+<link rel="icon" href="/icone-32.png">
 <link rel="apple-touch-icon" href="/icone.png">
 <link rel="stylesheet" href="/app.css">
 <title>HubSquare</title>

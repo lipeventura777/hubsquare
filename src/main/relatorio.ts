@@ -92,7 +92,7 @@ async function segredosDoPc(): Promise<string[]> {
   lista.push((await lerChave().catch(() => null)) ?? '')
   lista.push((await lerTexto(join(dados(), 'playit', 'chave-secreta')).catch(() => '')).trim())
   for (const s of await servidores()) {
-    const c = (await lerJson(join(s.pasta, 'servsquare-convite.json'))) as {
+    const c = (await lerJson(join(s.pasta, 'hubsquare-convite.json'))) as {
       token?: unknown
     } | null
     if (typeof c?.token === 'string') lista.push(c.token)
@@ -149,7 +149,7 @@ async function travamentosDe(pasta: string): Promise<{ nome: string; caminho: st
 async function modsDe(
   pasta: string
 ): Promise<{ arquivo: string; versao: string | null; sha1: string }[]> {
-  const registro = (await lerJson(join(pasta, 'servsquare-mods.json'))) as {
+  const registro = (await lerJson(join(pasta, 'hubsquare-mods.json'))) as {
     itens?: { arquivo: string; versao?: string; titulo?: string }[]
   } | null
   const lista: { arquivo: string; versao: string | null; sha1: string }[] = []
@@ -178,15 +178,20 @@ const javasInstalados = async (): Promise<string[]> =>
     .filter((d) => d.isDirectory())
     .map((d) => t('p.relatorio.java', { name: d.name }))
 
+// A mesma limpeza do relatório, para o texto que a pessoa escreve em Relatar problema (Fase R1).
+export async function limpezaDoPc(): Promise<Limpeza> {
+  return {
+    casas: [...new Set([homedir(), process.env.USERPROFILE ?? ''].filter(Boolean))],
+    segredos: await segredosDoPc()
+  }
+}
+
 export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> {
   const { servidorId, instalacaoId, tirar } = (pedido ?? {}) as Record<string, unknown>
   const itens = itensEscolhidos(tirar)
   const servidor = (await servidores()).find((s) => s.id === servidorId) ?? null
   const instalacao = (await instalacoes()).find((i) => i.id === instalacaoId) ?? null
-  const limpeza: Limpeza = {
-    casas: [...new Set([homedir(), process.env.USERPROFILE ?? ''].filter(Boolean))],
-    segredos: await segredosDoPc()
-  }
+  const limpeza = await limpezaDoPc()
   const limpar = (t: string): string => limparTexto(t, limpeza)
   const arquivos: Record<string, string> = {} // nome no zip → conteúdo já limpo
   const log = async (nome: string, caminho: string, limite = LIMITE_LOG): Promise<void> => {
@@ -197,7 +202,7 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
   if (itens.includes('erros')) await log('erros.log', join(dados(), 'logs', 'erros.log'))
   if (servidor && itens.includes('servidor')) {
     await log('servidor/latest.log', join(servidor.pasta, 'logs', 'latest.log'))
-    await log('servidor/servsquare-acoes.log', join(servidor.pasta, 'servsquare-acoes.log'))
+    await log('servidor/hubsquare-acoes.log', join(servidor.pasta, 'hubsquare-acoes.log'))
   }
   if (instalacao && itens.includes('jogo')) {
     await log('jogo/latest.log', join(instalacao.pasta, 'logs', 'latest.log'))
@@ -230,7 +235,7 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
       const info = await lerInfo(item)
       const props = await lerTexto(join(item.pasta, 'server.properties')).catch(() => '')
       lista.push({
-        ...(info ?? { nome: item.nome, pasta: item.pasta, semServsquareJson: true }),
+        ...(info ?? { nome: item.nome, pasta: item.pasta, semHubsquareJson: true }),
         serverProperties: props ? limparPropriedades(props).split(/\r?\n/) : null
       })
     }
@@ -252,7 +257,7 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
   }
   if (itens.includes('manifesto')) {
     const convite = servidor
-      ? ((await lerJson(join(servidor.pasta, 'servsquare-convite.json'))) as {
+      ? ((await lerJson(join(servidor.pasta, 'hubsquare-convite.json'))) as {
           versao?: unknown
         } | null)
       : null
@@ -296,7 +301,7 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
 
   const pasta = app.getPath('desktop')
   const destino = join(pasta, nomeDoRelatorio(new Date()))
-  const montagem = join(tmpdir(), `servsquare-relatorio-${randomUUID()}`)
+  const montagem = join(tmpdir(), `hubsquare-relatorio-${randomUUID()}`)
   try {
     for (const [nome, texto] of Object.entries(arquivos)) {
       await mkdir(dirname(join(montagem, nome)), { recursive: true })
@@ -307,7 +312,7 @@ export async function gerarRelatorio(pedido: unknown): Promise<RelatorioGerado> 
   } catch (e) {
     throw new ErroApp(t('p.relatorio.naoConseguiGravarORelatorio'), detalhar(e))
   } finally {
-    await rm(montagem, { recursive: true, force: true }).catch(() => {})
+    await rm(montagem, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
   }
   return { arquivo: destino.split(/[\\/]/).pop()!, itens: Object.keys(arquivos) }
 }

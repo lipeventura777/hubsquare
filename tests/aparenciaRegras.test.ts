@@ -59,3 +59,19 @@ test('sem arquivo: padrão (Dia), sem regravar nada estranho', () => {
   assert.equal(aparencia.destaque, null)
   assert.deepEqual(migrarAparencia({ destaque: 'vermelho' }, true).aparencia.destaque, null)
 })
+
+test('logo: arquivo antigo fica com a logo visível e acompanhando o fundo; escolha salva continua', () => {
+  const antigo = migrarAparencia({ bioma: 'nether' }, false).aparencia
+  assert.equal(antigo.logoNaBarra, true)
+  assert.equal(antigo.coresLogo, 'fundo')
+  const escolhido = migrarAparencia(
+    { bioma: 'nether', logoNaBarra: false, coresLogo: 'oficiais' },
+    false
+  ).aparencia
+  assert.equal(escolhido.logoNaBarra, false)
+  assert.equal(escolhido.coresLogo, 'oficiais')
+  assert.equal(
+    migrarAparencia({ bioma: 'dia', coresLogo: 'roxo' }, false).aparencia.coresLogo,
+    'fundo'
+  )
+})

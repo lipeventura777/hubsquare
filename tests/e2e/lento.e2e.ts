@@ -55,7 +55,7 @@ test('@lento baixa o Paper, liga, responde no console e desliga com backup', asy
   await expect(j.getByRole('button', { name: 'Ligar', exact: true })).toBeVisible({
     timeout: 2 * 60_000
   })
-  const backups = join(a.pasta, 'documents', 'ServSquare', 'backups', 'Servidor Lento')
+  const backups = join(a.pasta, 'documents', 'HubSquare', 'backups', 'Servidor Lento')
   await expect
     .poll(
       () => (existsSync(backups) ? readdirSync(backups).filter((n) => n.endsWith('.zip')) : []),

@@ -45,6 +45,7 @@ import { FONTES, NOMES_FONTES, downloadPermitido, type Fonte } from '../shared/f
 import { removerArquivo } from './removidos'
 import { pedidosDaPagina, tamanhoValido } from '../shared/paginaRegras'
 import { t as tx } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Aba Explorar da tela Mods (Fase 23): todos os tipos de conteúdo do Modrinth.
 // Mods e plugins do servidor seguem pelo mods.ts (Fase 16). Este arquivo cuida do resto:
@@ -53,7 +54,7 @@ import { t as tx } from '../shared/i18n'
 // a pasta do servidor.
 
 // O que o Explorar instalou, na pasta do servidor.
-const ARQUIVO = 'servsquare-explorar.json'
+const ARQUIVO = 'hubsquare-explorar.json'
 const ZIP = /\.zip$/i
 
 interface Salvo {
@@ -94,7 +95,7 @@ export async function lerEstado(info: InfoServidor): Promise<EstadoExplorar> {
 
 let cadeia: Promise<unknown> = Promise.resolve()
 
-// Uma mudança de cada vez no servsquare-explorar.json.
+// Uma mudança de cada vez no hubsquare-explorar.json.
 function editar<T>(info: InfoServidor, mudar: (e: EstadoExplorar) => Promise<T>): Promise<T> {
   const resultado = cadeia.then(async () => {
     const estado = await lerEstado(info)
@@ -102,7 +103,7 @@ function editar<T>(info: InfoServidor, mudar: (e: EstadoExplorar) => Promise<T>)
     await gravarComSeguranca(join(info.pasta, ARQUIVO), JSON.stringify(estado, null, 2))
     return valor
   })
-  cadeia = resultado.catch(() => {})
+  cadeia = resultado.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return resultado
 }
 
@@ -567,7 +568,9 @@ export async function instalarDatapack(
     join(pasta, novo.arquivo),
     checksum,
     `Baixando ${novo.titulo} ${novo.versao}`,
-    aoProgredir
+    aoProgredir,
+    undefined,
+    novo.titulo
   )
   const mesmo = (d: Salvo & { mundo: string }): boolean =>
     d.projetoId === projetoId && d.mundo === mundo && (d.fonte ?? 'modrinth') === f
@@ -716,7 +719,10 @@ export async function adicionarAosAmigos(
     await garantirModsNoJogo(info, [...deps, ...(doShader ? [doShader.id] : [])])
   } else {
     // Pacote pros amigos: mods só do jogador que o pack exige vão junto (ex.: os do Fresh Animations).
-    for (const d of deps) await adicionarAosAmigos(info, d, 'mod').catch(() => {})
+    for (const d of deps)
+      await adicionarAosAmigos(info, d, 'mod').catch(
+        registrarErro('explorar.ts', 'pôr a dependência no Pacote pros amigos')
+      )
   }
 }
 
@@ -751,7 +757,9 @@ async function baixarParaJogo(
     join(pasta, a.arquivo),
     { algoritmo: 'sha512', valor: a.sha512 },
     a.titulo,
-    () => {}
+    () => {},
+    undefined,
+    a.titulo
   )
 }
 

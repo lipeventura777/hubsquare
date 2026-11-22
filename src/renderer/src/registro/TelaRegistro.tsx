@@ -3,7 +3,7 @@ import type { AcaoApp, ArquivoLog, ErroTela, RelatorioTravamento } from '../../.
 import { NIVEIS, niveisDasLinhas, type NivelLog } from '../../../shared/logs'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { dataHora, tamanho } from '../componentes/formato'
-import { IconeRegistro } from '../componentes/icones'
+import { IconeRecarregar, IconeRegistro } from '../icones'
 import { Esqueleto } from '../componentes/movimento'
 import { Aviso, Botao, CaixaSelecao, Campo, EstadoVazio } from '../componentes/ui'
 import { corDaLinha } from '../servidor/comandos'
@@ -92,7 +92,7 @@ function ArquivosDoRegistro({ aba }: { aba: string }): React.JSX.Element {
             aria-label={t('telaRegistro.atualizar')}
             onClick={() => void carregar()}
           >
-            ⟳
+            <IconeRecarregar />
           </Botao>
         </header>
         <ul className="min-h-0 flex-1 overflow-auto">

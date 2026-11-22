@@ -23,7 +23,7 @@ test('relatório de erro: sem nenhum segredo plantado, sem mundo nem mod, e o le
 }) => {
   const { dono, token } = await donoComConvite(abrir, MC)
   const j = dono.janela
-  const dados = join(dono.pasta, 'appData', 'ServSquare')
+  const dados = join(dono.pasta, 'appData', 'HubSquare')
   const servidor = pastaServidor(dono.pasta, 'Servidor Amigos')
 
   // Segredos deste PC (valores falsos, nos arquivos de verdade do app).
@@ -55,7 +55,7 @@ test('relatório de erro: sem nenhum segredo plantado, sem mundo nem mod, e o le
       `[2026-11-13T10:00:00.000Z] Error: algo antigo`,
       `[2026-11-13T11:00:00.000Z] Error: Falha plantada no teste`,
       `    at C:\\Users\\${homedir().split(/[\\/]/).pop()}\\x.js`,
-      `    pasta ${homedir()}\\AppData\\Roaming\\ServSquare`,
+      `    pasta ${homedir()}\\AppData\\Roaming\\HubSquare`,
       `    pin hash ${pinHash} salt ${pinSalt}`,
       `    Cookie: hs=${sessao}`,
       `    chave ${chaveCf} playit ${playit} convite ${token}`,

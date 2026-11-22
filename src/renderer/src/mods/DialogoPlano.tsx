@@ -1,3 +1,4 @@
+import { IconeAtencao } from '../icones'
 import type { PlanoMods, Progresso } from '../../../shared/tipos'
 import { BarraProgresso } from '../componentes/movimento'
 import { Dialogo } from '../componentes/ui'
@@ -73,7 +74,8 @@ export function DialogoPlano({
           )}
           {plano.avisos.map((a) => (
             <p key={a} className="text-warning">
-              ⚠ {a}
+              <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+              {a}
             </p>
           ))}
           {plano.problemas.map((p) => (

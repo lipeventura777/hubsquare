@@ -90,7 +90,7 @@ test('passar o servidor: sem segredos, outro PC hospeda, volta e atualiza o orig
   test.setTimeout(8 * 60_000)
   const { dono, texto, token } = await donoComConvite(abrir, MC)
   const amigo = await amigoAceita(abrir, texto, 'AmigoTeste', MC)
-  const indiceAmigo = join(amigo.pasta, 'appData', 'ServSquare', 'instalacoes.json')
+  const indiceAmigo = join(amigo.pasta, 'appData', 'HubSquare', 'instalacoes.json')
   const instalacoes = (): { origem: { token: string; enderecos: string[] } }[] =>
     existsSync(indiceAmigo) ? (lerJson(indiceAmigo).instalacoes as never) : []
   await expect.poll(() => instalacoes().length).toBe(1)
@@ -115,7 +115,7 @@ test('passar o servidor: sem segredos, outro PC hospeda, volta e atualiza o orig
   // 1. O dono passa para a Bia.
   const ida = join(dono.pasta, 'ida.hubserver')
   await passar(dono, 'Bia', ida)
-  const infoA = lerJson(join(pastaA, 'servsquare.json'))
+  const infoA = lerJson(join(pastaA, 'hubsquare.json'))
   expect(infoA.emprestado).toMatchObject({ com: 'Bia' })
 
   // O arquivo não leva segredo, token, caminho deste PC, .jar nem os arquivos do app.
@@ -143,8 +143,8 @@ test('passar o servidor: sem segredos, outro PC hospeda, volta e atualiza o orig
   for (const fora of [
     'config/senha.yml',
     'config/caminho.yml',
-    'servsquare.json',
-    'servsquare-convite.json',
+    'hubsquare.json',
+    'hubsquare-convite.json',
     'eula.txt'
   ])
     expect(existsSync(join(aberto, fora)), `${fora} fica no PC`).toBe(false)
@@ -173,10 +173,10 @@ test('passar o servidor: sem segredos, outro PC hospeda, volta e atualiza o orig
   await receber.getByRole('button', { name: 'Criar servidor' }).click()
   await expect(jb.getByRole('tab', { name: 'ServSquare' })).toBeVisible({ timeout: 3 * 60_000 })
   const pastaB = pastaServidor(bia.pasta, NOME)
-  expect(lerJson(join(pastaB, 'servsquare.json')).idFixo).toBe(infoA.idFixo)
+  expect(lerJson(join(pastaB, 'hubsquare.json')).idFixo).toBe(infoA.idFixo)
   expect(readFileSync(join(pastaB, 'world', 'level.dat'), 'utf8')).toBe('nivel-original')
   expect(readFileSync(join(pastaB, 'eula.txt'), 'utf8')).toMatch(/eula=true/)
-  expect(existsSync(join(pastaB, 'servsquare-convite.json'))).toBe(false)
+  expect(existsSync(join(pastaB, 'hubsquare-convite.json'))).toBe(false)
 
   // 3. A Bia convida; o amigo entra com o convite dela e a instalação continua a mesma.
   const textoBia = await convidar(jb)
@@ -216,13 +216,13 @@ test('passar o servidor: sem segredos, outro PC hospeda, volta e atualiza o orig
     `rcon.password=${SEGREDOS[0]}`
   )
   expect(existsSync(join(pastaA, 'config', 'senha.yml'))).toBe(true)
-  expect(lerJson(join(pastaA, 'servsquare.json')).emprestado).toBeUndefined()
+  expect(lerJson(join(pastaA, 'hubsquare.json')).emprestado).toBeUndefined()
   // Não virou cópia: um servidor só.
-  const indiceA = lerJson(join(dono.pasta, 'appData', 'ServSquare', 'servidores.json'))
+  const indiceA = lerJson(join(dono.pasta, 'appData', 'HubSquare', 'servidores.json'))
   expect((indiceA.servidores as unknown[]).length).toBe(1)
   // Backup protegido, com o mundo de antes.
-  const backups = join(dono.pasta, 'documents', 'ServSquare', 'backups', NOME)
-  const meta = lerJson(join(backups, 'servsquare-backups.json')) as Record<
+  const backups = join(dono.pasta, 'documents', 'HubSquare', 'backups', NOME)
+  const meta = lerJson(join(backups, 'hubsquare-backups.json')) as Record<
     string,
     { tipo?: string; protegido?: boolean }
   >
@@ -261,12 +261,14 @@ test('passar o servidor leva o fundo: com a imagem e, sem ela, fica igual ao app
   const dono = await abrir('dono')
   await criarPeloAssistente(dono.janela, NOME, MC)
   // Uma imagem de fundo do servidor, guardada como o app guarda (nome = SHA-256 do conteúdo).
-  const bytes = readFileSync(join(__dirname, '..', '..', 'build', 'icon.png'))
+  const bytes = readFileSync(
+    join(__dirname, '..', '..', 'build', 'logo', 'png', 'hubsquare-512.png')
+  )
   const nome = `${createHash('sha256').update(bytes).digest('hex')}.png`
-  const fundos = join(dono.pasta, 'appData', 'ServSquare', 'fundos')
+  const fundos = join(dono.pasta, 'appData', 'HubSquare', 'fundos')
   mkdirSync(fundos, { recursive: true })
   writeFileSync(join(fundos, nome), bytes)
-  const infoA = join(pastaServidor(dono.pasta, NOME), 'servsquare.json')
+  const infoA = join(pastaServidor(dono.pasta, NOME), 'hubsquare.json')
   const fundo = {
     tipo: 'imagem',
     imagem: nome,
@@ -287,8 +289,8 @@ test('passar o servidor leva o fundo: com a imagem e, sem ela, fica igual ao app
   expect(lerJsonDoZip(ida, 'hubserver.json').fundo).toEqual(fundo)
   expect(execFileSync(TAR, ['-tf', ida], { encoding: 'utf8' })).toContain(`hubserver-fundo/${nome}`)
   const bia = await receberNoAssistente(abrir, 'bia', ida)
-  expect(lerJson(join(pastaServidor(bia.pasta, NOME), 'servsquare.json')).fundo).toEqual(fundo)
-  expect(existsSync(join(bia.pasta, 'appData', 'ServSquare', 'fundos', nome))).toBe(true)
+  expect(lerJson(join(pastaServidor(bia.pasta, NOME), 'hubsquare.json')).fundo).toEqual(fundo)
+  expect(existsSync(join(bia.pasta, 'appData', 'HubSquare', 'fundos', nome))).toBe(true)
   expect(existsSync(join(pastaServidor(bia.pasta, NOME), 'hubserver-fundo'))).toBe(false)
 
   // Sem a imagem (ela sumiu deste PC): quem recebe fica "Igual ao app".
@@ -296,7 +298,7 @@ test('passar o servidor leva o fundo: com a imagem e, sem ela, fica igual ao app
   const semImagem = join(dono.pasta, 'sem-imagem.hubserver')
   await passar(dono, 'Cris', semImagem)
   const cris = await receberNoAssistente(abrir, 'cris', semImagem)
-  expect(lerJson(join(pastaServidor(cris.pasta, NOME), 'servsquare.json')).fundo).toBeUndefined()
+  expect(lerJson(join(pastaServidor(cris.pasta, NOME), 'hubsquare.json')).fundo).toBeUndefined()
 })
 
 const lerJsonDoZip = (zip: string, nome: string): Record<string, unknown> =>

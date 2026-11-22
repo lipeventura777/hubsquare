@@ -1,13 +1,15 @@
 import { app } from 'electron'
 import { createHash } from 'crypto'
 import { createWriteStream } from 'fs'
-import { rename, rm } from 'fs/promises'
+import { appendFile, mkdir, rename, rm } from 'fs/promises'
+import { join } from 'path'
 import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import type { ReadableStream as WebReadableStream } from 'stream/web'
 import { ErroApp, detalhar } from './erros'
 import type { Progresso } from '../shared/tipos'
 import { t } from '../shared/i18n'
+import { classificarFalha, linhaDoLog, type FalhaDownload } from '../shared/redeRegras'
 
 export type AoProgredir = (p: Progresso) => void
 
@@ -33,11 +35,51 @@ export function urlDeVerdade(url: string): string {
   return `${simulado}/${u.host}${u.pathname}${u.search}`
 }
 
+const FALHAS: Record<FalhaDownload, Parameters<typeof t>[0]> = {
+  naoExiste: 'p.rede.falhaNaoExiste',
+  recusado: 'p.rede.falhaRecusado',
+  siteComProblema: 'p.rede.falhaSiteComProblema',
+  semConexao: 'p.rede.falhaSemConexao'
+}
+
+// O que falhou, para a mensagem: o item que quem chamou informou, ou "um arquivo de <site>".
+function nomeDoItem(url: string, item?: string): string {
+  if (item) return item
+  let host = '?'
+  try {
+    host = new URL(url).host
+  } catch {
+    // fica "?"
+  }
+  return t('p.rede.itemArquivoDe', { host })
+}
+
+// Fase E3: a mensagem diz o item e o que fazer (só manda esperar quando o site está com
+// problema), e o erros.log ganha só o site, o status e o item (linhaDoLog).
+function falhaDeDownload(
+  url: string,
+  status: number | null,
+  item: string | undefined,
+  detalhe: string
+): ErroApp {
+  const nome = nomeDoItem(url, item)
+  void mkdir(join(app.getPath('userData'), 'logs'), { recursive: true })
+    .then(() =>
+      appendFile(
+        join(app.getPath('userData'), 'logs', 'erros.log'),
+        `[${new Date().toISOString()}] ${linhaDoLog(url, status, nome)}\n`
+      )
+    )
+    .catch(() => {}) // é o próprio registro: sem ele não há onde anotar
+  return new ErroApp(t(FALHAS[classificarFalha(status)], { item: nome }), detalhe)
+}
+
 async function pedir(
   url: string,
   timeoutMs?: number,
   aceitar404 = false,
-  extra?: RequestInit
+  extra?: RequestInit,
+  item?: string
 ): Promise<Response> {
   let resposta: Response
   try {
@@ -56,11 +98,13 @@ async function pedir(
             : (extra?.signal ?? undefined)
     })
   } catch (e) {
-    throw new ErroApp(t('p.rede.naoConseguiMeConectarA'), `${url}\n${detalhar(e)}`)
+    throw falhaDeDownload(url, null, item, `${url}\n${detalhar(e)}`)
   }
   if (!resposta.ok && !(aceitar404 && resposta.status === 404)) {
-    throw new ErroApp(
-      t('p.rede.oSiteDeDownloadRespondeu'),
+    throw falhaDeDownload(
+      url,
+      resposta.status,
+      item,
       t('p.rede.http', { url, status: resposta.status, statusText: resposta.statusText })
     )
   }
@@ -68,19 +112,20 @@ async function pedir(
 }
 
 // `extra` permite POST e cabeçalhos próprios (ex.: o User-Agent que o Modrinth exige).
-export async function buscarJson<T>(url: string, extra?: RequestInit): Promise<T> {
-  return (await pedir(url, 30_000, false, extra)).json() as Promise<T>
+// `item` (todas as funções): o que está sendo baixado, para a mensagem de erro.
+export async function buscarJson<T>(url: string, extra?: RequestInit, item?: string): Promise<T> {
+  return (await pedir(url, 30_000, false, extra, item)).json() as Promise<T>
 }
 
 // Igual ao buscarJson, mas devolve null quando o site diz "não encontrado" (404 ou 204).
-export async function buscarJsonOpcional<T>(url: string): Promise<T | null> {
-  const resposta = await pedir(url, 30_000, true)
+export async function buscarJsonOpcional<T>(url: string, item?: string): Promise<T | null> {
+  const resposta = await pedir(url, 30_000, true, undefined, item)
   if (resposta.status === 404 || resposta.status === 204) return null
   return resposta.json() as Promise<T>
 }
 
-export async function buscarBytes(url: string): Promise<Buffer> {
-  return Buffer.from(await (await pedir(url, 30_000)).arrayBuffer())
+export async function buscarBytes(url: string, item?: string): Promise<Buffer> {
+  return Buffer.from(await (await pedir(url, 30_000, false, undefined, item)).arrayBuffer())
 }
 
 // Baixa para um arquivo temporário e só troca pelo definitivo se o checksum bater.
@@ -90,9 +135,10 @@ export async function baixar(
   checksum: Checksum | undefined,
   etapa: string,
   aoProgredir: AoProgredir,
-  sinal?: AbortSignal // Cancelar: interrompe o download no meio
+  sinal?: AbortSignal, // Cancelar: interrompe o download no meio
+  item?: string
 ): Promise<void> {
-  const resposta = await pedir(url, undefined, false, sinal ? { signal: sinal } : undefined)
+  const resposta = await pedir(url, undefined, false, sinal ? { signal: sinal } : undefined, item)
   const total = Number(resposta.headers.get('content-length')) || 0
   const temporario = `${destino}.baixando`
   const hash = checksum && createHash(checksum.algoritmo)
@@ -119,7 +165,10 @@ export async function baixar(
     )
   } catch (e) {
     await rm(temporario, { force: true })
-    throw new ErroApp(t('p.rede.oDownloadFoiInterrompidoConfira'), `${url}\n${detalhar(e)}`)
+    throw new ErroApp(
+      t('p.rede.oDownloadFoiInterrompidoConfira', { item: nomeDoItem(url, item) }),
+      `${url}\n${detalhar(e)}`
+    )
   }
 
   if (hash && checksum) {
@@ -127,7 +176,7 @@ export async function baixar(
     if (obtido !== checksum.valor.toLowerCase()) {
       await rm(temporario, { force: true })
       throw new ErroApp(
-        t('p.rede.oArquivoBaixadoVeioCorrompido'),
+        t('p.rede.oArquivoBaixadoVeioCorrompido', { item: nomeDoItem(url, item) }),
         `${url}\n${checksum.algoritmo} esperado: ${checksum.valor}\n${checksum.algoritmo} obtido: ${obtido}`
       )
     }

@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { classesBotao } from './estilos'
-import { IconeSeta } from './icones'
+import { IconeSeta } from '../icones'
 
 // Componentes base das telas novas (DESIGN.md, seções 6.12 a 6.21).
 
@@ -136,7 +136,7 @@ export function BotoesBloco({
 }
 
 // Acordeão (6.21): linha de 52px com ícone, título e botão redondo com chevron que gira 180°.
-// A altura anima (--dur-slow) pela grade 0fr → 1fr, sem medir nada.
+// Fase P8: a altura muda na hora (altura não se anima); o conteúdo aparece com fade.
 export function Acordeao({
   itens
 }: {
@@ -168,7 +168,7 @@ export function Acordeao({
                 className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-text"
               >
                 <IconeSeta
-                  className={`h-4 w-4 transition-transform duration-(--dur-slow) ease-(--ease-out) ${
+                  className={`h-4 w-4 transition-transform duration-(--dur-base) ease-(--ease-entrada) ${
                     estaAberto ? 'rotate-180' : ''
                   }`}
                 />
@@ -176,8 +176,8 @@ export function Acordeao({
             </button>
             <div
               id={idConteudo}
-              className={`grid transition-[grid-template-rows] duration-(--dur-slow) ease-(--ease-out) ${
-                estaAberto ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+              className={`grid transition-opacity duration-(--dur-base) ease-(--ease-entrada) ${
+                estaAberto ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
               }`}
             >
               <div className="overflow-hidden">

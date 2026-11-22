@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ErroTela, Instalacao, StatusServidorJogo } from '../../../shared/tipos'
-import { IconeServidor } from '../componentes/icones'
+import { IconeServidor } from '../icones'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { BotaoDiagnostico } from '../componentes/Diagnostico'
 import { BarraProgresso, BolinhaStatus, Esqueleto } from '../componentes/movimento'
@@ -73,7 +73,7 @@ export function TelaServidoresJogo(): React.JSX.Element {
           />
         )}
         {lista === null ? (
-          <Esqueleto linhas={3} />
+          <Esqueleto linhas={3} forma="lista" />
         ) : !lista.length ? (
           <EstadoVazio
             icone={<IconeServidor />}

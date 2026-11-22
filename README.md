@@ -1,4 +1,12 @@
-# HubSquare
+<p align="center">
+  <img src="build/logo/hubsquare-logo.svg" width="160" height="160" alt="">
+</p>
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/marca/wordmark-escuro.png">
+    <img src="docs/marca/wordmark-claro.png" alt="HubSquare" width="360">
+  </picture>
+</h1>
 
 [Português (Brasil)](README.pt-BR.md) · **English**
 
@@ -27,7 +35,11 @@ HubSquare never signs in to your Microsoft account and has no offline (cracked) 
 1. Open the [**Releases**](https://github.com/lipeventura777/hubsquare/releases/latest) page and download `HubSquare-Setup-<version>.exe` (and, if you want, `SHA256SUMS.txt` to check it).
 2. Run the installer, choose the language and the folder (or keep the default).
 
-When a new version comes out, the app lets you know (you can turn this off). It only opens the download page; nothing installs by itself.
+**Coming from 1.4.0 or older?** Just install the new version over it. The installer removes the old entry from Windows (your data stays), and on first launch the app moves `%APPDATA%\ServSquare` and `Documents\ServSquare` to `%APPDATA%\HubSquare` and `Documents\HubSquare`, with everything inside: servers, worlds, backups, installations, mods and backgrounds. If a folder is in use, nothing is deleted: the app keeps the old folders for that session and tries again next time.
+
+### Updates
+
+When a new version comes out on GitHub, the app downloads it in the background and shows "Version X ready" inside the app (never a Windows notification). It installs when you click **Restart and update** or when you close the app, and never while a server is running, a backup is being made, a modpack is installing or PLAY is getting the game ready: it waits and tells you why. You can skip a version, and turn automatic updates off in Options › General › Updates. Each release on GitHub has the installer, the update files and a `SHA256SUMS.txt`.
 
 ### Windows SmartScreen
 
@@ -52,11 +64,15 @@ npm run dev
 | `npm run test:e2e:lento` | slow end-to-end tests with real Paper and Java downloads |
 | `npm run dist` | builds the installer and `SHA256SUMS.txt` in `release/` |
 | `npm run format` | formats the code with Prettier |
-| `npm run icone` | regenerates `build/icon.ico` from `build/icon.png` |
+| `npm run icone` | regenerates `build/icon.ico`, the PNGs in `build/logo/png/`, `resources/` and `docs/marca/` from the two logos in `build/logo/` |
 | `npm run ler-relatorio -- <file.zip>` | prints the summary of an error report |
 | `npm run repro:modpack -- <mode>` | reproduces modpack installs from the terminal |
 
 Stack: Electron, TypeScript, React, Vite (electron-vite), Tailwind CSS; installer with electron-builder (NSIS). How the code is organized: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Contributing: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Getting help
+
+Found a bug or have an idea? In the app, open **Gear › About › Report a problem** (or the tray menu, or "See details" on any error). Pick the type, describe what happened and choose **Send by email** or **Open on GitHub**: both open already filled in, with an error report `.zip` (no secrets, worlds or mod files) ready to attach. You can also email suporte.hubsquare@gmail.com or open an [issue](https://github.com/lipeventura777/hubsquare/issues) directly.
 
 ## Privacy and security
 
@@ -64,7 +80,11 @@ HubSquare has no account, no analytics and no telemetry. It only talks to the of
 
 ## License
 
-[MIT](LICENSE). Third-party components and fonts: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[GNU General Public License v3.0 or later](LICENSE) (`GPL-3.0-or-later`). Third-party components and fonts: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Trademark
+
+The HubSquare name and logo are not covered by the license (trademark registration pending at INPI, Brazil). You may fork and change the code under the GPL, but a modified version must use a different name and logo.
 
 ## Disclaimer
 

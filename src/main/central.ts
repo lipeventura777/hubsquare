@@ -166,7 +166,7 @@ let fila: Promise<unknown> = Promise.resolve()
 
 function emFila<T>(tarefa: () => Promise<T>): Promise<T> {
   const r = fila.then(tarefa)
-  fila = r.catch(() => {})
+  fila = r.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return r
 }
 
@@ -422,7 +422,7 @@ function mudarConsole(f: (h: HistoricoConsole) => void): Promise<HistoricoConsol
     await gravarComSeguranca(arquivoConsole(), JSON.stringify(h))
     return h
   })
-  filaConsole = r.catch(() => {})
+  filaConsole = r.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return r
 }
 

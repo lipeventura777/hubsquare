@@ -97,6 +97,8 @@ export async function salvarAparencia(valor: unknown): Promise<Aparencia> {
     escurecimento: v.escurecimento,
     fundoEmTodoApp: v.fundoEmTodoApp,
     reduzirAnimacoes: v.reduzirAnimacoes,
+    logoNaBarra: v.logoNaBarra !== false,
+    coresLogo: v.coresLogo === 'oficiais' ? 'oficiais' : 'fundo',
     fundoApp
   }
   await gravar(nova)

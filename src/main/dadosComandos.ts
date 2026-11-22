@@ -81,7 +81,7 @@ async function preparar(versao: string, aoProgredir: AoProgredir): Promise<void>
   const v = await detalhesVersao(versao)
   const servidor = v.downloads.server
   if (!servidor) throw new ErroApp(t('p.dadosComandos.aMojangNaoTemO'))
-  const temp = join(tmpdir(), `servsquare-comandos-${randomUUID()}`)
+  const temp = join(tmpdir(), `hubsquare-comandos-${randomUUID()}`)
   await mkdir(temp, { recursive: true })
   try {
     const jar = join(temp, 'server.jar')
@@ -165,7 +165,7 @@ async function preparar(versao: string, aoProgredir: AoProgredir): Promise<void>
     await writeFile(join(destino, 'pronto'), '')
     cache.delete(versao)
   } finally {
-    await rm(temp, { recursive: true, force: true }).catch(() => {})
+    await rm(temp, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
   }
 }
 

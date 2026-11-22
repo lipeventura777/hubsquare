@@ -190,17 +190,12 @@ test('CurseForge: com mais de 10.000 resultados, avisa e não pede além do limi
     }
   })
   simulado!.responder('api.curseforge.com/v1/categories', () => ({ json: { data: [] } }))
-  const a = await abrir()
+  // Chave de mentira no lugar da chave do build (Fase L1).
+  const a = await abrir('app', (p) =>
+    writeFileSync(join(p, 'chave-curseforge-teste.txt'), 'chave-de-teste')
+  )
   const j = a.janela
   await criarPeloAssistente(j, 'Servidor CF', MC)
-  // Chave de mentira, criptografada pelo próprio app (como em Opções › Integrações).
-  const cifrada = await a.app.evaluate(({ safeStorage }) =>
-    safeStorage.encryptString('chave-de-teste').toString('base64')
-  )
-  writeFileSync(
-    join(a.pasta, 'appData', 'ServSquare', 'curseforge.json'),
-    JSON.stringify({ chave: cifrada })
-  )
   await abrirExplorar(j)
   await j.getByRole('button', { name: 'CurseForge', exact: true }).click()
   await expect(j.getByText('Muitos resultados. Use os filtros para refinar a busca.')).toBeVisible()

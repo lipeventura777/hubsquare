@@ -18,7 +18,8 @@ import type {
   PedidoInstalacao,
   ResultadoJogar,
   AjustesApp,
-  ReleaseApp,
+  AvisoVersao,
+  MotivoEspera,
   EstadoModo,
   PedidoConvite,
   PedidoParaEntrar,
@@ -82,6 +83,8 @@ import type {
   ImagemFundo,
   OpcoesRelatorio,
   PedidoRelatorio,
+  PedidoRelato,
+  RelatoEnviado,
   RelatorioGerado,
   PreviaPassar,
   AnaliseHubserver,
@@ -216,6 +219,8 @@ const api = {
   ...apiDoAlvo(null),
   paraInstalacao: (id: string) => apiDoAlvo(id),
   versaoDoApp: (): Promise<string> => ipcRenderer.invoke('app:versao'),
+  // Fase E2: frase do aviso quando a mudança para as pastas HubSquare não terminou (null: nada).
+  avisoMigracao: (): Promise<string | null> => ipcRenderer.invoke('app:avisoMigracao'),
   servidorAtual: (): Promise<Resultado<InfoServidor | null>> =>
     ipcRenderer.invoke('servidor:atual'),
   listarVersoes: (tipo: TipoId): Promise<Resultado<string[]>> =>
@@ -253,6 +258,12 @@ const api = {
   gerarRelatorio: (pedido: PedidoRelatorio): Promise<Resultado<RelatorioGerado>> =>
     ipcRenderer.invoke('relatorio:gerar', pedido),
   abrirPastaDoRelatorio: (): Promise<Resultado<void>> => ipcRenderer.invoke('relatorio:abrirPasta'),
+  // Relatar problema (Fase R1): abre o e-mail ou a issue do GitHub; o app não envia nada.
+  enviarRelato: (pedido: PedidoRelato): Promise<Resultado<RelatoEnviado>> =>
+    ipcRenderer.invoke('relatar:enviar', pedido),
+  mostrarRelatorio: (): Promise<Resultado<void>> => ipcRenderer.invoke('relatar:mostrarArquivo'),
+  // O item Relatar problema da bandeja.
+  aoRelatar: (f: () => void) => ouvir('app:relatar', f),
   // Passar o servidor (Fase M7).
   previaPassar: (id: string): Promise<Resultado<PreviaPassar>> =>
     ipcRenderer.invoke('passar:previa', id),
@@ -345,10 +356,6 @@ const api = {
 
   // Mods e plugins (Fase 16). Sem `arquivos`, atualiza todos.,
   temChaveCurseForge: (): Promise<Resultado<boolean>> => ipcRenderer.invoke('curseforge:temChave'),
-  salvarChaveCurseForge: (chave: string): Promise<Resultado<void>> =>
-    ipcRenderer.invoke('curseforge:salvarChave', chave),
-  apagarChaveCurseForge: (): Promise<Resultado<void>> =>
-    ipcRenderer.invoke('curseforge:apagarChave'),
   analisarModpackCurseForge: (projetoId: string): Promise<Resultado<AnaliseModpack>> =>
     ipcRenderer.invoke('modpacks:analisarCurseForge', projetoId),
   estadoDadosComandos: (): Promise<Resultado<EstadoDadosComandos>> =>
@@ -461,16 +468,19 @@ const api = {
   salvarAjustes: (ajustes: AjustesApp): Promise<Resultado<AjustesApp>> =>
     ipcRenderer.invoke('ajustes:salvar', ajustes),
   // Versão nova do HubSquare (Fase M2)
-  avisoVersaoApp: (): Promise<Resultado<ReleaseApp | null>> =>
+  avisoVersaoApp: (): Promise<Resultado<AvisoVersao | null>> =>
     ipcRenderer.invoke('appVersao:aviso'),
   baixarVersaoApp: (): Promise<Resultado<void>> => ipcRenderer.invoke('appVersao:baixar'),
   lembrarVersaoDepois: (): Promise<Resultado<void>> =>
     ipcRenderer.invoke('appVersao:lembrarDepois'),
   pularVersaoApp: (): Promise<Resultado<void>> => ipcRenderer.invoke('appVersao:pular'),
+  // Fase L1: "Reiniciar e atualizar"; volta o motivo da espera (null = já está instalando).
+  instalarVersaoApp: (): Promise<Resultado<MotivoEspera | null>> =>
+    ipcRenderer.invoke('appVersao:instalar'),
   avisoVersaoLigado: (): Promise<Resultado<boolean>> => ipcRenderer.invoke('appVersao:ligado'),
   ligarAvisoVersao: (ligado: boolean): Promise<Resultado<boolean>> =>
     ipcRenderer.invoke('appVersao:ligar', ligado),
-  aoMudarVersaoApp: (f: (r: ReleaseApp | null) => void) => ouvir('appVersao:mudou', f),
+  aoMudarVersaoApp: (f: (r: AvisoVersao | null) => void) => ouvir('appVersao:mudou', f),
   // Fundo animado (Fase V2): instalação de modpack em andamento (o fundo para).
   modpackInstalando: (): Promise<boolean> => ipcRenderer.invoke('fundo:modpackInstalando'),
   aoMudarJanelaVisivel: (f: (visivel: boolean) => void) => ouvir('janela:visivel', f),

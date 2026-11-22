@@ -23,7 +23,7 @@ for (const bioma of BIOMAS) {
     test(`@desempenho ${bioma} · ${s.nome}`, async ({ abrir }) => {
       test.setTimeout((SEGUNDOS + 60) * 1000)
       const a = await abrir(`${bioma}`, (p) => {
-        const dados = join(p, 'appData', 'ServSquare')
+        const dados = join(p, 'appData', 'HubSquare')
         mkdirSync(dados, { recursive: true })
         writeFileSync(join(dados, 'aparencia.json'), JSON.stringify({ bioma, ...s.prefs }))
       })

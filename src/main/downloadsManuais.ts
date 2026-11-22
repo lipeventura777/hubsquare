@@ -13,6 +13,7 @@ import { instalarBaixado, jaTemArquivo } from './mods'
 import { avisarTela } from './servidor'
 import { acharItem, lerInfo } from './servidores'
 import { t as tx } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Fase D: assistente de downloads manuais (o fluxo do ATLauncher).
 // Arquivos do CurseForge que o autor não deixa outros apps baixarem: o usuário baixa pela página
@@ -78,7 +79,7 @@ export const lerGuardados = (): Promise<Record<string, Guardado>> =>
 let cadeia: Promise<unknown> = Promise.resolve()
 function enfileirar<T>(tarefa: () => Promise<T>): Promise<T> {
   const r = cadeia.then(tarefa)
-  cadeia = r.catch(() => {})
+  cadeia = r.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return r
 }
 
@@ -347,7 +348,7 @@ function agendar(): void {
     }
     rodando = true
     enfileirar(procurarAgora)
-      .catch(() => {})
+      .catch(registrarErro('downloadsManuais.ts', 'procurar os downloads manuais nas pastas'))
       .finally(() => {
         rodando = false
         if (deNovo) {
@@ -388,7 +389,7 @@ function atualizarVigia(itens: Salvo[]): void {
         }
       }
     })
-    .catch(() => {})
+    .catch(registrarErro('downloadsManuais.ts', 'vigiar as pastas dos downloads manuais'))
 }
 
 // Ao abrir o app: tira pendências de servidores/instalações que não existem mais e procura.

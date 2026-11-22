@@ -81,13 +81,6 @@ async function pedir<T>(
   return r.data
 }
 
-// Usado só para conferir a chave antes de guardar.
-export async function chaveFunciona(c: string): Promise<boolean> {
-  return pedir(`/games/${JOGO}`, { chave: c })
-    .then(() => true)
-    .catch(() => false)
-}
-
 export async function buscar(p: {
   classId: number
   termo: string

@@ -24,7 +24,8 @@ app.getPath = (nome) => mapa[nome] ?? getPathReal(nome)
 process.env.TEMP = process.env.TMP = mapa.temp
 dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [arquivo] })
 
-const logs = join(process.env.APPDATA, 'ServSquare', 'logs')
+// Na pasta de teste, nunca na de dados de verdade (criar %APPDATA%/HubSquare impediria a migração).
+const logs = join(base, 'logs')
 mkdirSync(logs, { recursive: true })
 const arquivoLog = join(logs, `repro-app-${new Date().toISOString().replace(/[:.]/g, '-')}.log`)
 const t0 = Date.now()

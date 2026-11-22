@@ -16,8 +16,9 @@ import {
   IconeCoracao,
   IconeJogadores,
   IconeMundos,
+  IconeRecarregar,
   IconeServidor
-} from '../componentes/icones'
+} from '../icones'
 import { Esqueleto } from '../componentes/movimento'
 import { Acordeao, CabecaJogador, CardPainel, TituloPagina } from '../componentes/paineis'
 import { Botao, Dialogo, LinhaControle, Selecao } from '../componentes/ui'
@@ -189,7 +190,7 @@ export function DetalhesJogador({
                     disabled={atualizando}
                     onClick={() => void carregar()}
                   >
-                    ⟳
+                    <IconeRecarregar />
                   </Botao>
                 }
               >
@@ -389,7 +390,7 @@ function Icones({
 }: {
   valor: number
   rotulo: string
-  icone: (p: { className?: string }) => React.JSX.Element
+  icone: (p: { className?: string; cheio?: boolean }) => React.JSX.Element
   cor: string
 }): React.JSX.Element {
   const meios = Math.round(valor)
@@ -403,9 +404,11 @@ function Icones({
         const parte = Math.max(0, Math.min(2, meios - i * 2))
         return (
           <span key={i} className="relative h-5 w-5">
-            <Icone className="absolute inset-0 h-5 w-5 opacity-25" />
+            {/* Vazio: só o contorno apagado. Cheio (ou meio, cortado): a forma preenchida. */}
+            <Icone className="absolute inset-0 h-5 w-5 opacity-40" />
             {parte > 0 && (
               <Icone
+                cheio
                 className={`absolute inset-0 h-5 w-5 ${parte === 1 ? '[clip-path:inset(0_50%_0_0)]' : ''}`}
               />
             )}

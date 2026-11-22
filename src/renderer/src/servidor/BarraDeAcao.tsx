@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NOMES_TIPOS, type EstadoServidor, type InfoServidor } from '../../../shared/tipos'
-import { IconeCopiar, IconeSeta } from '../componentes/icones'
+import { IconeCopiar, IconeMenu, IconeSeta } from '../icones'
 import { classesBotao, type Variante } from '../componentes/estilos'
 import { Botao, Menu } from '../componentes/ui'
 import { t } from '../../../shared/i18n'
@@ -120,7 +120,7 @@ export function BarraDeAcao({
             { rotulo: t('barraDeAcao.abrirPastaDoServidor'), aoClicar: aoAbrirPasta }
           ]}
         >
-          ⋮
+          <IconeMenu className="h-5 w-5" />
         </Menu>
       </div>
 

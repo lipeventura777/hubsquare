@@ -96,15 +96,22 @@
   --z-flutuante: 50;
 
   /* Animações (seção 8). Com "Reduzir animações", as durações viram 0 (main.css). */
-  --dur-instant: 60ms;
-  --dur-fast: 120ms;
-  --dur-base: 180ms;
-  --dur-slow: 280ms;
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Fase P8: três durações e duas curvas para todo o app (DESIGN.md seção 8; os mesmos valores
+     em DURACOES, src/shared/animacaoRegras.ts). Só opacity e transform se movem. */
+  --dur-fast: 120ms; /* rápida: saídas, menus, hover, selos, pressionar */
+  --dur-base: 180ms; /* normal: entrada de tela, aba, área, listas e avisos */
+  --dur-modal: 220ms; /* entrada de modal */
+  --ease-entrada: cubic-bezier(0.23, 1, 0.32, 1); /* começa rápido e assenta devagar */
+  --ease-saida: cubic-bezier(0.33, 1, 0.68, 1); /* mais leve: sai sem arrastar no fim */
 
   --fonte-texto: 'Inter', 'Segoe UI', sans-serif;
   --fonte-pixel: 'Pixelify Sans', 'Inter', sans-serif;
   --fonte-mono: 'Cascadia Mono', Consolas, monospace;
+
+  /* Marca (DESIGN.md, seção Marca): o wordmark "HubSquare". O light-dark() segue o color-scheme do
+     bioma: tons escuros sobre vidro claro, tons claros sobre vidro escuro. */
+  --marca-hub: light-dark(#2e7a41, #45a55a);
+  --marca-square: light-dark(#1f6a93, #2f95c8);
 }
 
 /* ---------- Os cinco biomas ---------- */

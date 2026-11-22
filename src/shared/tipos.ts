@@ -94,6 +94,7 @@ export interface Configuracoes {
   motd: string
   pvp: boolean
   ramGb: number
+  porta: number // Fase E3: server-port do server.properties
 }
 
 export interface LimitesRam {
@@ -244,6 +245,8 @@ export interface Aparencia {
   fundoEmTodoApp: boolean // false: a imagem aparece só no banner do Painel
   reduzirAnimacoes: boolean // escolha do usuário; o Windows também pode pedir (prefers-reduced-motion)
   fundoApp?: EscolhaFundo // Fase V4: fundo do app inteiro (sem valor no arquivo: migrado ao abrir)
+  logoNaBarra: boolean // a logo no topo da barra lateral (Sobre sempre mostra)
+  coresLogo: 'oficiais' | 'fundo' // dentro do app: cores da marca ou acompanhar o fundo
 }
 
 // Fase V4: imagem guardada na pasta de fundos ("Minhas imagens").
@@ -278,6 +281,7 @@ export interface ErroTela {
   falhas?: string[] // arquivos que não deram certo (a tela oferece tentar de novo só esses)
   cancelado?: boolean // o usuário cancelou: a tela não mostra como erro
   emprestado?: boolean // Fase M7: ligar um servidor passado a um amigo (a tela oferece ligar mesmo assim)
+  porta?: boolean // Fase E3: porta em uso ao ligar (a tela oferece trocar a porta nas Opções)
 }
 
 export type Resultado<T> = { ok: true; valor: T } | { ok: false; erro: ErroTela }
@@ -749,7 +753,7 @@ export interface AjustesJogo {
   // Fase P5:
   memoriaPadrao: number | null // GB das instalações novas; null: a sugestão do app
   resolucao: { largura: number; altura: number } | null // janela do jogo; null: a do launcher
-  pastaInstalacoes: string | null // onde ficam as instalações novas; null: Documentos/ServSquare/jogo
+  pastaInstalacoes: string | null // onde ficam as instalações novas; null: Documentos/HubSquare/jogo
   pastasDownloads: string[] // Fase D: onde mais procurar downloads manuais (além de Downloads)
   nick?: string // Fase M4: o nick do Minecraft do jogador, lembrado para os próximos convites
 }
@@ -1097,6 +1101,12 @@ export interface ReleaseApp {
   url: string // página do release no GitHub
   notas: string // markdown escrito no release
 }
+// Fase L1: o aviso na tela. pronta = já baixada; esperando = por que ainda não instalou.
+export type MotivoEspera = 'servidor' | 'backup' | 'modpack' | 'jogar'
+export interface AvisoVersao extends ReleaseApp {
+  pronta: boolean
+  esperando: MotivoEspera | null
+}
 
 // ---------- Central de comandos (Fase 26) ----------
 
@@ -1172,7 +1182,7 @@ export interface Instalacao {
   loader: LoaderCliente
   versaoLoader: string | null // null: a mais nova estável na hora de jogar
   ram: number // GB
-  pasta: string // Documentos/ServSquare/jogo/<instalação>
+  pasta: string // Documentos/HubSquare/jogo/<instalação>
   origem: OrigemInstalacao
   criada: string // ISO
   ultimoUso: string | null // ISO
@@ -1364,6 +1374,22 @@ export interface PedidoRelatorio {
   servidorId: string | null
   instalacaoId: string | null
   tirar: string[] // itens que o usuário desmarcou
+}
+
+// Relatar problema (Fase R1).
+export type TipoRelato = 'bug' | 'problema' | 'sugestao' | 'outro'
+export interface PedidoRelato {
+  tipo: TipoRelato
+  descricao: string
+  incluirRelatorio: boolean
+  via: 'email' | 'github'
+}
+export interface RelatoEnviado {
+  url: string // o mailto: ou a issue nova, já preenchidos
+  abriu: boolean // false: o Windows não tem programa de e-mail para o mailto:
+  email: string
+  arquivo: string | null // nome do .zip do relatório
+  caminho: string | null // onde ele está
 }
 
 export interface RelatorioGerado {

@@ -37,6 +37,7 @@ import { montarPacoteAmigos } from './modpacks'
 import { downloadPermitido } from './modpackRegras'
 import { lerIndice, lerInfo } from './servidores'
 import { idFixoDe } from './passarServidor'
+import { portaDe } from '../shared/redeRegras'
 import { t } from '../shared/i18n'
 
 // Convites (Fase P2), lado do dono. Cada servidor tem um manifesto (o que o amigo precisa
@@ -47,7 +48,7 @@ import { t } from '../shared/i18n'
 // comandos. Ele escuta só nos IPs da rede local, do Radmin e do Tailscale
 // (e em 127.0.0.1 quando o dono cadastra um túnel do playit para ele). Nunca em 0.0.0.0.
 
-const ARQUIVO = 'servsquare-convite.json' // na pasta do servidor
+const ARQUIVO = 'hubsquare-convite.json' // na pasta do servidor
 const PORTA_PADRAO = 8788
 const CACHE_MS = 60_000
 const MAX_ERROS = 20
@@ -96,7 +97,7 @@ async function gravarConvite(pasta: string, c: ConviteSalvo): Promise<void> {
 
 // ---------- Pedidos para entrar (Fase M4) ----------
 
-const ARQUIVO_PEDIDOS = 'servsquare-pedidos.json' // na pasta do servidor
+const ARQUIVO_PEDIDOS = 'hubsquare-pedidos.json' // na pasta do servidor
 let filaPedidos: Promise<unknown> = Promise.resolve()
 
 async function lerPedidosDe(pasta: string): Promise<PedidosServidor> {
@@ -122,7 +123,7 @@ function comPedidos<T>(
     }
     return valor
   })
-  filaPedidos = tarefa.catch(() => {})
+  filaPedidos = tarefa.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return tarefa
 }
 
@@ -183,7 +184,7 @@ async function receberPedido(pasta: string, corpo: string): Promise<[number, str
 
 // Endereços para entrar no jogo, na ordem que o amigo deve tentar.
 async function enderecosDeJogo(info: InfoServidor): Promise<string[]> {
-  const porta = (await lerArquivoPropriedades(info.pasta)).get('server-port') || '25565'
+  const porta = portaDe((await lerArquivoPropriedades(info.pasta)).get('server-port'))
   const { modo, enderecoPlayit } = await lerPreferencias()
   const ips = [ipRadmin(), ipTailscale(), ipLocal()].filter((ip): ip is string => !!ip)
   const lista = ips.map((ip) => `${ip}:${porta}`)
@@ -200,7 +201,7 @@ export async function manifestoDoServidor(info: InfoServidor): Promise<Manifesto
   const convite = await lerConvite(info.pasta)
   if (!convite) throw new ErroApp(t('p.convites.esseServidorAindaNaoTem'))
 
-  const montagem = join(tmpdir(), `servsquare-manifesto-${randomUUID()}`)
+  const montagem = join(tmpdir(), `hubsquare-manifesto-${randomUUID()}`)
   let arquivos: Manifesto['arquivos'] = []
   let semLink: string[] = []
   let manuais: ArquivoManual[] = []
@@ -239,7 +240,7 @@ export async function manifestoDoServidor(info: InfoServidor): Promise<Manifesto
       ]
     }
   } finally {
-    await rm(montagem, { recursive: true, force: true }).catch(() => {})
+    await rm(montagem, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
   }
   // Ordem dos resource packs = ordem em que o dono adicionou (o primeiro fica por cima).
   const packs = arquivos
@@ -440,7 +441,7 @@ setInterval(() => {
       if (a.join() !== escutando.join()) return atualizarEscuta()
       return undefined
     })
-    .catch(() => {})
+    .catch(() => {}) // repete a cada 30 s; registrar aqui encheria o log
 }, 30_000).unref()
 
 app.on('will-quit', () => void parar())

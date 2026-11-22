@@ -1,3 +1,4 @@
+import { IconeOk } from '../icones'
 import { useEffect, useRef, useState } from 'react'
 import type { DownloadManual, ErroTela, Resultado } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
@@ -121,6 +122,9 @@ function Linha({
         {/* key: o selo entra de novo (fade + escala) a cada troca de estado. */}
         <span key={d.estado} className={`anim-estalo shrink-0 text-[13px] font-bold ${e.cor}`}>
           {e.texto}
+          {d.estado === 'pronto' && (
+            <IconeOk className="ml-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+          )}
         </span>
       </div>
       {d.estado === 'diferente' && d.motivo && <p className="text-xs text-danger">{d.motivo}</p>}

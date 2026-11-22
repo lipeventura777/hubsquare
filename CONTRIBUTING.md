@@ -32,7 +32,7 @@ The end-to-end tests never touch your real folders or the internet: `HUBSQUARE_D
 
 - Keep each PR focused on one thing and describe what changed and how you tested it (the PR template asks for this).
 - Don't add dependencies without discussing it in an issue first.
-- By contributing, you agree that your contribution is licensed under the [MIT License](LICENSE).
+- By contributing, you agree that your contribution is licensed under the [GNU General Public License v3.0 or later](LICENSE) (`GPL-3.0-or-later`). The HubSquare name and logo are not covered by the license (see the Trademark section of the [README](README.md#trademark)).
 
 ## Reporting security problems
 

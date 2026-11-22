@@ -2,7 +2,9 @@ import { app } from 'electron'
 import { readFile } from 'fs/promises'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'http'
 import { join } from 'path'
-import icone from '../../resources/icon.png?asset'
+// Logo: a pequena (32 px) como favicon e a completa (256 px) para a tela inicial do celular.
+import iconePequeno from '../../resources/logo-32.png?asset'
+import icone from '../../resources/logo-256.png?asset'
 import {
   NOMES_TIPOS,
   type EstadoCelular,
@@ -44,6 +46,7 @@ import {
   servidorAtual
 } from './servidor'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Integrações › Celular (Fase 20): painel no navegador do celular.
 // Escuta só nos IPs da rede local, do Radmin e do Tailscale (nunca em 0.0.0.0) e nunca abre porta
@@ -142,7 +145,7 @@ setInterval(() => {
   if (!config.ativo || suspenso) return
   const alvo = enderecosAlvo()
   if (alvo.length !== escutando.length || alvo.some((ip) => !escutando.includes(ip))) {
-    reiniciarEscuta().catch(() => {})
+    reiniciarEscuta().catch(registrarErro('celular.ts', 'religar o painel do celular'))
   }
 }, 30_000)
 
@@ -237,6 +240,9 @@ async function tratar(req: IncomingMessage, res: ServerResponse): Promise<void> 
       return arquivoFixo(res, 'application/manifest+json', manifesto())
     }
     if (url.pathname === '/icone.png') return arquivoFixo(res, 'image/png', await readFile(icone))
+    if (url.pathname === '/icone-32.png') {
+      return arquivoFixo(res, 'image/png', await readFile(iconePequeno))
+    }
   }
 
   // Tudo que muda algo: a Origem (quando o navegador manda) precisa ser este mesmo endereço.
@@ -251,7 +257,7 @@ async function tratar(req: IncomingMessage, res: ServerResponse): Promise<void> 
   sessao.usada = Date.now()
   gravarUsoDepois ??= setTimeout(() => {
     gravarUsoDepois = undefined
-    gravar().catch(() => {})
+    gravar().catch(registrarErro('celular.ts', 'gravar o uso da sessão do celular'))
   }, 60_000)
 
   if (rota === 'GET /api/estado') return responder(res, 200, await estado(sessao))
@@ -390,10 +396,10 @@ async function acao(res: ServerResponse, sessao: Sessao, qual: unknown): Promise
     } else if (qual === 'desligar') {
       await registrar(t('p.celular.desligouOServidor', { quem }))
       // Desligar leva até 30 s; o painel acompanha pelo estado.
-      void desligar().catch(() => {})
+      void desligar().catch(registrarErro('celular.ts', 'desligar o servidor pelo celular'))
     } else if (qual === 'reiniciar') {
       await registrar(t('p.celular.reiniciouOServidor', { quem }))
-      void reiniciar().catch(() => {})
+      void reiniciar().catch(registrarErro('celular.ts', 'reiniciar o servidor pelo celular'))
     } else return responder(res, 400, { erro: t('p.celular.acaoDesconhecida') })
     responder(res, 200, {})
   } catch (e) {
@@ -419,7 +425,9 @@ async function trocar(
     })
   )
   // Desligar o atual (com backup) pode demorar; o painel acompanha pelo estado.
-  void trocarServidor(id, ligarDepois === true).catch(() => {})
+  void trocarServidor(id, ligarDepois === true).catch(
+    registrarErro('celular.ts', 'trocar de servidor pelo celular')
+  )
   responder(res, 200, {})
 }
 

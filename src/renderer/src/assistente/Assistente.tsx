@@ -1,3 +1,4 @@
+import { ehForgeAntigo } from '../../../shared/forgeAntigoRegras'
 import { useEffect, useState } from 'react'
 import {
   NOMES_TIPOS,
@@ -9,7 +10,7 @@ import {
   type TipoId
 } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeLogo } from '../componentes/icones'
+import { IconeLogo, IconeOk } from '../icones'
 import { classesBotao } from '../componentes/estilos'
 import { BarraProgresso } from '../componentes/movimento'
 import { Aviso, Botao, CaixaSelecao, Campo, Secao, Selecao } from '../componentes/ui'
@@ -70,7 +71,8 @@ export function Assistente({
         maxJogadores: 10,
         motd: tx('assistente.servidorFeitoComOHubsquare'),
         pvp: true,
-        ramGb: limites.sugerida
+        ramGb: limites.sugerida,
+        porta: 25565
       })
     })
   }, [])
@@ -213,6 +215,10 @@ export function Assistente({
                   </option>
                 ))}
               </Selecao>
+              {/* Fase F1: Forge de 1.7.10 a 1.12.1 */}
+              {tipo === 'forge' && ehForgeAntigo(versao) && (
+                <p className="text-xs text-muted">{tx('tipos.forge.estaVersaoUsaJava8')}</p>
+              )}
             </Secao>
           )}
 
@@ -340,7 +346,7 @@ export function BarraDeEtapas({
                   feita || atual ? 'bg-accent text-accent-text' : 'bg-panel-2 text-muted'
                 }`}
               >
-                {feita ? '✓' : i + 1}
+                {feita ? <IconeOk className="h-4 w-4" /> : i + 1}
               </span>
               <span className={`text-xs ${atual ? 'font-bold' : 'text-muted'}`}>{nome}</span>
             </div>

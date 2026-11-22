@@ -1,4 +1,3 @@
-import { app } from 'electron'
 import { spawn } from 'child_process'
 import { existsSync } from 'fs'
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'fs/promises'
@@ -8,17 +7,19 @@ import { validarAutomacao } from '../shared/automacao'
 import { antigosParaApagar } from './backupRegras'
 import { gravarComSeguranca } from './config'
 import { ErroApp, detalhar } from './erros'
+import { migrarPasta, raizDocumentos } from './migracao'
 import { dentroDe, guardarMundoAtual, nivelDoMundo, pastasDoMundo } from './mundo'
 import { avisarTela, comServidorDesligado, eventos, registrarNoConsole } from './servidor'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Backups do mundo em .zip, feitos com o tar que vem no Windows (sem biblioteca extra).
-// Só apaga arquivos dentro de Documentos/ServSquare/backups.
+// Só apaga arquivos dentro de Documentos/HubSquare/backups.
 
 const TAR = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe')
 
 function raizBackups(): string {
-  return join(app.getPath('documents'), 'ServSquare', 'backups')
+  return join(raizDocumentos(), 'backups')
 }
 
 // Usa o nome da pasta do servidor (não muda ao renomear), que é o nome dado na criação.
@@ -52,11 +53,12 @@ function nomeDoArquivo(): string {
 const EH_BACKUP = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(-\d+)?\.zip$/
 
 // Tipo e proteção de cada backup (Fase 23.2), na pasta de backups do servidor.
-const META = 'servsquare-backups.json'
+const META = 'hubsquare-backups.json'
 type Meta = Record<string, { tipo?: TipoBackup; protegido?: boolean }>
 
 async function lerMeta(info: InfoServidor): Promise<Meta> {
   try {
+    migrarPasta(pastaBackups(info)) // Fase E2: hubsquare-backups.json que sobrou
     const d = JSON.parse(await readFile(join(pastaBackups(info), META), 'utf8'))
     return d && typeof d === 'object' ? d : {}
   } catch {
@@ -73,7 +75,7 @@ function mudarMeta(info: InfoServidor, mudar: (m: Meta) => void): Promise<void> 
     await mkdir(pastaBackups(info), { recursive: true })
     await gravarComSeguranca(join(pastaBackups(info), META), JSON.stringify(m, null, 2))
   })
-  filaMeta = r.catch(() => {})
+  filaMeta = r.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return r
 }
 
@@ -163,6 +165,9 @@ export async function protegerBackup(
 // Compacta o mundo atual (ou o mundo "nivel"). Precisa ser chamado com o servidor desligado e
 // a trava pega, ou com o salvamento pausado (backup agendado, ver automacao.ts). Também usado
 // antes de apagar um servidor, trocar a versão e mexer em mundos.
+// Fase L1: backups compactando agora (a atualização do app espera terminar).
+export let backupsEmAndamento = 0
+
 export async function compactarMundo(
   info: InfoServidor,
   nivelEscolhido: string | undefined,
@@ -182,6 +187,7 @@ export async function compactarMundo(
     nome = nome.replace(/(-\d+)?\.zip$/, `-${i}.zip`)
   // O tar decide o formato pela extensão, então o temporário também termina em .zip.
   const temporario = join(pasta, `criando-${nome}`)
+  backupsEmAndamento++
   try {
     // O session.lock fica travado com o servidor ligado (backup agendado) e o jogo recria ele.
     await tar([
@@ -199,11 +205,13 @@ export async function compactarMundo(
   } catch (e) {
     await rm(temporario, { force: true })
     throw e
+  } finally {
+    backupsEmAndamento--
   }
   // Sem o tipo anotado, o backup ainda vale.
   await mudarMeta(info, (m) => {
     m[nome] = { tipo }
-  }).catch(() => {})
+  }).catch(registrarErro('backup.ts', 'anotar o tipo do backup'))
   await apagarAntigos(info)
   await rm(join(pasta, FALHOU), { force: true })
   avisarTela('backups:mudou', null)
@@ -241,7 +249,7 @@ export async function marcarFalha(info: InfoServidor, e: unknown): Promise<void>
     .then(() =>
       writeFile(join(pastaBackups(info), FALHOU), `${new Date().toISOString()}\n${motivo}\n`)
     )
-    .catch(() => {})
+    .catch(registrarErro('backup.ts', 'anotar que o backup falhou'))
   avisarTela('backups:mudou', null)
 }
 

@@ -1,3 +1,4 @@
+import { IconeAtencao, IconeVoltar } from '../icones'
 import { useCallback, useEffect, useState } from 'react'
 import { useApi } from '../componentes/api'
 import type {
@@ -150,6 +151,7 @@ export function DetalhesDoProjeto({
 
   const voltar = (
     <Botao tamanho="pequeno" className="self-start" onClick={aoVoltar}>
+      <IconeVoltar className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
       {rotuloVoltar}
     </Botao>
   )
@@ -337,6 +339,7 @@ export function DetalhesDoProjeto({
         <FraseCompat compat={d.compat} />
         {semVersao && (
           <p className="text-[13px] text-warning">
+            <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
             {t('detalhesProjeto.naoHaVersaoParaO', { versao: info.versao })}
             {d.destino === 'servidor'
               ? t('detalhesProjeto.com', { nomeLoader: nomeLoader(info.tipo) })

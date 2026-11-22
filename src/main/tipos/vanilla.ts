@@ -23,7 +23,9 @@ export const vanilla: TipoServidor = {
       destino,
       { algoritmo: 'sha1', valor: servidor.sha1 },
       `Baixando o servidor Vanilla ${versao}`,
-      aoProgredir
+      aoProgredir,
+      undefined,
+      t('p.rede.itemServidor', { nome: 'Vanilla', versao })
     )
     return null
   }

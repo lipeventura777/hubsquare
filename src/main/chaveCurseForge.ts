@@ -1,49 +1,27 @@
-import { app, safeStorage } from 'electron'
-import { readFile, rm } from 'fs/promises'
+import { readFileSync } from 'fs'
 import { join } from 'path'
-import { gravarComSeguranca } from './config'
-import { ErroApp } from './erros'
-import { t } from '../shared/i18n'
 
-// Chave da API do CurseForge (Fase 24): cada usuário pede a própria e cola em
-// Opções › Integrações. Fica só na pasta de dados do app, criptografada pelo Windows
-// (safeStorage); nunca no código, no repositório nem no instalador, e nunca volta para a tela.
+// Chave da API do CurseForge (Fase L1): a chave oficial do app entra só no build, pelo segredo
+// CURSEFORGE_API_KEY do GitHub, que o electron.vite.config.ts troca em __CHAVE_CURSEFORGE__ na
+// hora de compilar. Nunca fica no repositório. Sem ela, o CurseForge aparece como "em breve".
+declare const __CHAVE_CURSEFORGE__: string
 
-const arquivo = (): string => join(app.getPath('userData'), 'curseforge.json')
+// Testes (HUBSQUARE_DADOS): uma chave de mentira no arquivo chave-curseforge-teste.txt da pasta do
+// teste faz o papel da chave do build, sem compilar de novo.
+function chaveDeTeste(): string {
+  const pasta = process.env.HUBSQUARE_DADOS
+  if (!pasta) return ''
+  try {
+    return readFileSync(join(pasta, 'chave-curseforge-teste.txt'), 'utf8').trim()
+  } catch {
+    return '' // teste sem CurseForge
+  }
+}
 
 export async function lerChave(): Promise<string | null> {
-  try {
-    const { chave } = JSON.parse(await readFile(arquivo(), 'utf8'))
-    if (typeof chave !== 'string' || !safeStorage.isEncryptionAvailable()) return null
-    return safeStorage.decryptString(Buffer.from(chave, 'base64'))
-  } catch {
-    return null
-  }
+  return __CHAVE_CURSEFORGE__ || chaveDeTeste() || null
 }
 
 export async function temChave(): Promise<boolean> {
   return (await lerChave()) !== null
-}
-
-// Confere a chave com um pedido simples antes de guardar.
-export async function salvarChave(
-  valor: unknown,
-  testar: (chave: string) => Promise<boolean>
-): Promise<void> {
-  const chave = typeof valor === 'string' ? valor.trim() : ''
-  if (!/^[\x21-\x7e]{20,200}$/.test(chave)) {
-    throw new ErroApp(t('p.chaveCurseForge.essaChaveNaoPareceCerta'))
-  }
-  if (!safeStorage.isEncryptionAvailable()) {
-    throw new ErroApp(t('p.chaveCurseForge.oWindowsNaoDeixouCriptografar'))
-  }
-  if (!(await testar(chave))) {
-    throw new ErroApp(t('p.chaveCurseForge.oCurseforgeRecusouEssaChave'))
-  }
-  const cifrada = safeStorage.encryptString(chave).toString('base64')
-  await gravarComSeguranca(arquivo(), JSON.stringify({ chave: cifrada }))
-}
-
-export async function apagarChave(): Promise<void> {
-  await rm(arquivo(), { force: true })
 }

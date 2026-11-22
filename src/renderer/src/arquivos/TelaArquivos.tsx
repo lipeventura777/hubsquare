@@ -7,7 +7,13 @@ import {
 } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { dataHora, tamanho } from '../componentes/formato'
-import { IconeArquivos, IconeRegistro } from '../componentes/icones'
+import {
+  IconeArquivos,
+  IconeMaisAcoes,
+  IconeRecarregar,
+  IconeRegistro,
+  IconeSubmenu
+} from '../icones'
 import { Esqueleto } from '../componentes/movimento'
 import { Aviso, Botao, Campo, Dialogo, EstadoVazio, Menu } from '../componentes/ui'
 import { useEstadoServidor } from '../servidor/comandos'
@@ -102,7 +108,7 @@ export function TelaArquivos(): React.JSX.Element {
             const ultima = i === partes.length && !editando
             return (
               <span key={i} className="flex items-center gap-1">
-                {i > 0 && <span className="text-muted">›</span>}
+                {i > 0 && <IconeSubmenu className="h-3 w-3 text-muted" />}
                 <button
                   type="button"
                   disabled={ultima}
@@ -119,7 +125,7 @@ export function TelaArquivos(): React.JSX.Element {
           })}
           {editando && (
             <>
-              <span className="text-muted">›</span>
+              <IconeSubmenu className="h-3 w-3 text-muted" />
               <span className="px-1 font-bold">{editando.split('/').pop()}</span>
             </>
           )}
@@ -175,7 +181,7 @@ export function TelaArquivos(): React.JSX.Element {
                   aria-label={t('telaArquivos.atualizar')}
                   onClick={() => void abrir(caminho)}
                 >
-                  ⟳
+                  <IconeRecarregar />
                 </Botao>
               </div>
             </header>
@@ -250,7 +256,7 @@ export function TelaArquivos(): React.JSX.Element {
                               }
                             ]}
                           >
-                            ⋯
+                            <IconeMaisAcoes />
                           </Menu>
                         </td>
                       </tr>

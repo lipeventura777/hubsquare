@@ -52,6 +52,7 @@ import {
   gravarPerfil,
   ABRIR_LAUNCHER_LIGADO,
   launcherAberto,
+  corrigirPerfisMigrados,
   MINECRAFT,
   removerPerfil
 } from './launcherOficial'
@@ -107,10 +108,14 @@ import { apagarArquivoDeImagem, avisarFundo, guardarImagem } from './fundos'
 import { lerAparencia, salvarAparencia } from './aparencia'
 import { lerIndice as lerIndiceServidores, lerInfo } from './servidores'
 import { tiposDeServidor } from './tipos'
+import { migrarPasta, raizDocumentos } from './migracao'
+import { exigirForgeSuportado } from './tipos/forge'
+import { portaDe } from '../shared/redeRegras'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Instalações do PlaySquare (Fase P1). O índice fica em instalacoes.json, na pasta de dados do
-// app; cada instalação tem a própria pasta de jogo em Documentos/ServSquare/jogo/<instalação>.
+// app; cada instalação tem a própria pasta de jogo em Documentos/HubSquare/jogo/<instalação>.
 // Mundos, prints e configurações da pasta nunca são apagados por uma atualização: o app só troca
 // os arquivos que ele mesmo pôs (anotados em hubsquare-instalacao.json, dentro da pasta).
 
@@ -132,7 +137,7 @@ interface IndiceInstalacoes {
 }
 
 const arquivoIndice = (): string => join(app.getPath('userData'), 'instalacoes.json')
-export const pastaJogoPadrao = (): string => join(app.getPath('documents'), 'ServSquare', 'jogo')
+export const pastaJogoPadrao = (): string => join(raizDocumentos(), 'jogo')
 
 // Onde ficam as instalações novas (Ajustes do jogo; as que já existem não mudam de lugar).
 export async function pastaJogo(): Promise<string> {
@@ -160,6 +165,8 @@ async function lerIndice(): Promise<IndiceInstalacoes> {
   if (cache) return cache
   const texto = await lerTexto(arquivoIndice())
   cache = texto ? (JSON.parse(texto) as IndiceInstalacoes) : { instalacoes: [], ignorados: [] }
+  // Fase E2: arquivos servsquare* que sobraram na pasta (fora de Documentos, backup restaurado...).
+  for (const i of cache.instalacoes) migrarPasta(i.pasta)
   return cache
 }
 
@@ -220,6 +227,8 @@ function validarLoader(loader: unknown): LoaderCliente {
 }
 
 async function validarVersao(versao: unknown, loader: LoaderCliente): Promise<string> {
+  // Forge antes da 1.7.10 continua recusado (docs/forge-antigo.md).
+  if (typeof versao === 'string') exigirForgeSuportado(loader, versao)
   if (typeof versao !== 'string' || !(await versoesDoLoader(loader)).includes(versao)) {
     throw new ErroApp(t('p.instalacoes.escolhaUmaVersaoDoMinecraft'))
   }
@@ -348,7 +357,7 @@ export async function criarDeModpack(projetoId: unknown, aoProgredir: AoProgredi
     try {
       await instalarPackNoJogo(arquivo, { projetoId, versaoId: v.id }, aoProgredir, sinal)
     } finally {
-      await rm(temporario, { recursive: true, force: true }).catch(() => {})
+      await rm(temporario, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
     }
   })
 }
@@ -376,6 +385,8 @@ export async function instalarPackNoJogo(
         }
       })()
       const versao = pack.indice.dependencies.minecraft
+      // Forge antes da 1.7.10 continua recusado (docs/forge-antigo.md).
+      exigirForgeSuportado(tipo, versao)
       await javaDaVersao(versao) // confere que a versão existe na Mojang
       const nome = validarNome(pack.indice.name.slice(0, 48))
       pasta = await pastaNova(nome)
@@ -451,11 +462,19 @@ export async function instalarPackNoJogo(
       pasta = null // deu certo: a pasta fica
       return id
     } finally {
-      await apagarEmTrabalhador(pack.pasta).catch(() => {})
+      await apagarEmTrabalhador(pack.pasta).catch(
+        registrarErro('instalacoes.ts', 'apagar a pasta do pack depois da instalação')
+      )
     }
   } finally {
-    if (provisoria) await apagarEmTrabalhador(provisoria).catch(() => {})
-    if (pasta) await apagarEmTrabalhador(pasta).catch(() => {})
+    if (provisoria)
+      await apagarEmTrabalhador(provisoria).catch(
+        registrarErro('instalacoes.ts', 'apagar a pasta provisória da instalação')
+      )
+    if (pasta)
+      await apagarEmTrabalhador(pasta).catch(
+        registrarErro('instalacoes.ts', 'apagar a instalação que não terminou')
+      )
   }
 }
 
@@ -705,10 +724,12 @@ async function sincronizarDoServidor(i: Salva, aoProgredir: AoProgredir): Promis
       arquivos.map((a) => a.path)
     )
   } finally {
-    await apagarEmTrabalhador(montagem).catch(() => {})
+    await apagarEmTrabalhador(montagem).catch(
+      registrarErro('instalacoes.ts', 'apagar a pasta de montagem da instalação')
+    )
   }
   // O jogador entra pelo próprio PC: o endereço é localhost com a porta do servidor.
-  const porta = (await lerArquivoPropriedades(info.pasta)).get('server-port') || '25565'
+  const porta = portaDe((await lerArquivoPropriedades(info.pasta)).get('server-port'))
   const dat = join(i.pasta, 'servers.dat')
   const antigo = await readFile(dat).catch(() => null)
   await writeFile(dat, servidorNoTopo(antigo, info.nome, `localhost:${porta}`))
@@ -903,6 +924,8 @@ export async function entrarComConvite(texto: unknown, pedido?: unknown): Promis
       t('p.instalacoes.enderecosTentados', { enderecos: convite.enderecos.join(', ') })
     )
   }
+  // Forge antes da 1.7.10 continua recusado (docs/forge-antigo.md).
+  exigirForgeSuportado(manifesto.loader, manifesto.minecraft)
   const origem = {
     tipo: 'convite' as const,
     conviteId: manifesto.conviteId,
@@ -1039,7 +1062,9 @@ async function prepararConvite(
   if (proibidos.length) return { avisos, parar: { situacao: 'proibidos', arquivos: proibidos } }
   // Fase D: mods que o autor não deixa baixar: o amigo baixa pela página oficial, com o assistente.
   if (disponivel.manuais?.length) {
-    await registrarPendencias(await infoDaInstalacao(i.id), disponivel.manuais).catch(() => {})
+    await registrarPendencias(await infoDaInstalacao(i.id), disponivel.manuais).catch(
+      registrarErro('instalacoes.ts', 'registrar os downloads manuais do convite')
+    )
   }
   if (disponivel.semLink.length) {
     avisos.push(t('p.instalacoes.oServidorUsaModsQue', { join: disponivel.semLink.join(', ') }))
@@ -1230,7 +1255,7 @@ async function assinatura(i: Salva): Promise<string> {
         }
       }
       partes.push(
-        await readFile(join(item.pasta, 'servsquare-explorar.json'), 'utf8').catch(() => '')
+        await readFile(join(item.pasta, 'hubsquare-explorar.json'), 'utf8').catch(() => '')
       )
     }
   }
@@ -1259,6 +1284,8 @@ export async function jogar(
   jogando = true
   try {
     let i = await exigir(id)
+    // Forge antes da 1.7.10 continua recusado (docs/forge-antigo.md). Avisa antes de baixar qualquer coisa.
+    exigirForgeSuportado(i.loader, i.versao)
     const o = (opcoes ?? {}) as OpcoesJogar
     const recusados = recusadosDe(o)
     if (recusados) i = await mudar(i.id, { recusados })
@@ -1270,6 +1297,7 @@ export async function jogar(
     // O launcher regrava o arquivo de perfis enquanto está aberto: a mudança se perderia.
     if (await launcherAberto()) return { situacao: 'launcherAberto' }
     exigirPerfis()
+    await corrigirPerfisMigrados() // Fase E2: gameDir das outras instalações depois da migração
 
     const r = await prepararPasta(i, o, aoProgredir)
     if (r.parar) return r.parar
@@ -1407,7 +1435,9 @@ export async function exportarMrpack(
     await rm(zip, { force: true })
     return basename(escolha.filePath)
   } finally {
-    await apagarEmTrabalhador(montagem).catch(() => {})
+    await apagarEmTrabalhador(montagem).catch(
+      registrarErro('instalacoes.ts', 'apagar a pasta de montagem da instalação')
+    )
   }
 }
 
@@ -1436,7 +1466,7 @@ export async function definirFundoInstalacao(id: unknown, escolha: unknown): Pro
 }
 
 // ---------- Fundo do servidor (Fase V10) ----------
-// Guardado no servsquare.json do servidor. "Igual à instalação" segue o fundo da instalação dele.
+// Guardado no hubsquare.json do servidor. "Igual à instalação" segue o fundo da instalação dele.
 
 export async function fundoDoServidorAtual(info: InfoServidor): Promise<FundoDoServidor> {
   await sincronizarComServidores() // a instalação de cada servidor nasce aqui, se faltar
@@ -1572,7 +1602,7 @@ async function servidorDa(i: Salva): Promise<InfoServidor | null> {
 
 // Mods que o modpack do servidor manda só para o jogador (o servidor nunca baixou).
 async function modsSoDoJogadorDoPack(pasta: string): Promise<string[]> {
-  const texto = await lerTexto(join(pasta, 'servsquare-modpack.json')).catch(() => '')
+  const texto = await lerTexto(join(pasta, 'hubsquare-modpack.json')).catch(() => '')
   if (!texto) return []
   try {
     const files = (JSON.parse(texto) as { indice?: { files?: ArquivoIndice[] } }).indice?.files
@@ -1654,7 +1684,7 @@ export async function statusDoServidor(id: unknown): Promise<StatusServidorJogo 
     const estado = lerEstado()
     const ligado = ativo && estado === 'ligado'
     const uuids = ligado ? await uuidsDoServidor(info.pasta) : new Map<string, string>()
-    const porta = (await lerArquivoPropriedades(info.pasta)).get('server-port') || '25565'
+    const porta = portaDe((await lerArquivoPropriedades(info.pasta)).get('server-port'))
     return {
       dono: true,
       nome: info.nome,

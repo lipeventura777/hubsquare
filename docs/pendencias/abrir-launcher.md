@@ -1,6 +1,6 @@
 # Pendência: abrir o jogo pelo Minecraft Launcher
 
-**Situação:** religado na Fase M1 (`ABRIR_LAUNCHER_LIGADO = true` em `src/main/launcherOficial.ts`). A escolha do launcher é `escolherLauncher` em `src/main/launcherRegras.ts`: só aceita o app `Microsoft.4297127D64EC6_…!Minecraft` ou um `MinecraftLauncher.exe` clássico; o marcador do Xbox e links `ms-windows-store:` são recusados (e conferidos de novo antes de abrir). Falta só a conferência na tela (`testar-quando-voltar.md`). Para desligar de novo, basta voltar a opção para `false`.
+**Situação:** religado na Fase M1 (`ABRIR_LAUNCHER_LIGADO = true` em `src/main/launcherOficial.ts`). A escolha do launcher é `escolherLauncher` em `src/main/launcherRegras.ts`: só aceita o app `Microsoft.4297127D64EC6_…!Minecraft` ou um `MinecraftLauncher.exe` clássico; o marcador do Xbox e links `ms-windows-store:` são recusados (e conferidos de novo antes de abrir). Conferido na tela e aprovado em nov/2026 (`arquivo/testar-quando-voltar.md`, seção da Fase M1): **resolvido**. Para desligar de novo, basta voltar a opção para `false`. O resto deste arquivo é o histórico do bug e da correção.
 
 ## O bug
 
@@ -29,7 +29,7 @@ Ou seja: o app escolheu o pacote errado. O launcher estava instalado, mas o app 
 | Launcher clássico | `C:\Program Files (x86)\Minecraft Launcher\MinecraftLauncher.exe` | Também existe. |
 | Pasta do jogo | `%APPDATA%\.minecraft` (`launcher_profiles.json`, contas `_microsoft_store`) | As duas versões usam esta pasta. |
 
-## Proposta de correção (para quando eu pedir)
+## Proposta de correção (implementada na Fase M1)
 
 1. **Nunca usar o marcador.** Tirar `Microsoft.MinecraftJavaEdition` da lista, ou recusar qualquer pacote cujo `MicrosoftGame.Config` aponte para `MCPlaceholderStub.exe`.
 2. **Ordem de preferência:** primeiro `Microsoft.4297127D64EC6!Minecraft` (Store); se não houver, `MinecraftLauncher.exe` clássico em Program Files (x86) ou Program Files.

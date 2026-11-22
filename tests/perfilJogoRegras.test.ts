@@ -17,9 +17,9 @@ const PERFIS = JSON.stringify({
 })
 
 for (const pasta of [
-  'C:\\Users\\Ana Paula\\Documents\\ServSquare\\jogo\\COBBLEVERSE-1 7 42-CF',
-  'C:\\Users\\João Ávila\\Documentos\\ServSquare\\jogo\\Ação & Aventura',
-  'C:\\Users\\ana\\OneDrive\\Documentos\\ServSquare\\jogo\\Meu Mundo'
+  'C:\\Users\\Ana Paula\\Documents\\HubSquare\\jogo\\COBBLEVERSE-1 7 42-CF',
+  'C:\\Users\\João Ávila\\Documentos\\HubSquare\\jogo\\Ação & Aventura',
+  'C:\\Users\\ana\\OneDrive\\Documentos\\HubSquare\\jogo\\Meu Mundo'
 ]) {
   test(`gameDir absoluto e intacto no JSON: ${pasta}`, () => {
     const perfil = montarPerfil({
@@ -43,11 +43,11 @@ test('gameDir com barras normais ou ".." vira o caminho absoluto do Windows', ()
   const p = montarPerfil({
     nome: 'x',
     versaoId: 'v',
-    pasta: 'C:/Users/ana/Documents/ServSquare/jogo/../jogo/Mundo',
+    pasta: 'C:/Users/ana/Documents/HubSquare/jogo/../jogo/Mundo',
     ram: 4,
     agora: 'a'
   })
-  assert.equal(p.gameDir, 'C:\\Users\\ana\\Documents\\ServSquare\\jogo\\Mundo')
+  assert.equal(p.gameDir, 'C:\\Users\\ana\\Documents\\HubSquare\\jogo\\Mundo')
   assert.equal(p.icon, 'Furnace')
   assert.equal(p.resolution, undefined)
   const r = montarPerfil({

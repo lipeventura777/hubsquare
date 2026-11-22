@@ -1,3 +1,4 @@
+import { IconeAtencao } from '../icones'
 import type { ArquivoManual } from '../../../shared/tipos'
 import { t } from '../../../shared/i18n'
 
@@ -24,7 +25,10 @@ export function ListaManuais({
   if (!itens.length) return null
   return (
     <div className="flex flex-col gap-1 text-[13px] text-warning">
-      <p>⚠ {texto}</p>
+      <p>
+        <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+        {texto}
+      </p>
       <ul className="flex max-h-40 flex-col gap-1 overflow-auto">
         {itens.map((i) => (
           <li key={i.url + i.titulo}>

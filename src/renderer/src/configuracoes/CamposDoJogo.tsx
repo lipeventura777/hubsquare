@@ -68,6 +68,18 @@ export function CamposDoJogo({
             className="w-32"
           />
         </label>
+        <label className="flex flex-col gap-1 text-[13px]">
+          {t('camposDoJogo.portaDoServidor')}
+          <Campo
+            type="number"
+            min={1}
+            max={65535}
+            value={config.porta}
+            onChange={(e) => mudar('porta', e.target.valueAsNumber)}
+            className="w-32"
+          />
+          <span className="text-xs text-muted">{t('camposDoJogo.portaPadrao25565')}</span>
+        </label>
       </Secao>
 
       <Secao titulo={t('camposDoJogo.mensagemNaListaDeServidores')}>

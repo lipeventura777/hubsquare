@@ -47,7 +47,9 @@ export const fabric: TipoServidor = {
       join(pasta, JAR),
       undefined,
       t('tipos.fabric.baixandoOFabric', { loader, versao }),
-      aoProgredir
+      aoProgredir,
+      undefined,
+      t('p.rede.itemServidor', { nome: 'Fabric', versao })
     )
     return loader
   },

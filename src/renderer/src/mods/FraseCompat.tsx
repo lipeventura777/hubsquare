@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Compat, TipoAviso } from '../../../shared/tipos'
-import { IconeErro, IconeOk } from '../componentes/icones'
+import { IconeErro, IconeOk } from '../icones'
 import { t } from '../../../shared/i18n'
 
 // PlaySquare (Fase P3, DESIGN.md seção 6.1.5): se o item vai funcionar no jogo do jogador e por

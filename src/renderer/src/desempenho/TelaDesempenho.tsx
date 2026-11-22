@@ -14,7 +14,7 @@ import type {
 } from '../../../shared/tipos'
 import { Flutuante } from '../componentes/Flutuante'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeDesempenho } from '../componentes/icones'
+import { IconeAtencao, IconeDesempenho } from '../icones'
 import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import { CardPainel } from '../componentes/paineis'
 import {
@@ -423,7 +423,8 @@ function InstalarFerramenta({
             </ul>
             {plano.avisos.map((a) => (
               <p key={a} className="text-warning">
-                ⚠ {a}
+                <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+                {a}
               </p>
             ))}
             {plano.problemas.map((p) => (

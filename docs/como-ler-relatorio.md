@@ -30,11 +30,11 @@ Nada de segredo vai junto:
 | `LEIA-ME.txt` | Resumo: versões, o que foi escolhido, último erro, último diagnóstico e a lista de arquivos. |
 | `erros.log` | Erros do app que não foram tratados e falhas do Jogar (pasta de dados › logs). Até 2 MB, do fim. Cada entrada começa com `[data ISO]`. |
 | `servidor/latest.log` | O fim do log do servidor escolhido (até 2 MB). Procure `ERROR`, `Exception` e `Caused by`. |
-| `servidor/servsquare-acoes.log` | O que a automação do app fez (desligar vazio, reinício, backup agendado). |
+| `servidor/hubsquare-acoes.log` | O que a automação do app fez (desligar vazio, reinício, backup agendado). |
 | `jogo/latest.log` | O fim do log do jogo da instalação escolhida (até 2 MB). |
 | `travamentos/servidor-*.txt`, `travamentos/jogo-*.txt` | Os 3 relatórios de travamento mais recentes de cada lado (até 1 MB cada). `Description:` e a primeira exceção dizem o que aconteceu. A Fase 25 também cruza com os mods. |
 | `sistema.json` | Versão do app e do Electron, Windows, memória total e livre (GB) e os Javas que o app já baixou. |
-| `config/servidores.json` | O `servsquare.json` de cada servidor (tipo, versão, loader, RAM, Java dos mods, automação, emprestado) e o `server.properties` em linhas, sem segredos. |
+| `config/servidores.json` | O `hubsquare.json` de cada servidor (tipo, versão, loader, RAM, Java dos mods, automação, emprestado) e o `server.properties` em linhas, sem segredos. |
 | `config/instalacoes.json` | O índice das instalações do PlaySquare (versão, loader, origem; o token do convite sai). |
 | `mods.json` | Mods e plugins do servidor e da instalação escolhidos: arquivo, título e versão (quando o app instalou) e SHA-1. Dá para achar o mod no Modrinth pelo hash. |
 | `manifesto.json` | Versão do convite do servidor e, na instalação, a versão aplicada e a disponível. Aplicada menor que disponível quer dizer instalação desatualizada. |
@@ -44,4 +44,4 @@ Nada de segredo vai junto:
 
 - Mod que falta no servidor ou no jogo: compare os hashes de `mods.json` dos dois lados.
 - `class file version` ou `Fix:` do Fabric no log do servidor: Java errado. Confira `javaDosMods` em `config/servidores.json` e os Javas em `sistema.json`.
-- Se um caminho aparece como `%USERPROFILE%\Documents\ServSquare\...`, é a pasta padrão do app.
+- Se um caminho aparece como `%USERPROFILE%\Documents\HubSquare\...`, é a pasta padrão do app.

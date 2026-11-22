@@ -27,7 +27,7 @@ import {
   LinhaControle,
   Selecao
 } from '../componentes/ui'
-import { IconeMods } from '../componentes/icones'
+import { IconeAtencao, IconeFechar, IconeMods } from '../icones'
 import { COR_ETIQUETA } from './etiquetas'
 import { AbasDeTipo } from './partesExplorar'
 import { IconeProjeto } from './TelaMods'
@@ -85,7 +85,7 @@ export function PainelMod({
           </p>
         </div>
         <Botao tamanho="pequeno" onClick={aoFechar} aria-label={t('painelMod.fecharOPainel')}>
-          {t('painelMod.texto')}
+          <IconeFechar className="h-4 w-4" />
         </Botao>
       </header>
       <div className="shrink-0 px-4 pt-2">
@@ -164,7 +164,10 @@ function VisaoGeral({
                 key={i}
                 className="flex flex-col gap-2 border-l-4 border-warning pl-3 text-[13px]"
               >
-                <span>⚠ {p.texto}</span>
+                <span>
+                  <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+                  {p.texto}
+                </span>
                 {p.correcao && (
                   <Botao
                     tamanho="pequeno"

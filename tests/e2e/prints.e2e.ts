@@ -19,7 +19,7 @@ for (const bioma of BIOMAS) {
   test(`prints das telas no bioma ${bioma}`, async ({ abrir }) => {
     mkdirSync(PASTA, { recursive: true })
     const a = await abrir(bioma, (p) => {
-      const dados = join(p, 'appData', 'ServSquare')
+      const dados = join(p, 'appData', 'HubSquare')
       mkdirSync(dados, { recursive: true })
       writeFileSync(join(dados, 'aparencia.json'), JSON.stringify({ bioma, vidroLeve: false }))
     })

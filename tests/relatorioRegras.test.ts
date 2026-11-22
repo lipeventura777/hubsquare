@@ -84,7 +84,7 @@ test('JSON: campos de segredo saem inteiros, o resto passa pela limpeza', () => 
   const o = limparObjeto(
     {
       nome: 'Mundo',
-      pasta: 'C:\\Users\\Ana Souza\\Documents\\ServSquare\\servidores\\Mundo',
+      pasta: 'C:\\Users\\Ana Souza\\Documents\\HubSquare\\servidores\\Mundo',
       pin: { salt: 'aa', hash: 'bb' },
       sessoes: [{ id: 'x' }],
       origem: { tipo: 'convite', token: 'K7M2P9QX4T8VW3RZ', enderecos: ['1.2.3.4:25565'] },
@@ -94,7 +94,7 @@ test('JSON: campos de segredo saem inteiros, o resto passa pela limpeza', () => 
   ) as Record<string, unknown>
   assert.deepEqual(o, {
     nome: 'Mundo',
-    pasta: `${USUARIO}\\Documents\\ServSquare\\servidores\\Mundo`,
+    pasta: `${USUARIO}\\Documents\\HubSquare\\servidores\\Mundo`,
     pin: REMOVIDO,
     sessoes: REMOVIDO,
     origem: { tipo: 'convite', token: REMOVIDO, enderecos: ['1.2.•••.•••:25565'] },

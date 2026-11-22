@@ -67,7 +67,7 @@ export async function trocarServidor(id: unknown, ligarDepois: unknown): Promise
 }
 
 // Apagar: só desligado, com o nome digitado igual, backup final do mundo antes,
-// e só se a pasta estiver dentro de Documentos/ServSquare/servidores.
+// e só se a pasta estiver dentro de Documentos/HubSquare/servidores.
 export async function apagarServidor(id: unknown, confirmacao: unknown): Promise<void> {
   const item = await acharItem(id)
   if (!item) throw new ErroApp(t('p.listaServidores.esseServidorNaoEstaMais'))
@@ -86,7 +86,7 @@ export async function apagarServidor(id: unknown, confirmacao: unknown): Promise
     const info = await lerInfo(item)
     if (info) {
       try {
-        await compactarMundo(info, undefined, 'apagar') // backup final; ele fica em Documentos/ServSquare/backups
+        await compactarMundo(info, undefined, 'apagar') // backup final; ele fica em Documentos/HubSquare/backups
       } catch (e) {
         throw new ErroApp(t('p.listaServidores.naoConseguiFazerOBackup'), detalhar(e))
       }

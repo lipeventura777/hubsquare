@@ -1,3 +1,4 @@
+import { IconeFavorito } from '../icones'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { EstadoServidor, ErroTela, LinhaConsole } from '../../../shared/tipos'
 import { sugerir, type NoComando } from '../../../shared/comandos'
@@ -243,7 +244,7 @@ export function Console({
                   aria-label={t('console.tirarDosFavoritos')}
                   className="text-warning"
                 >
-                  ★
+                  <IconeFavorito cheio className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
@@ -275,7 +276,7 @@ export function Console({
                     }
                     className={favoritos.includes(h) ? 'text-warning' : 'text-console-muted'}
                   >
-                    {favoritos.includes(h) ? '★' : '☆'}
+                    <IconeFavorito cheio={favoritos.includes(h)} className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
@@ -319,6 +320,7 @@ export function Console({
           title={t('console.comandosFavoritosEHistorico')}
           className="shrink-0 px-1 text-console-muted hover:text-on-dark"
         >
+          <IconeFavorito className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
           {t('console.favoritos2')}
         </button>
       </form>

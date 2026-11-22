@@ -1,3 +1,4 @@
+import { IconeAtencao, IconeFechar, IconeOk } from '../icones'
 /* eslint-disable react-refresh/only-export-components -- o botão e o conserto do dono andam juntos */
 import { useState } from 'react'
 import type { ErroTela } from '../../../shared/tipos'
@@ -20,10 +21,25 @@ import { t } from '../../../shared/i18n'
 // mostra a lista, com o primeiro problema em destaque, o conserto quando existe (sempre com o
 // clique) e "Copiar resultado" (sem tokens nem IP público completo).
 
-const ICONE: Record<ResultadoChecagem, { simbolo: string; classe: string; rotulo: string }> = {
-  ok: { simbolo: '✓', classe: 'text-online', rotulo: t('diagnostico.certo') },
-  falhou: { simbolo: '✗', classe: 'text-danger', rotulo: t('diagnostico.problema') },
-  aviso: { simbolo: '!', classe: 'text-warning', rotulo: t('diagnostico.aviso') },
+const ICONE: Record<
+  ResultadoChecagem,
+  { simbolo: React.ReactNode; classe: string; rotulo: string }
+> = {
+  ok: {
+    simbolo: <IconeOk className="h-4 w-4" />,
+    classe: 'text-online',
+    rotulo: t('diagnostico.certo')
+  },
+  falhou: {
+    simbolo: <IconeFechar className="h-4 w-4" />,
+    classe: 'text-danger',
+    rotulo: t('diagnostico.problema')
+  },
+  aviso: {
+    simbolo: <IconeAtencao className="h-4 w-4" />,
+    classe: 'text-warning',
+    rotulo: t('diagnostico.aviso')
+  },
   pulada: { simbolo: '–', classe: 'text-muted', rotulo: t('diagnostico.naoConferido') }
 }
 

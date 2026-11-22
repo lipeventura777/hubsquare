@@ -25,7 +25,7 @@ for (const bioma of BIOMAS) {
   test(`troca Serv/Play no bioma ${bioma}: abas inteiras, clique e teclado`, async ({ abrir }) => {
     mkdirSync(PASTA, { recursive: true })
     const a = await abrir(bioma, (p) => {
-      const dados = join(p, 'appData', 'ServSquare')
+      const dados = join(p, 'appData', 'HubSquare')
       mkdirSync(dados, { recursive: true })
       writeFileSync(join(dados, 'aparencia.json'), JSON.stringify({ bioma, vidroLeve: false }))
     })

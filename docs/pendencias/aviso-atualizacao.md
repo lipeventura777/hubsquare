@@ -10,4 +10,4 @@ que estava planejado aqui.
   PlaySquare › Ajustes do jogo.
 - Como lançar: `docs/como-lancar-versao.md`.
 
-Falta só ver o aviso na tela quando sair o primeiro release público (`testar-quando-voltar.md`).
+Conferido na tela e aprovado em nov/2026 (`arquivo/testar-quando-voltar.md`, seção da Fase M2).

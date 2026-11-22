@@ -57,7 +57,9 @@ async function baixarProgramas(aoProgredir: AoProgredir): Promise<void> {
       caminho(nome),
       { algoritmo: 'sha256', valor: sha256 },
       'Baixando o playit.gg',
-      aoProgredir
+      aoProgredir,
+      undefined,
+      t('p.rede.itemPlayit')
     )
   }
 }

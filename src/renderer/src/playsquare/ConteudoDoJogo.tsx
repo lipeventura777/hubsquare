@@ -10,7 +10,7 @@ import {
 } from '../../../shared/tipos'
 import { ApiDaInstalacao } from '../componentes/api'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeInstalacoes } from '../componentes/icones'
+import { IconeInstalacoes } from '../icones'
 import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import {
   Aviso,

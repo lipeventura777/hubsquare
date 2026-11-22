@@ -7,7 +7,7 @@ import { expect, test } from './apoio'
 for (const bioma of ['nether', 'dia'] as const) {
   test(`fundo animado (${bioma}): anima, e para ao minimizar`, async ({ abrir }) => {
     const a = await abrir('app', (p) => {
-      const dados = join(p, 'appData', 'ServSquare')
+      const dados = join(p, 'appData', 'HubSquare')
       mkdirSync(dados, { recursive: true })
       writeFileSync(
         join(dados, 'aparencia.json'),

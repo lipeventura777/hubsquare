@@ -20,7 +20,9 @@ export const PADRAO: Aparencia = {
   escurecimento: 0.6,
   fundo: null,
   fundoEmTodoApp: false,
-  reduzirAnimacoes: false
+  reduzirAnimacoes: false,
+  logoNaBarra: true,
+  coresLogo: 'fundo'
 }
 
 const ehCor = (v: unknown): v is string => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)
@@ -48,7 +50,10 @@ export function migrarAparencia(
       : undefined,
     particulasSobreImagem: salvo.particulasSobreImagem !== false,
     destaque: cor(salvo.destaque, DESTAQUE_ANTIGO),
-    destaquePlay: cor(salvo.destaquePlay, DESTAQUE_PLAY_ANTIGO)
+    destaquePlay: cor(salvo.destaquePlay, DESTAQUE_PLAY_ANTIGO),
+    // Logo (sem valor no arquivo: quem já usa o app fica com ela visível e acompanhando o fundo).
+    logoNaBarra: salvo.logoNaBarra !== false,
+    coresLogo: salvo.coresLogo === 'oficiais' ? 'oficiais' : 'fundo'
   }
   return { aparencia, migrou: antigo }
 }

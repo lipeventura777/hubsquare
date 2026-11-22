@@ -41,8 +41,11 @@ export const paper: TipoServidor = {
 
   async instalar(versao, pasta, _java, aoProgredir) {
     const destino = join(pasta, 'server.jar')
+    const item = t('p.rede.itemServidor', { nome: 'Paper', versao })
     const build = await buscarJson<Build>(
-      `${API}/versions/${encodeURIComponent(versao)}/builds/latest`
+      `${API}/versions/${encodeURIComponent(versao)}/builds/latest`,
+      undefined,
+      item
     )
     const jar = build.downloads['server:default']
     if (!jar) throw new ErroApp(t('tipos.paper.oPaperAindaNaoTem', { versao }))
@@ -51,7 +54,9 @@ export const paper: TipoServidor = {
       destino,
       { algoritmo: 'sha256', valor: jar.checksums.sha256 },
       `Baixando o Paper ${versao} (build ${build.id})`,
-      aoProgredir
+      aoProgredir,
+      undefined,
+      item
     )
     return String(build.id)
   }

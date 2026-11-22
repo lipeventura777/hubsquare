@@ -37,7 +37,7 @@ function nomeSimples(valor: unknown): string {
 }
 
 // Com o servidor ligado, as pastas do mundo ativo não podem sumir nem mudar de nome.
-// O servsquare.json nunca: sem ele o app não reconhece o servidor.
+// O hubsquare.json nunca: sem ele o app não reconhece o servidor.
 async function protegido(info: InfoServidor, alvo: string): Promise<boolean> {
   if (dirname(alvo) !== resolve(info.pasta)) return false
   const nome = basename(alvo).toLowerCase()

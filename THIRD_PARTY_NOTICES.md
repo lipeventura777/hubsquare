@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-HubSquare itself is licensed under the [MIT License](LICENSE). It includes or is built with the following third-party components. Each keeps its own license and copyright.
+HubSquare itself is licensed under the [GNU General Public License v3.0 or later](LICENSE) (`GPL-3.0-or-later`); the HubSquare name and logo are not covered by it. It includes or is built with the following third-party components. Each keeps its own license and copyright.
 
 ## Bundled in the installed app
 

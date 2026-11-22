@@ -1,370 +1,150 @@
-# Testar quando voltar (correção: instalação de modpacks)
-
-Tudo abaixo já passou pelo terminal (`npm run repro:modpack -- <modo>`), com o mesmo código do
-app. O que falta é olhar a **interface**, que o terminal não vê.
-
-Antes: o servidor **COBBLEVERSE** que ficou da tentativa de 12/11 (02:00) está completo
-(11.364 arquivos, 6,6 GB) e pode ser usado ou apagado pelo app. No Temp do Windows ficaram
-`servsquare-baixando-…` e `servsquare-mrpack-…` de uma análise do CurseForge abandonada às 01:48;
-dá para apagar à mão.
-
-## ServSquare › Servidores › Criar a partir de um modpack
-
-1. **Abrir arquivo .mrpack** com o `COBBLEVERSE 1.0.0.mrpack` da pasta Downloads.
-   - [ ] A análise leva **segundos** (antes: quase 2 minutos sem nenhum aviso).
-2. **Criar servidor** (EULA marcado).
-   - [ ] A frase muda sozinha: "Extraindo o modpack: X de 11232 arquivos" → Java → Fabric →
-     "Baixando X de 127 arquivos: nome.jar" → "Copiando as configurações do modpack: X de 11209
-     arquivos" → "Guardando uma cópia do modpack no servidor".
-   - [ ] A barra anda e a janela **nunca** fica "Não está respondendo"; dá para clicar em outras
-     coisas (ex.: arrastar a janela) enquanto instala.
-3. **Cancelar** no meio (botão ao lado da frase).
-   - [ ] Volta para a tela sem mensagem de erro vermelha.
-   - [ ] Em Servidores **não** aparece servidor novo; em `Documentos\ServSquare\servidores` não
-     sobra pasta `.modpack-…`.
-   - [ ] Clicar em **Criar servidor** de novo funciona (e os mods já baixados não são baixados de
-     novo: a etapa "Baixando" passa rápido).
-4. Queda de internet de verdade: desligue o Wi-Fi/cabo durante "Baixando…" por uns 30 s e ligue.
-   - [ ] Aparece o erro no padrão do app (faixa vermelha), com a **lista dos arquivos** que
-     falharam e o botão **"Tentar de novo só os que falharam"**.
-   - [ ] O botão termina a instalação baixando só o que faltou.
-5. **Voltar** na etapa Confirmar: a pasta temporária do pack é apagada (nada em
-   `%TEMP%\servsquare-mrpack-…`).
-6. Repita 1–3 com um modpack do **CurseForge** (busca do Explorar ou o `COBBLEVERSE-1.7.42-CF.zip`
-   pela busca do CurseForge, se a chave estiver configurada).
-
-## PlaySquare
-
-7. **Instalações › + Nova instalação › De um modpack** (ex.: COBBLEVERSE).
-   - [ ] Etapa com "X de Y arquivos" e o botão **Cancelar** acima da lista.
-   - [ ] Cancelar: nenhuma instalação nova; em `Documentos\ServSquare\jogo` não sobra
-     `.instalando-…` nem pasta vazia.
-8. **Explorar › modpack › Criar instalação com este modpack**: mesma coisa (etapa, Cancelar, e
-   "Tentar de novo só os que falharam" se a internet cair).
-
-## Erros sem tratamento
-
-9. [ ] Se algum erro escapar, ele aparece num quadro no canto de baixo à direita (padrão de erro,
-   com "Ver detalhes" e "Fechar") e o app continua aberto. O texto técnico fica em
-   `%APPDATA%\ServSquare\logs\erros.log`.
-
-## Para decidir
-
-- Num dos testes o PC entrou em **suspensão por inatividade** no meio da instalação (45 min
-  parado; o Windows registrou "System Idle"). Ao acordar, a instalação continuou e terminou certo.
-  Se quiser, dá para o app impedir a suspensão só enquanto instala um modpack
-  (`powerSaveBlocker` do Electron). Não fiz porque é funcionalidade nova.
-
-## O que o terminal não cobre
-
-- Aparência (cores, tema claro/escuro, animação da barra) da etapa com Cancelar.
-- O tempo real no seu disco C: com o antivírus do Windows lendo os 11 mil arquivos.
-
-# Testar quando voltar (Fase M1: JOGAR pelo launcher oficial)
-
-Pelo terminal já passou: detecção (só Store, só clássico, os dois, nenhum, marcador do Xbox
-recusado), o script do PowerShell da detecção neste PC (acha `Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft`
-e o clássico pelo registro) e a criação do perfil numa cópia do `launcher_profiles.json`
-(`node --import ./tests/ts-sem-extensao.mjs .teste/m1/provar-perfis.ts`: os 5 perfis antigos
-ficaram idênticos). O que só dá para ver na tela:
-
-1. PlaySquare › Jogar, instalação do seu servidor, com o launcher **fechado** › **JOGAR**.
-   - [ ] A barra mostra "Criando a instalação no Minecraft Launcher" → "Abrindo o Minecraft Launcher".
-   - [ ] Abre o **Minecraft Launcher** (nunca a Microsoft Store).
-   - [ ] Aparece "Clique em JOGAR no launcher: a instalação X já está selecionada".
-   - [ ] No launcher, a instalação do servidor já vem selecionada; clicar em JOGAR entra com os mods,
-     e em Multijogador o servidor é o primeiro da lista.
-2. Com o launcher **aberto**, clicar em JOGAR.
-   - [ ] Aparece "Feche o Minecraft Launcher" com o botão **Já fechei**; fechar e clicar continua.
-3. [ ] No launcher, em Instalações, seus perfis antigos (1.18, 1.21.5, última versão, snapshot)
-   continuam lá. Cópia de antes de cada mudança em `Documentos\ServSquare\backups\launcher`.
-4. [ ] Servidor desligado: aparece também **Ligar servidor e jogar**; ele liga, espera e abre o launcher.
-5. [ ] Instalação que mudou (ex.: um mod novo no servidor): o botão diz **ATUALIZAR E JOGAR**.
-6. [ ] Debaixo do JOGAR aparecem, pequenos, "Abrir pasta da instalação" e "Exportar para Modrinth
-   App / Prism Launcher".
-7. [ ] Atalho da área de trabalho (`--jogar=<id>`) abre o HubSquare no Jogar daquela instalação;
-   o JOGAR segue o mesmo caminho acima.
-8. [ ] Se algo falhar ao abrir, o motivo aparece em `%APPDATA%\ServSquare\logs\erros.log`
-   (linhas "Jogar: ...").
-
-# Testar quando voltar (Fase M2: aviso de versão nova)
-
-Pelo terminal já passou: as regras (versão igual, maior, menor, pré-lançamento, pulada, lembrar
-depois, sem rede, 304, limite e 404) e o pedido real ao GitHub (release achado num repositório
-público; o `hubsquare` ainda privado responde 404 e não mostra nada; sem rede, nada). O que só dá
-para ver na tela, depois que o repositório estiver público:
-
-1. Publique um release de teste com versão maior que a do app instalado (ex.: `v1.0.1`, seguindo
-   `docs/como-lancar-versao.md`).
-   - [ ] Ao abrir o HubSquare (ou em até 6 h), aparece no canto "HubSquare 1.0.1 disponível" com as
-     novidades formatadas.
-   - [ ] **Baixar** abre a página do release no navegador e nada é baixado sozinho.
-   - [ ] **Lembrar depois** some o aviso; ele volta no dia seguinte.
-   - [ ] **Pular esta versão** some e não volta para essa versão; um `v1.0.2` volta a avisar.
-2. [ ] Opções › Gerais e PlaySquare › Ajustes do jogo têm "Avisar quando sair versão nova do
-   HubSquare"; desligado, o aviso não aparece.
-3. [ ] Sem internet, o app abre normal, sem aviso e sem erro.
-
-# Testar quando voltar (Fase V1: vidro e biomas)
-
-Pelo terminal já passou: contraste de 4,5:1 nos cinco biomas (`tests/contrasteRegras.test.ts`),
-migração das preferências (`tests/aparenciaRegras.test.ts`), o fluxo da Aparência (migra, troca
-de bioma, vidro leve, bioma no banner) e os prints de 12 telas nos cinco biomas em
-`.teste/prints-v1/`. O que só dá para ver na tela:
-
-1. [ ] Ao abrir pela primeira vez depois de atualizar: o seu tema antigo virou o bioma certo
-   (claro → Dia claro, escuro → Dia), a sua imagem de fundo e as suas cores continuam.
-2. [ ] Aparência › Tema: passar pelos cinco biomas e, em cada um, por todas as telas (ServSquare
-   e PlaySquare), diálogos, menus ⋮, listas de seleção, avisos, console, editor de arquivos e
-   telas de erro. Todo texto legível, nada "invisível" sobre o fundo.
-3. [ ] Aparência › Fundo › "Usar em todo o app" com uma imagem sua (uma bem clara e uma bem
-   escura): o vidro fica mais opaco sozinho e o texto continua legível.
-4. [ ] "Vidro leve": some o desfoque e o app fica mais leve; o resto igual.
-5. [ ] PlaySquare › Jogar › Fundo: bioma próprio da instalação, imagem sua e a capa de um
-   modpack; o nome sempre numa placa de vidro legível.
-6. [ ] Brilho do JOGAR, quadradinho online com brilho e títulos com brilho na Noite e no Nether.
-7. [ ] Desempenho num PC mais fraco (o desfoque pesa); se travar, testar com "Vidro leve".
-
-# Testar quando voltar (Fase V2: fundos vivos)
-
-Pelo terminal já passou: regras de pausa, ritmo e economia (`tests/animacaoRegras.test.ts`), o
-fundo animando e parando ao minimizar (`tests/e2e/conferir-animacao.e2e.ts`), o contraste com as
-cores novas das partículas e a medição de CPU/GPU (`npm run desempenho:fundo`, tabela em
-`.teste/resultados-desempenho/fundo.md`). O que só dá para ver com você na frente:
-
-1. [ ] Cada bioma animado (Aparência › Tema): Dia e Dia claro (nuvens, grama, folhas, pássaros),
-   Noite (estrelas girando e piscando, estrela cadente, vaga-lumes, janelas), Mar (raios, bolhas,
-   algas, cardumes, areia) e Nether (brasas, lava, névoa de calor). Nada pisca de um jeito estranho.
-2. [ ] "Animação do fundo": completa, leve e desligada mudam na hora.
-3. [ ] PlaySquare › Jogar: trocar de instalação (uma com bioma próprio e outra sem) faz a
-   transição suave entre biomas; com uma imagem sua, só as partículas por cima (e somem ao
-   desligar "Partículas sobre a minha imagem").
-4. [ ] Abrir o jogo pelo JOGAR: o fundo do HubSquare para enquanto joga e volta ao fechar.
-   Conferir que o jogo não perde FPS com o app aberto (F3 no jogo, com e sem o HubSquare aberto).
-5. [ ] Minimizar, mandar para a bandeja e deixar sem foco por 30 s: o fundo para; ao voltar, segue.
-6. [ ] Instalar um modpack: o fundo fica parado até terminar.
-
-# Testar quando voltar (Fase M4: whitelist pelo convite)
-
-Pelo terminal já passou: as regras dos pedidos (`tests/pedidosRegras.test.ts`), o fluxo completo
-entre duas instâncias (aceitar, pedir, aprovar, nick no `whitelist.json`), o nick inexistente e a
-segurança da rota (token errado, corpo grande, caracteres estranhos, 21º pedido, repetido,
-bloqueio do IP). O que só dá para ver com um amigo de verdade:
-
-1. [ ] Mande o convite para um amigo pelo Radmin. Ele, em Entrar com convite, põe o nick e um
-   recado. Aparece para você o aviso "<nick> pediu para entrar" e o pedido em Jogadores.
-2. [ ] Aprove com o servidor **ligado** (vai pelo `whitelist add`) e, numa outra vez, **desligado**
-   (vai para o `whitelist.json`). Nos dois casos o amigo entra no jogo sem ser barrado.
-3. [ ] Na tela Jogar dele aparece "Aguardando o dono aprovar" e, depois, "Aprovado".
-4. [ ] Com o HubSquare fechado no seu PC, o amigo aceita o convite pelo arquivo `.hubsquare`: o
-   pedido fica "vai quando o dono abrir o HubSquare" e chega quando você abre.
-5. [ ] "Aprovar automaticamente quem usar este convite" ligado: o amigo entra sem você aprovar.
-   Revogar o convite: os pedidos pendentes somem.
-
-# Testar quando voltar (Fase M5: diagnóstico de conexão)
-
-Pelo terminal já passou: as regras (ordem, pulo depois de uma essencial, texto copiado sem token
-e sem IP público), o dono com o servidor desligado, o amigo com o servidor do dono desligado, a
-instalação desatualizada (com o conserto), o nick não aprovado, tudo certo depois de aprovar, e,
-com o Paper de verdade, o servidor ligado e o túnel do playit sem configurar. O que só dá para ver
-com você e um amigo:
-
-1. [ ] **Radmin desligado:** feche o Radmin VPN e rode "Testar tudo" (método Radmin) e, no PC do
-   amigo, "Não consigo entrar": os dois param no Radmin com a frase de abrir o Radmin.
-2. [ ] **Servidor desligado:** "Testar tudo" mostra "Ligar o servidor"; clicar liga, e "Conferir de
-   novo" segue para as próximas. O amigo vê "O servidor não respondeu".
-3. [ ] **Tudo certo:** servidor ligado, túnel do playit rodando (ou Radmin conectado com o Java
-   liberado) e o nick do amigo aprovado: os dois lados mostram "Tudo certo".
-4. [ ] **Túnel caído de verdade:** com o servidor ligado e o playit vinculado, feche o
-   `playitd.exe` pelo Gerenciador de Tarefas: "Testar tudo" mostra "Religar o túnel" e o
-   conserto volta o túnel.
-5. [ ] **Firewall:** sem a regra do Java (Conexão › Radmin ou Rede local), o conserto "Liberar o
-   Java no Firewall" pede administrador e depois passa.
-6. [ ] "Copiar resultado" e colar num chat: sem o código do convite e sem o seu IP público inteiro.
-
-# Testar quando voltar (Fase M6: modo amigo)
-
-Pelo terminal já passou: as regras (primeira abertura, convite, servidores salvos, voltar ao
-amigo, fechar de verdade), a primeira abertura no modo amigo (só o PlaySquare, nenhuma porta do
-app além das que o teste usa para controlar o Electron, e fechar a janela sai do app), a abertura
-por convite com ele já colado e a troca para o completo e de volta (o convite escuta no completo e
-para no amigo; o servidor continua guardado). O que só dá para ver com você:
-
-1. [ ] **Instalar do zero numa pasta de teste:** gere o instalador (`npm run dist`), instale numa
-   conta do Windows sem o HubSquare (ou apague só uma cópia de teste de `%APPDATA%\ServSquare`,
-   nunca a sua) e escolha "Só vou jogar com amigos": só o PlaySquare aparece.
-2. [ ] Dois cliques num arquivo `.hubsquare` e um link `hubsquare://convite/...` (num chat):
-   abrem o HubSquare com o convite colado (o registro vem do instalador).
-3. [ ] No modo amigo, `netstat -ano | findstr 8788` (e a porta do celular) não mostra nada do
-   HubSquare.
-4. [ ] O seu PC (com servidores) abre direto no completo, sem boas-vindas, igual a antes.
-5. [ ] "Também quero hospedar servidores" e "Usar só o PlaySquare" trocam com a transição; com
-   o servidor ligado, voltar ao amigo é recusado com a mensagem de desligar antes.
-
-# Testar quando voltar (Fase M7: passar o servidor)
-
-Pelo terminal já passou: as regras (o que vai e o que fica, server.properties sem segredos,
-conferência do pacote, mesmo servidor, nome do amigo) e o fluxo completo com três PCs de teste:
-o dono passa para a Bia (o arquivo aberto não tem senha, token, caminho do PC nem .jar), ligar
-pede "Ligar mesmo assim", a Bia recebe pelo assistente e vira dona com o mesmo id, o amigo entra
-com o convite da Bia e a instalação dele continua a mesma (só o endereço muda), a Bia muda o mundo
-e devolve, e o dono atualiza o dele (backup protegido com o mundo antigo, nada de cópia). O que só
-dá para ver com você:
-
-1. [ ] **COBBLEVERSE:** com ele desligado, Servidores › ⋯ › "Passar para outro amigo…". Confira o
-   tamanho, a lista "Fica neste PC" (nenhuma config importante deveria cair lá à toa) e o tempo
-   para gerar. Abra o .hubserver com o 7-Zip: nenhum .jar, e o `hubserver.json` com os mods do
-   Modrinth como link.
-2. [ ] **Importar em outro PC** (ou numa conta do Windows sem o HubSquare): "Receber servidor
-   (.hubserver)" no primeiro passo do assistente, EULA, e ver o NeoForge, o Java e os mods
-   baixando pela fila; os do CurseForge na janela Downloads necessários. Ligar e entrar no mundo.
-3. [ ] Devolver o arquivo e escolher "Atualizar o meu servidor com este mundo": o mundo de volta,
-   o backup com cadeado em Cópias de segurança, e o "Com <nome>" some do card.
-4. [ ] Um amigo com a instalação do seu convite entra com o convite do novo dono: a mesma
-   instalação (sem baixar tudo de novo), com o endereço novo.
-5. [ ] O "Ligar mesmo assim" no botão grande da barra lateral e no Jogar ("Ligar servidor e jogar").
-
-# Testar quando voltar (Fase M8: relatório de erro)
-
-Pelo terminal já passou: as regras de limpeza e um relatório gerado pela tela com segredos falsos
-plantados (PIN, sal, cookie, chave do CurseForge, segredo do playit, token do convite, senha do
-RCON, IP público, Bearer, accessToken, a pasta do usuário, mundo e .jar): nenhum aparece no .zip, o
-item desmarcado não vai, "Abrir pasta" abre a Área de Trabalho e o `npm run ler-relatorio` resume.
-O que só dá para ver com você:
-
-1. [ ] Gerar um relatório de verdade no seu PC (Opções › Gerais › Ajuda) com o COBBLEVERSE e uma
-   instalação escolhidos; abrir o .zip e conferir que nada pessoal ficou (procure o seu nome de
-   usuário, o seu e-mail e o IP público). Tempo para gerar com 300+ mods (hash de cada um).
-2. [ ] O botão "Gerar relatório de erro" dentro de "Ver detalhes" de uma mensagem de erro aberta
-   num diálogo (um diálogo por cima do outro).
-3. [ ] O diálogo nos cinco biomas e em janela estreita (os dois selects lado a lado).
-4. [ ] Rodar `npm run ler-relatorio -- <arquivo>` num relatório de um amigo de verdade.
-
-# Testar quando voltar (Correção M1: jogo abre com os mods)
-
-Pelo terminal já passou: a causa (instalação de um servidor apagado, pasta de mods vazia), as regras do perfil (gameDir com espaços, acentos e OneDrive), do options.txt (existente, vazio e inexistente) e do shader, e o perfil gerado numa cópia do seu launcher_profiles.json (`node --import ./tests/ts-sem-extensao.mjs .teste/m1c/perfil.ts "<instalação>"`). O que só dá para ver com você:
-
-1. [ ] Em PlaySquare › Jogar, escolha a instalação **COBBLEVERSE** (a do servidor que existe) e clique em JOGAR. Abra o jogo pelo launcher e confira o menu Mods (ou a linha "Loading N mods" em `Documentos\ServSquare\jogo\COBBLEVERSE\logs\latest.log`): N deve ser o número de mods do pack, não 4.
-2. [ ] Em Opções › Pacotes de recursos, os packs do servidor aparecem ativados, por cima dos seus.
-3. [ ] JOGAR na instalação antiga **COBBLEVERSE-1 7 42-CF** agora mostra o erro "O servidor da instalação ... não existe mais" em vez de abrir o jogo vazio. Pode apagar essa instalação em Instalações.
-4. [ ] A pasta `%APPDATA%\.minecraft\mods` continua igual (nada foi copiado para lá).
-
-# Testar quando voltar (Fase V3: abas Serv/Play e acabamento)
-
-Pelo terminal já passou: as abas nos cinco biomas (nenhuma corta letras, cantos pelos tokens, clique e setas do teclado), a contagem de mods da memória (instalação ainda não instalada conta os do servidor), o nome com pontos e os prints antes/depois em `.teste/prints-v3/`. O que só dá para ver com você:
-
-1. [ ] Trocar Serv/Play várias vezes, com o mouse e com as setas: o fundo desliza sem pular, o nome nunca aparece cortado, o anel de foco aparece só pelo teclado. Repetir com "Reduzir animações" ligado (a troca fica na hora) e com a barra recolhida.
-2. [ ] Jogar › COBBLEVERSE: "Memória do jogo" mostra "Sugerido: … (141 mods …)" (97 do servidor + 44 só do jogador), e não 0. Ao trocar de instalação, aparece "Contando mods…" por um instante.
-3. [ ] Nome das instalações: uma instalação de servidor de modpack com a versão "esmagada" (ex.: "…-1 7 42-…") aparece com os pontos; nomes escolhidos por você continuam iguais; as pastas no disco não mudam. Importar um .zip "Pack-1.2.3.zip" sugere "Pack-1.2.3".
-4. [ ] Jogar com o dono e o servidor desligado: o status "Servidor …" não fica mais por cima do botão "Ligar servidor e jogar".
-5. [ ] As telas que os testes não fotografam (lista no fim de `docs/design/acabamento-v3.md`), nos cinco biomas.
-
-# Testar quando voltar (Fase V4: fundos personalizáveis)
-
-Pelo terminal já passou: o bug (escolher a imagem e ver o banner na hora; continua depois de recarregar), a cópia pelo hash sem duplicar, arquivo que não é imagem recusado, a regra dos 25 MB e do protocolo (recusa `..` e o que não está na pasta), a prioridade, a migração (imagem antiga existente vale, apagada avisa, bioma próprio vale) e a imagem que some (volta ao bioma com aviso). Prints em `.teste/prints-v4/`. O que só dá para ver com você:
-
-1. [ ] Aparência › Fundo: escolher uma imagem sua para o app; mexer em enquadramento, ponto de foco (arrastar), desfoque, escurecer/clarear e partículas, vendo a prévia e o app ao vivo. Trocar de bioma e usar o **Desfazer**. O vidro fica claro sobre uma imagem clara e escuro sobre uma escura, com o texto legível.
-2. [ ] Jogar › Fundo numa instalação: Igual ao app, Bioma e Imagem; os mesmos ajustes; "Usar este fundo em todas as instalações" (com a confirmação) e "Voltar ao fundo do app". Trocar de instalação: o fundo muda com transição suave.
-3. [ ] Arrastar uma imagem do Explorador para cima do banner da tela Jogar: aparece a moldura e o fundo troca.
-4. [ ] Fechar e reabrir o HubSquare: o fundo do app e o de cada instalação continuam. A Catotaz_place continua com a imagem dela e a COBBLEVERSE-1 7 42-CF com o bioma Dia (migração).
-5. [ ] Minhas imagens: ver "Em uso: …" e apagar uma em uso (quem usava volta para "Igual ao app").
-
-# Testar quando voltar (Fase V5: sete biomas novos)
-
-Pelo terminal já passou: o contraste de 4,5:1 nos doze biomas (nenhuma cor da lista precisou mudar), os doze na escolha de fundo do app e da instalação, o Vidro leve nos sete e os prints em `.teste/prints-v5/` (Painel e Jogar em cada bioma novo e a folha `doze-miniaturas.png`). O que só dá para ver com você:
-
-1. [ ] Aparência › Fundo: passar pelos sete biomas novos (Cerejeira em Claros; os outros seis em Escuros) e olhar algumas telas em cada um: o vidro, a borda, o brilho do título e o botão de destaque.
-2. [ ] Jogar › Fundo numa instalação: escolher cada um dos sete; o banner troca com a transição suave e fica parado (sem animação nesta fase).
-3. [ ] Geodo de Ametista: o vidro ficou em 85% de opacidade por causa da calcita clara na borda. Ver se ainda parece vidro ou se prefere a calcita mais escura.
-4. [ ] Aurora Nevada e Deep Dark: o reflexo forte em cima do vidro (gelo) e o brilho ciano por dentro agradam, ou estão fortes demais?
-5. [ ] Ligar o "Vidro leve" em dois ou três dos novos.
-
-# Testar quando voltar (Fase V6: fundo vivo dos biomas novos)
-
-Pelo terminal já passou: os limites de movimento nos doze biomas (simulação de 4 minutos em cada, modo completo e leve), o quadro inicial de cada bioma idêntico à arte parada da V5, a pausa ao minimizar nos sete novos, o fundo parado com "reduzir movimento", a troca entre biomas novos na tela Jogar e a medição de CPU (tabela em `.teste/resultados-desempenho/fundo-v6.md`). Gravações em `.teste/prints-v6/<bioma>-sequencia.png` (8 quadros, 1 s entre eles). O que só dá para ver com você:
-
-1. [ ] Olhar cada bioma novo por um minuto (Aparência › Fundo): o movimento é calmo, nada pisca nem chama atenção atrás do texto, e o evento raro aparece de vez em quando (borboleta, pulso, bando/arbusto, estrela cadente, peixe).
-2. [ ] Jogar: trocar de instalação entre instalações com biomas diferentes (novos e antigos): a troca é suave, sem pulo nem tela preta.
-3. [ ] Com o app aberto, jogar uns minutos: o jogo não perde FPS (o fundo para sozinho com o jogo aberto).
-4. [ ] "Partículas por cima" de uma imagem sua com cada bioma novo.
-5. [ ] Ligar "Reduzir animações": o fundo fica parado na arte (escolher "completa" à mão volta a animar).
-
-# Testar quando voltar (Fase V7: imagens dentro dos cantos)
-
-Pelo terminal já passou: `tests/e2e/cantos.e2e.ts` confere, em Cópias de segurança, Mundos, Mods (Explorar e Instalados), Servidores, Jogar, Instalações, Explorar, Conteúdo, Servidores do PlaySquare, Capturas de tela e Ajustes do jogo, que nada encostado num canto arredondado vaza (também com o mouse em cima dos cards). Prints antes/depois em `.teste/prints-v7/`. O que só dá para ver com você:
-
-1. [ ] Passar o mouse nos cards de Cópias de segurança e Mundos (o card sobe 2px) e olhar os cantos de cima da imagem: ficam redondos, sem ponta reta aparecendo.
-2. [ ] O mesmo com "Vidro leve" ligado.
-3. [ ] Ajustes do jogo: a caixa "Todos os avisos estão aparecendo" com cantos arredondados e a faixa verde acompanhando a curva.
-4. [ ] Cópias de segurança: com a janela larga e estreita, a caixa de seleção e Proteger ficam juntos, e Apagar e Restaurar juntos à direita.
-
-# Testar quando voltar (Fase V8: telas mais largas)
-
-Pelo terminal já passou: `tests/e2e/larguras.e2e.ts` abre todas as telas e abas das duas áreas em 1280×800, 1600×900, 1920×1080 e 2560×1440 e confere que nada rola para os lados, que em 1920 o conteúdo usa pelo menos 65% do painel (telas vazias à parte) e que nenhum parágrafo passa de 90 caracteres por linha. Prints antes/depois em `.teste/prints-v8/` (medidas em `medidas-antes.md` e `medidas-depois.md`). O que só dá para ver com você:
-
-1. [ ] Com a janela maximizada e com ela pequena: Software, Ajustes do jogo, Opções (Gerais e Integrações), Conexão (todas as abas), Integrações › Celular, Automação, Mods › Proibidos e Comandos.
-2. [ ] Software: com o Paper e a versão atual escolhidos, passar o mouse no botão desligado mostra "Este já é o software atual".
-3. [ ] Telas vazias ou de preparar (Comandos sem preparar, Opções › Avançado, Mods › Atualizações sem nada, Desempenho › Mapa): o aviso no meio do painel.
-4. [ ] Arrastar a janela de larga para estreita: as seções passam de 3 para 2 colunas e depois para uma, sem pular nem cortar.
-
-# Testar quando voltar (Fase V9: páginas nas listas de mods)
-
-Pelo terminal já passou: as regras de página (`tests/paginaRegras.test.ts`), e com respostas gravadas (`tests/e2e/paginas.e2e.ts`): trocar de página, mudar o tamanho (fica salvo), filtro voltando para a página 1, voltar dos detalhes na mesma página e posição, erro com "Tentar de novo", trocar rápido (a página atrasada é ignorada), o limite de 10.000 do CurseForge e a seleção entre páginas nos instalados. Medição em `.teste/resultados-desempenho/paginas.md`; prints em `.teste/prints-v9/`. O que só dá para ver com você:
-
-1. [ ] Mods › Explorar: procurar um mod popular (ex.: "sodium"), passar algumas páginas pelos números, pelas setas do teclado e pelo "Ir para a página"; trocar "Por página" e conferir que fica salvo ao reabrir o app.
-2. [ ] Abrir um mod, voltar: a mesma página e a mesma posição da rolagem.
-3. [ ] CurseForge (com a sua chave): uma busca bem aberta mostra "Muitos resultados…" e a última página abre.
-4. [ ] Instalados do Cobbleverse (e Conteúdo da instalação dele no PlaySquare): páginas rápidas, a busca acha mods de qualquer página, e selecionar em duas páginas mostra "N selecionados".
-5. [ ] Criar servidor de modpack: a lista de modpacks com páginas.
-
-# Testar quando voltar (Fase V10: fundo próprio no ServSquare)
-
-Pelo terminal já passou: a ordem (servidor > app > bioma padrão) e o "Igual à instalação" seguindo a instalação (`tests/fundoRegras.test.ts`), e de ponta a ponta (`tests/e2e/fundoServidor.e2e.ts`): imagem e bioma por servidor, valendo em Painel e Opções, Servidores com o fundo do app, trocar de servidor troca o fundo, a escolha continua depois de recarregar, "Igual à instalação" acompanhando a mudança no Jogar, e apagar a imagem em uso. Prints em `.teste/prints-v10/`. O que só dá para ver com você:
-
-1. [ ] Painel do servidor do Cobbleverse › Fundo: escolher uma imagem sua (e mexer nos ajustes); andar pelas telas dele (Opções, Console, Mods): o fundo é o mesmo.
-2. [ ] Trocar para "Igual à instalação deste servidor" e mudar o fundo da instalação dele no PlaySquare › Jogar: voltando ao ServSquare, o fundo acompanha.
-3. [ ] Alternar entre servidores na tela Servidores: o fundo troca (com a passagem suave quando é bioma).
-4. [ ] Arrastar uma imagem do Explorador para o topo do Painel.
-
-# Testar quando voltar (Fase V11: modo vitrine)
-
-Pelo terminal já passou (`tests/e2e/vitrine.e2e.ts`): esconder e mostrar pelo botão e pelo Esc nas duas telas, lembrar ao reabrir (por área), LIGAR e JOGAR pelo bloco (com o estado e o erro no próprio bloco), Tab só no que está à mostra, a barra lateral voltando como estava e trocar de tela trazendo o painel. Prints com e sem vitrine em Dia, Cerejeira, Deep Dark e com uma imagem em `.teste/prints-v11/`. O que só dá para ver com você:
-
-1. [ ] Jogar e Painel: "Esconder painel" (olho riscado) e ver a animação (os cards saem para baixo, o banner cresce, o título e a barra lateral recolhem); "Mostrar painel" e Esc trazem tudo de volta.
-2. [ ] Ligar o servidor pela vitrine: "Ligando… 0:05" correndo no bloco e depois "Online · 0/10 jogadores", sem abrir o console.
-3. [ ] Com "Reduzir animações" ligado: troca na hora.
-4. [ ] Com a vitrine ligada, um amigo entra no servidor: o aviso aparece por cima.
-
-## Fase I1: português e inglês
-
-O que já passou pelo terminal: os dois arquivos de textos têm as mesmas 3.123 chaves e as mesmas
-variáveis (`npm test`), nenhum texto visível fixo no código (`npm run lint`), e os fluxos de
-`tests/e2e/idioma.e2e.ts` (primeira abertura, troca sem reiniciar, instalação antiga, formatos).
-Os prints das telas nas duas línguas ficam em `.teste/prints-i1/pt-BR/` e `.teste/prints-i1/en/`.
-O que falta é olhar no Windows de verdade:
-
-1. **Instalador novo** (`release/HubSquare-Setup-<versão>.exe`):
-   - [ ] Logo no começo aparece a escolha de idioma do instalador; escolha **English**.
-   - [ ] As telas do instalador (licença, pasta, fim) vêm em inglês, com a licença MIT.
-   - [ ] Num PC (ou usuário do Windows) que **nunca usou o app**: a primeira tela é a escolha de
-     idioma com **English (US)** já marcado (veio do instalador).
-   - [ ] No PC de sempre (com servidores e instalações): o app abre direto em português, sem
-     perguntar nada.
-2. **Passar por todas as telas em inglês**: ServSquare (todas as telas e abas da barra lateral),
-   PlaySquare (Play, Installations, Browse, Content, Servers, Screenshots, Game settings) e a
-   engrenagem (Theme, Background, Animations, Idioma / Language, About).
-   - [ ] Nada em português que seja do app (nomes de mods, MOTD, console e o que você digitou
-     ficam como vieram).
-   - [ ] Nenhum texto cortado ou botão quebrado em 1280 e em 1920.
-   - [ ] Inventário do jogador: depois de "Download icons" de novo, os nomes dos itens vêm em
-     inglês (os ícones baixados antes da Fase I1 não trazem o arquivo de nomes em inglês).
-   - [ ] Comandos: listas de itens e efeitos em inglês depois de "Get commands" de novo (dados de
-     comandos preparados antes da Fase I1 só têm os nomes em português; em inglês aparece o id).
-3. **Trocar para português** em engrenagem › Idioma / Language:
-   - [ ] A tela muda na hora, sem fechar o app, e volta para a mesma aba.
-   - [ ] **Bandeja** (perto do relógio): botão direito mostra "Abrir / Ligar servidor / Sair" em
-     português; depois de trocar para inglês, "Open / Start server / Quit". A dica do ícone também.
-   - [ ] Com o servidor ligado durante a troca: ele continua ligado e o console continua.
-4. **Painel do celular**: com o app em inglês, abra o painel no celular e confira que a página
-   vem em inglês (e em português depois de trocar).
-5. **Engrenagem › About**: versão, links (Copy funciona) e o aviso da Mojang em maiúsculas.
+# Testar quando voltar
+
+## Logo: esconder e cores pelo fundo
+
+- [ ] Aparência › Tema › Logo: com "Acompanhar o fundo", trocar o bioma do app (Aparência › Fundo)
+  por alguns, inclusive Nether, Cerejeira e Geodo de Ametista: a logo da barra lateral muda de cor
+  junto com o fundo, combina com ele e continua legível (contorno visível, H e S legíveis).
+- [ ] Pôr uma imagem como fundo do app (de preferência bem colorida): a logo pega as cores dela.
+- [ ] Dar a um servidor um fundo próprio (Painel › Fundo) diferente do app: nas telas daquele
+  servidor a logo segue o fundo dele; em Servidores e Aparência volta ao do app.
+- [ ] "Oficiais": a logo volta ao verde e azul de sempre em qualquer fundo.
+- [ ] "Mostrar logo na barra lateral" desligado: a logo some, as abas Serv/Play sobem sem deixar
+  buraco e continuam funcionando; em Sobre a logo continua lá.
+- [ ] Com "Reduzir animações" ligado, a cor da logo troca na hora.
+
+## Logo nova (cubo chunk)
+
+- [ ] Instalar o HubSquare (`npm run dist`, o .exe em `release/`) e conferir a logo nova no
+  instalador (ícone da janela e do arquivo), no atalho da área de trabalho, no menu Iniciar, na
+  barra de tarefas, na bandeja (barra clara e escura do Windows) e na janela do app.
+- [ ] No Explorador, um arquivo `.hubsquare` mostra a logo nova. O `.hubserver` continua sem
+  ícone próprio (não tem associação; fica para depois).
+- [ ] Se o Windows mostrar o ícone antigo em algum lugar, rodar `ie4uinit.exe -show` para limpar
+  o cache de ícones (ou reiniciar o Explorador).
+- [ ] Abrir o painel do celular: o favicon e o ícone da tela inicial são a logo nova.
+- [ ] GitHub: subir `docs/marca/social-preview.png` em Settings › General › Social preview e,
+  se quiser, `docs/marca/avatar.png` como foto do perfil ou da organização.
+
+## Fase L1: atualização automática e release
+
+- [ ] Pôr o segredo `CURSEFORGE_API_KEY` no GitHub só quando a chave oficial chegar (sem ele, o
+  CurseForge aparece "em breve": conferir em Mods › Explorar › CurseForge e em Opções ›
+  Integrações).
+- [ ] Release de teste: subir a versão no package.json (ex.: 1.5.0-beta.1 não vale, o aviso
+  ignora pré-lançamentos; use uma versão normal num fork ou num repositório de teste), pôr a
+  seção no CHANGELOG, criar a tag `vX.Y.Z` e conferir no Actions que o release em rascunho tem o
+  .exe, o latest.yml, o .blockmap e o SHA256SUMS.txt, com as novidades do CHANGELOG. Publicar o
+  rascunho.
+- [ ] Instalar a versão anterior, abrir o app e esperar o aviso "Versão X pronta" (pode levar um
+  minuto). "Ver novidades" mostra o texto do release.
+- [ ] Com o servidor **ligado**: "Reiniciar e atualizar" mostra "Esperando o servidor desligar" e
+  não fecha nada. Desligar o servidor: aparece a espera do backup e, quando termina, o app fecha,
+  instala e abre de novo na versão nova.
+- [ ] Sem nada rodando: "Reiniciar e atualizar" fecha, instala e reabre. Servidores, mundos e
+  ajustes continuam lá.
+- [ ] "Ao fechar": o aviso some; fechar o app pela bandeja (Sair) instala a versão.
+- [ ] "Pular esta versão": fechar o app não instala.
+
+## Fase R1: relatar problema
+
+- [ ] Engrenagem › Sobre › Relatar problema › Bug, escrever algo e **Enviar por e-mail**: o
+  programa de e-mail abre com o assunto "[HubSquare <versão>] Bug: ..." e o corpo com versão,
+  Windows e idioma; a pasta da Área de Trabalho abre com o .zip selecionado; anexar e conferir que
+  o anexo vai (pode mandar para você mesmo).
+- [ ] O mesmo com **Abrir no GitHub**: a issue nova abre no modelo de bug, com a etiqueta "bug";
+  arrastar o .zip para a issue e conferir que ele sobe (pode fechar sem enviar).
+- [ ] Menu da bandeja › Relatar problema...: a janela abre com o diálogo.
+- [ ] Um erro qualquer › Ver detalhes › Relatar problema: abre o mesmo diálogo.
+
+## Fase P8: animações limpas
+
+- [ ] Navegar rápido entre cinco telas (ex.: Painel, Opções, Mods, Mundos, Jogadores) e ver se algo
+  pisca ou pula.
+- [ ] Trocar ServSquare ↔ PlaySquare algumas vezes: a área nova entra do lado da aba escolhida.
+- [ ] Aparência › Animações › "Reduzir animações" ligado: nada desliza, só aparece com fade.
+
+## Fase F1: Forge antigo (1.7.10 a 1.12.1)
+
+Pelo terminal já passou: o cliente da Naruto Storm Online preparado (versão, 18 bibliotecas
+conferidas e perfil, `forge-cliente`) e um servidor só com o Forge 1.7.10 e outro com o 1.12.1
+chegando ao "Done" com Java 8 (`forge-limpo`). O servidor do pack instala e liga com Java 8, mas
+trava em mods só do jogador que o pack põe soltos em `overrides/mods` (Resource Loader, Damage
+Indicators): fica para uma fase própria. Falta o launcher oficial de verdade e o jogo abrindo.
+
+1. **Naruto Storm Online:** PlaySquare › Jogar, escolha a instalação.
+   - [ ] Embaixo do JOGAR aparece "Esta versão usa Java 8, que o HubSquare baixa sozinho."
+   - [ ] JOGAR prepara (barra "Preparando as bibliotecas do Forge (X de 18)") e abre o launcher
+     oficial com o perfil da instalação selecionado.
+   - [ ] No launcher, JOGAR: o jogo abre com Java 8 (o próprio launcher baixa o dele, sem pedir
+     nada) e o título mostra "Minecraft 1.7.10".
+   - [ ] Menu principal › **Mods**: aparecem o Forge e os mods do pack (Naruto, etc.).
+   - [ ] Entrar num mundo e sair sem travar.
+2. **Forge 1.12.1 limpa:** PlaySquare › Instalações › + Nova instalação › Forge › 1.12.1.
+   - [ ] O aviso do Java 8 aparece abaixo da versão.
+   - [ ] JOGAR abre o launcher e o jogo; o menu **Mods** mostra Minecraft Forge 14.22.1.2478.
+3. **Servidor Forge 1.7.10 limpo:** ServSquare › Criar › Do zero › Forge › 1.7.10.
+   - [ ] O aviso do Java 8 aparece abaixo da versão; liga e o console mostra "Done".
+   - [ ] Entrar no servidor pelo jogo da instalação do servidor (Testar no meu jogo).
+   - [ ] (Esperado, por enquanto) Criar da Naruto Storm Online liga e trava em "Resource Loader":
+     são mods só do jogador soltos no pack.
+4. **Nada mudou no 1.12.2 em diante:** JOGAR numa instalação Forge 1.20.1 ou 1.12.2 continua igual.
+
+## Fase E3: erros de download, Forge antigo e porta do servidor
+
+Já passou nos testes (`tests/redeRegras.test.ts` e `tests/e2e/portaEForge.e2e.ts`); falta ver no
+seu PC, com as suas instalações e servidores.
+
+1. **Naruto Storm Online (Forge 1.7.10):** PlaySquare › Jogar, escolha a instalação e clique em JOGAR.
+   - [ ] Aparece "Forge antigo (antes da 1.12.2) ainda não é suportado." com "O suporte chega numa
+     próxima versão." embaixo, na hora, sem barra de download.
+   - [ ] A instalação continua na lista (nada apagado).
+   - [ ] Criar uma instalação ou um servidor com um modpack de Forge 1.7.10 mostra a mesma mensagem.
+2. **Porta 25570:** ServSquare › Opções do servidor, "Porta do servidor" = 25570, Salvar.
+   - [ ] Conexão mostra os endereços com `:25570` (Radmin e rede local) e a porta 25570 para o playit.
+   - [ ] Ligar o servidor; no console aparece "Starting Minecraft server on *:25570".
+   - [ ] Num outro PC (ou no PlaySquare de um amigo), entrar pelo convite: o endereço do convite tem
+     `:25570` e o jogo entra.
+   - [ ] Voltar a porta para 25565 depois do teste.
+3. **Porta ocupada:** com outro servidor de Minecraft aberto na mesma porta, clicar em LIGAR.
+   - [ ] Aparece "A porta <n> já está em uso por outro programa." e o botão "Trocar a porta nas
+     Opções" abre as Opções.
+
+## Fase E2: nome HubSquare com migração (instalar por cima da 1.4.0)
+
+Tudo abaixo já passou nos testes com pastas falsas (`tests/e2e/migracao.e2e.ts`). O que falta é
+o instalador de verdade e as suas pastas de verdade, que os testes nunca tocam.
+
+Antes: deixe a 1.4.0 instalada como está (hoje em `E:\Nova pasta\HubSquare`), feche o servidor,
+o jogo e o Minecraft Launcher. Se quiser uma rede de segurança extra, copie
+`%APPDATA%\ServSquare` e `Documentos\ServSquare` para outro lugar antes.
+
+1. **Instalar por cima:** rode `release/HubSquare-Setup-<versão>.exe` (de `npm run dist`).
+   - [ ] A pasta sugerida é `E:\Nova pasta\HubSquare` (a mesma da 1.4.0).
+   - [ ] A instalação termina sem erro e sem pedir para desinstalar nada à mão.
+   - [ ] Configurações › Aplicativos › Aplicativos instalados: só **um** HubSquare, na versão nova.
+   - [ ] Um só atalho HubSquare na Área de Trabalho e no menu Iniciar; os atalhos "Jogar" que você
+     criou para instalações continuam abrindo o app.
+2. **Primeira abertura:**
+   - [ ] Nenhum aviso de migração no canto de baixo à esquerda.
+   - [ ] `%APPDATA%\HubSquare` e `Documentos\HubSquare` existem; `%APPDATA%\ServSquare` e
+     `Documentos\ServSquare` não existem mais (foram movidas, não copiadas).
+   - [ ] `%APPDATA%\HubSquare\migracao-hubsquare.json` tem a data e as duas pastas movidas.
+   - [ ] O idioma e a aparência continuam os seus.
+3. **ServSquare:**
+   - [ ] **Servidores:** todos os servidores, com nome, tipo e versão.
+   - [ ] **Cópias de segurança:** os backups antigos aparecem, com os cadeados.
+   - [ ] **Mods › Instalados:** os mods, com fonte e etiquetas; Registro de eventos › Ações do app
+     com as ações antigas.
+   - [ ] Opções › Integrações: a chave do CurseForge continua guardada (se você tinha uma).
+4. **PlaySquare:**
+   - [ ] **Instalações:** todas, com imagem e fundo.
+   - [ ] **Fundos:** o fundo do app, o de cada instalação e o de cada servidor iguais a antes;
+     Aparência › Fundo › Minhas imagens com as imagens.
+   - [ ] **JOGAR no Cobbleverse:** o launcher abre o perfil e o jogo carrega com os mods. No
+     `launcher_profiles.json`, o `gameDir` do perfil `hubsquare-…` aponta para
+     `Documentos\HubSquare\jogo\…`.
+   - [ ] Capturas de tela continuam lá.
+5. **Se aparecer o aviso de migração:** feche o servidor, o jogo e o launcher e abra de novo; ele
+   tenta sozinho. O motivo fica em `%APPDATA%\ServSquare\logs\erros.log` (linha "Migração para
+   HubSquare").

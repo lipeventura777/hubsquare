@@ -18,8 +18,8 @@ Sources: the user's requirements for this phase, the [Minecraft Usage Guidelines
 | 8 | Free, no ads, no paid features (monetization rules) | Met (rules **to check** against the Usage Guidelines) | — |
 | 9 | Public privacy policy link | Met once the repository is public: <https://github.com/lipeventura777/hubsquare/blob/main/PRIVACY.md> | `PRIVACY.md`, `PRIVACY.pt-BR.md` |
 | 10 | Executable details: product name, version, description, author, copyright | Met | `package.json`, `electron-builder.yml` (`copyright`) |
-| 11 | Icon with every common size | Met — `build/icon.ico` (16, 20, 24, 32, 40, 48, 64, 96, 128, 256) | `scripts/gerar-icone.mjs` |
-| 12 | Installer with the license and the right name, in both languages | Met | `electron-builder.yml` (`nsis.license`, `multiLanguageInstaller`) |
+| 11 | Icon with every common size | Met — `build/icon.ico` (16, 20, 24, 32, 40 and 48 px from the small logo; 64, 128 and 256 px from the full logo) | `scripts/gerar-icone.mjs`, `build/logo/` |
+| 12 | Installer with the license and the right name, in both languages | Met | `electron-builder.yml` (`appId: com.hubsquare.app`, `productName: HubSquare`, `nsis.license`, `multiLanguageInstaller`); `build/installer.nsh` removes the old `com.servsquare.app` entry when installing over 1.4.0 |
 | 13 | SHA-256 checksums for each release | Met — `npm run dist` writes `release/SHA256SUMS.txt` | `scripts/checksums.mjs` |
 | 14 | Code signing (SmartScreen) | **Not yet** — policy ready for SignPath Foundation | `CODE_SIGNING_POLICY.md` |
 | 15 | Microsoft Store / Defender submission requirements | **To check** — depends on which Microsoft review you submit to | — |
@@ -29,7 +29,7 @@ Sources: the user's requirements for this phase, the [Minecraft Usage Guidelines
 
 - [ ] Read the [Minecraft Usage Guidelines](https://www.minecraft.net/en-us/usage-guidelines) and the [EULA](https://www.minecraft.net/en-us/eula) and confirm items 2 and 8 (the pages didn't load from here).
 - [ ] Make the repository public, so the privacy policy and code signing policy links work.
-- [ ] Apply to [SignPath Foundation](https://signpath.org) (needs: OSI license, public repo, code signing policy page, MFA on GitHub and SignPath, manual approval of each release). After acceptance, set up signing and sign the `.exe`.
+- [ ] Apply to [SignPath Foundation](https://signpath.org) (needs: OSI license — HubSquare is GPL-3.0-or-later —, public repo, code signing policy page, MFA on GitHub and SignPath, manual approval of each release). After acceptance, set up signing and sign the `.exe`.
 - [ ] If you submit the installer to Microsoft (Defender false-positive review or the Store), fill in their form with the links: code <https://github.com/lipeventura777/hubsquare>, privacy <https://github.com/lipeventura777/hubsquare/blob/main/PRIVACY.md>, checksums from `SHA256SUMS.txt`.
 - [ ] Create the release on GitHub with the `.exe` and `SHA256SUMS.txt`.
 
@@ -51,8 +51,8 @@ Fontes: o pedido desta fase, as [Regras de uso do Minecraft](https://www.minecra
 | 8 | Grátis, sem anúncios e sem nada pago | Atendida (regras a **conferir** nas Regras de uso) | — |
 | 9 | Link público da política de privacidade | Atendida quando o repositório ficar público: <https://github.com/lipeventura777/hubsquare/blob/main/PRIVACY.md> | `PRIVACY.md`, `PRIVACY.pt-BR.md` |
 | 10 | Detalhes do .exe: nome, versão, descrição, autor e copyright | Atendida | `package.json`, `electron-builder.yml` |
-| 11 | Ícone com todos os tamanhos comuns | Atendida — 16, 20, 24, 32, 40, 48, 64, 96, 128, 256 | `scripts/gerar-icone.mjs` |
-| 12 | Instalador com a licença e o nome certo, nas duas línguas | Atendida | `electron-builder.yml` |
+| 11 | Ícone com todos os tamanhos comuns | Atendida — 16, 20, 24, 32, 40 e 48 px da logo pequena; 64, 128 e 256 px da completa | `scripts/gerar-icone.mjs`, `build/logo/` |
+| 12 | Instalador com a licença e o nome certo, nas duas línguas | Atendida | `electron-builder.yml` (`appId: com.hubsquare.app`, `productName: HubSquare`); `build/installer.nsh` tira a entrada antiga `com.servsquare.app` ao instalar por cima da 1.4.0 |
 | 13 | Checksums SHA-256 de cada versão | Atendida — `npm run dist` grava `release/SHA256SUMS.txt` | `scripts/checksums.mjs` |
 | 14 | Assinatura de código (SmartScreen) | **Ainda não** — política pronta para a SignPath Foundation | `CODE_SIGNING_POLICY.md` |
 | 15 | Exigências da Microsoft Store / Defender | **Conferir** — depende de qual análise da Microsoft você vai pedir | — |
@@ -62,6 +62,6 @@ Fontes: o pedido desta fase, as [Regras de uso do Minecraft](https://www.minecra
 
 - [ ] Ler as [Regras de uso](https://www.minecraft.net/en-us/usage-guidelines) e o [EULA](https://www.minecraft.net/en-us/eula) e confirmar os itens 2 e 8 (as páginas não abriram daqui).
 - [ ] Deixar o repositório público, para os links da privacidade e da política de assinatura funcionarem.
-- [ ] Pedir a assinatura na [SignPath Foundation](https://signpath.org) (pede: licença OSI, repositório público, página da política de assinatura, verificação em duas etapas no GitHub e na SignPath, aprovação manual de cada versão). Depois de aceito, configurar e assinar o `.exe`.
+- [ ] Pedir a assinatura na [SignPath Foundation](https://signpath.org) (pede: licença OSI — o HubSquare é GPL-3.0-or-later —, repositório público, página da política de assinatura, verificação em duas etapas no GitHub e na SignPath, aprovação manual de cada versão). Depois de aceito, configurar e assinar o `.exe`.
 - [ ] Se for mandar o instalador para a Microsoft (análise de falso positivo do Defender ou Store), preencher o formulário com os links: código <https://github.com/lipeventura777/hubsquare>, privacidade <https://github.com/lipeventura777/hubsquare/blob/main/PRIVACY.md> e os checksums do `SHA256SUMS.txt`.
 - [ ] Criar a release no GitHub com o `.exe` e o `SHA256SUMS.txt`.

@@ -6,9 +6,23 @@
 //   cancelar-jogador  instalar no PlaySquare e cancelar no meio da cópia
 //   queda             criar o servidor com a internet "caindo" (simulado): conexões que caem no
 //                     meio e 20 s sem internet; depois "Tentar de novo só os que falharam"
+//   forge-servidor    Fase F1: criar o servidor do pack e ligar até o "Done" (o EULA é aceito só
+//                     nesta pasta de teste, por quem roda o script)
+//   forge-limpo       Fase F1: só o Forge (sem pack) na versão do 4º argumento (padrão 1.7.10),
+//                     ligado até o "Done" (EULA só nesta pasta de teste)
+//   forge-cliente     Fase F1: instalar o pack no PlaySquare e preparar o cliente como o JOGAR
+//                     (versão no .minecraft de teste e o perfil no launcher_profiles.json de teste)
 // Tudo acontece em .teste/repro/<modo> (servidores, instalações, pasta de dados e temporários).
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync
+} from 'node:fs'
 import { join, resolve } from 'node:path'
 
 const modo = process.argv[2] ?? 'servidor'
@@ -88,8 +102,8 @@ function contar(pasta: string): number {
   return n
 }
 
-const servidores = join(base, 'Documentos', 'ServSquare', 'servidores')
-const jogo = join(base, 'Documentos', 'ServSquare', 'jogo')
+const servidores = join(base, 'Documentos', 'HubSquare', 'servidores')
+const jogo = join(base, 'Documentos', 'HubSquare', 'jogo')
 const cache = join(base, 'dados', 'cache-modpacks')
 const lista = (p: string): string[] => (existsSync(p) ? readdirSync(p) : [])
 
@@ -274,6 +288,99 @@ try {
       novos === falhas.length &&
       conferirSobras({ servidores: 1, instalacoes: 0, tmp: false }) &&
       passou
+  } else if (modo === 'forge-servidor' || modo === 'forge-limpo') {
+    const { spawn } = await import('node:child_process')
+    const { garantirJava } = await import('../../src/main/java.ts')
+    const { javaDaVersao } = await import('../../src/main/mojang.ts')
+    const { tiposDeServidor } = await import('../../src/main/tipos/index.ts')
+    let pasta: string
+    let versaoJava: number
+    if (modo === 'forge-servidor') {
+      const info = await modpacks.criarDeModpack(pedido(await analisar()), progresso)
+      pasta = info.pasta
+      versaoJava = info.java
+    } else {
+      // Só o Forge, sem pack: prova a instalação sem depender dos mods (versão no 4º argumento).
+      const versao = process.argv[4] ?? '1.7.10'
+      pasta = join(servidores, `Forge ${versao}`)
+      mkdirSync(pasta, { recursive: true })
+      versaoJava = await javaDaVersao(versao)
+      const exe = await garantirJava(versaoJava, progresso)
+      await tiposDeServidor.forge.instalar(versao, pasta, exe, progresso)
+      // EULA aceito só nesta pasta de teste, por quem roda o script (aprovado na Fase F1).
+      writeFileSync(join(pasta, 'eula.txt'), 'eula=true\n')
+    }
+    destino = pasta
+    const java = await garantirJava(versaoJava, progresso)
+    const args = await tiposDeServidor.forge.argumentos(pasta)
+    log(`ligando: Java ${versaoJava} (${java}) ${args.join(' ')}`)
+    const filho = spawn(java, ['-Xmx3G', ...args], { cwd: pasta, windowsHide: true })
+    passou = await new Promise<boolean>((resolver) => {
+      const limite = setTimeout(() => (filho.kill(), resolver(false)), 15 * 60_000)
+      let fim = ''
+      let pronto = false // o stop leva uns segundos: avisa uma vez só
+      const linha = (d: Buffer): void => {
+        fim = (fim + d.toString('utf8')).slice(-4000)
+        if (!pronto && /Done \([\d.,]+s\)!/.test(fim)) {
+          pronto = true
+          log(`servidor pronto: ${fim.match(/.*Done \([\d.,]+s\)!.*/)?.[0]}`)
+          filho.stdin.write('stop\n')
+          clearTimeout(limite)
+          resolver(true)
+        }
+      }
+      filho.stdout.on('data', linha)
+      filho.stderr.on('data', linha)
+      filho.on('close', (codigo) => {
+        clearTimeout(limite)
+        log(`servidor fechou (código ${codigo}); fim do console:\n${fim.slice(-1500)}`)
+        resolver(false)
+      })
+    })
+    await new Promise((ok) => filho.once('close', ok))
+  } else if (modo === 'forge-cliente') {
+    const { instalarPackNoJogo } = await import('../../src/main/instalacoes.ts')
+    await instalarPackNoJogo(arquivo, { projetoId: 'arquivo-local', versaoId: 'local' }, progresso)
+    const indice = JSON.parse(readFileSync(join(base, 'dados', 'instalacoes.json'), 'utf8'))
+    const i = indice.instalacoes[0]
+    // Um launcher_profiles.json de teste (o instalador de verdade só existe no PC do jogador).
+    const minecraft = join(base, 'dados', '.minecraft')
+    mkdirSync(minecraft, { recursive: true })
+    const perfis = join(minecraft, 'launcher_profiles.json')
+    writeFileSync(perfis, JSON.stringify({ profiles: {}, version: 3 }, null, 2))
+    const { garantirVersaoCliente } = await import('../../src/main/clienteLoader.ts')
+    const { gravarPerfil } = await import('../../src/main/launcherOficial.ts')
+    const { montarPerfil } = await import('../../src/main/launcherRegras.ts')
+    const id = await garantirVersaoCliente(i.loader, i.versao, i.versaoLoader, progresso)
+    await gravarPerfil(
+      `hubsquare-${i.id}`,
+      montarPerfil({
+        nome: i.nome,
+        versaoId: id,
+        pasta: i.pasta,
+        ram: i.ram,
+        agora: new Date().toISOString()
+      })
+    )
+    const versao = JSON.parse(readFileSync(join(minecraft, 'versions', id, `${id}.json`), 'utf8'))
+    const libs = versao.libraries as { downloads: { artifact: { path: string; sha1: string } } }[]
+    const faltando = libs.filter((l) => {
+      const f = join(minecraft, 'libraries', l.downloads.artifact.path)
+      return (
+        !existsSync(f) ||
+        createHash('sha1').update(readFileSync(f)).digest('hex') !== l.downloads.artifact.sha1
+      )
+    })
+    const perfil = JSON.parse(readFileSync(perfis, 'utf8')).profiles[`hubsquare-${i.id}`]
+    log(`versão ${id}: herda ${versao.inheritsFrom}, Java ${JSON.stringify(versao.javaVersion)}`)
+    log(`bibliotecas: ${libs.length}, faltando ou com hash errado: ${faltando.length}`)
+    log(`perfil: lastVersionId ${perfil.lastVersionId}, gameDir ${perfil.gameDir}`)
+    destino = i.pasta
+    passou =
+      !faltando.length &&
+      versao.javaVersion?.majorVersion === 8 &&
+      perfil.lastVersionId === id &&
+      perfil.gameDir === i.pasta
   } else {
     throw new Error(`modo desconhecido: ${modo}`)
   }

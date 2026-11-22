@@ -11,14 +11,15 @@ import { t } from '../../shared/i18n'
 // Forge e NeoForge: baixam o instalador oficial, rodam em modo servidor numa pasta temporária
 // e copiam o resultado para a pasta do servidor (sem apagar mundo, mods nem configurações).
 
-const TEMPORARIA = '.servsquare-instalador'
+const TEMPORARIA = '.hubsquare-instalador'
 
 export async function rodarInstalador(
   nome: string,
   url: string,
   pasta: string,
   java: string,
-  aoProgredir: AoProgredir
+  aoProgredir: AoProgredir,
+  antigo = false // Fase F1: instalador do Forge de 1.7.10 a 1.12.1
 ): Promise<void> {
   // Dentro da pasta do servidor: fica no mesmo disco e some junto se a criação falhar.
   const temporaria = join(pasta, TEMPORARIA)
@@ -26,16 +27,31 @@ export async function rodarInstalador(
   await rm(temporaria, { recursive: true, force: true })
   await mkdir(saida, { recursive: true })
   try {
-    const sha1 = (await buscarBytes(`${url}.sha1`)).toString('utf8').trim()
+    const item = t('p.rede.itemInstalador', { nome })
+    const sha1 = (await buscarBytes(`${url}.sha1`, item)).toString('utf8').trim()
     const jar = join(temporaria, 'instalador.jar')
     await baixar(
       url,
       jar,
       { algoritmo: 'sha1', valor: sha1 },
       t('tipos.instalador.baixandoOInstaladorDo', { nome }),
-      aoProgredir
+      aoProgredir,
+      undefined,
+      item
     )
-    await executar(java, ['-jar', jar, '--installServer', saida], temporaria, nome, aoProgredir)
+    // O instalador antigo ignora a pasta de destino e instala na pasta atual, sem janela só com o
+    // headless (docs/forge-antigo.md).
+    if (antigo) {
+      await executar(
+        java,
+        ['-Djava.awt.headless=true', '-jar', jar, '--installServer'],
+        saida,
+        nome,
+        aoProgredir
+      )
+    } else {
+      await executar(java, ['-jar', jar, '--installServer', saida], temporaria, nome, aoProgredir)
+    }
 
     aoProgredir({
       etapa: t('tipos.instalador.copiandoOsArquivosDo', { nome }),
@@ -50,7 +66,7 @@ export async function rodarInstalador(
     }
     await cp(saida, pasta, { recursive: true, force: true })
   } finally {
-    await rm(temporaria, { recursive: true, force: true }).catch(() => {})
+    await rm(temporaria, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
   }
 }
 

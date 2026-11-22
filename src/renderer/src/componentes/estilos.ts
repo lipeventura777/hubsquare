@@ -13,8 +13,8 @@ const CORES: Record<Variante, string> = {
 // Relevo: borda de baixo mais escura + brilho em cima. Pressionado: desce 2px e a borda afina.
 const RELEVO =
   'inline-flex items-center justify-center gap-2 border-b-[3px] shadow-[inset_0_1px_0_var(--relevo-brilho)] ' +
-  'transition-[transform,background-color,border-color,filter] duration-(--dur-fast) ease-(--ease-out) select-none ' +
-  'enabled:active:translate-y-[2px] enabled:active:border-b-1 enabled:active:duration-(--dur-instant) ' +
+  'transition-[transform,background-color,border-color] duration-(--dur-fast) ease-(--ease-entrada) select-none ' +
+  'enabled:active:translate-y-[2px] enabled:active:border-b-1 ' +
   'disabled:cursor-not-allowed disabled:opacity-50'
 
 const MEDIDAS = {

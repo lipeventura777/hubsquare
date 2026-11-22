@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ErroTela, ModoConexao, ResultadoTeste } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeCopiar } from '../componentes/icones'
+import { IconeCopiar } from '../icones'
 import { Aviso, Botao, Secao } from '../componentes/ui'
 import { t } from '../../../shared/i18n'
 

@@ -9,6 +9,7 @@ import {
   deveVerificar,
   lembrarDepois,
   lerEstado,
+  motivoParaEsperar,
   pularVersao,
   releaseDoGitHub,
   type EstadoAviso
@@ -134,4 +135,20 @@ test('arquivo guardado estranho volta ao padrão', () => {
   assert.deepEqual(lerEstado(null), ESTADO_INICIAL)
   assert.deepEqual(lerEstado({ ligado: 'sim', release: { versao: 1 } }), ESTADO_INICIAL)
   assert.equal(lerEstado({ ligado: false }).ligado, false)
+})
+
+test('pode instalar agora? só com nada rodando', () => {
+  const livre = { servidor: 'desligado', backups: 0, modpacks: 0, jogar: 0 }
+  assert.equal(motivoParaEsperar(livre), null)
+  assert.equal(motivoParaEsperar({ ...livre, servidor: 'ligado' }), 'servidor')
+  assert.equal(motivoParaEsperar({ ...livre, servidor: 'ligando' }), 'servidor')
+  assert.equal(motivoParaEsperar({ ...livre, servidor: 'desligando' }), 'servidor')
+  assert.equal(motivoParaEsperar({ ...livre, backups: 1 }), 'backup')
+  assert.equal(motivoParaEsperar({ ...livre, modpacks: 2 }), 'modpack')
+  assert.equal(motivoParaEsperar({ ...livre, jogar: 1 }), 'jogar')
+  // O servidor ligado vem primeiro: é o que o usuário precisa desligar.
+  assert.equal(
+    motivoParaEsperar({ servidor: 'ligado', backups: 1, modpacks: 1, jogar: 1 }),
+    'servidor'
+  )
 })

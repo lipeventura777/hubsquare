@@ -48,8 +48,8 @@ Anything that can be decided without the disk or the network lives in a `*Regras
 
 ## Data on disk
 
-- App data: `%APPDATA%\ServSquare` (name kept from before the HubSquare rename, so nothing gets lost on update).
-- Servers, backups and game installations: `Documents\ServSquare`.
+- App data: `%APPDATA%\HubSquare`. Since phase E2, the 1.4.0 folders (`%APPDATA%\ServSquare` and `Documents\ServSquare`) are moved to the new names on first launch (`src/shared/migracaoRegras.ts`, `src/main/migracao.ts`); if a move fails, nothing is deleted and that session keeps using the old folders.
+- Servers, backups and game installations: `Documents\HubSquare`.
 - Details of each file are in [PROJETO.md](../PROJETO.md) and in [PRIVACY.md](../PRIVACY.md).
 
 ## Network rules

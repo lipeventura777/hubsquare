@@ -17,7 +17,8 @@ import { ErroApp, detalhar } from './erros'
 import { garantirJava } from './java'
 import { urlDeVerdade } from './rede'
 import * as playit from './playit'
-import { eventos, javaDoServidor, lerEstado, PORTA, servidorAtual } from './servidor'
+import { eventos, javaDoServidor, lerEstado, portaDoServidor, servidorAtual } from './servidor'
+import { PORTA_PADRAO } from '../shared/redeRegras'
 import { abrirPorta, ipNaoPublico } from './upnp'
 import { t } from '../shared/i18n'
 
@@ -189,7 +190,7 @@ export async function estadoConexao(): Promise<EstadoConexao> {
   const [preferencias, info] = await Promise.all([lerPreferencias(), servidorAtual()])
   return {
     modo: preferencias.modo,
-    porta: PORTA,
+    porta: info ? await portaDoServidor(info) : PORTA_PADRAO,
     playit: {
       vinculado: playit.vinculado(),
       vinculando: playit.estaVinculando(),
@@ -258,6 +259,7 @@ const ok = (): string => t('p.conexao.seusAmigosJaConseguemEntrar')
 export async function testarConexao(modo: unknown): Promise<ResultadoTeste> {
   if (lerEstado() !== 'ligado') return { ok: false, mensagem: t('p.conexao.ligueOServidorAntesDe') }
   const info = await servidorAtual()
+  const porta = info ? await portaDoServidor(info) : PORTA_PADRAO
   const firewall = info ? await regraExiste(info) : false
   const avisoFirewall = t('p.conexao.oServidorRespondeNestePc')
 
@@ -291,10 +293,10 @@ export async function testarConexao(modo: unknown): Promise<ResultadoTeste> {
             : t('p.conexao.naoAcheiARedeLocal')
       }
     }
-    if (!(await pingMinecraft(ip, PORTA))) {
+    if (!(await pingMinecraft(ip, porta))) {
       return {
         ok: false,
-        mensagem: t('p.conexao.oServidorNaoRespondeuEm', { ip, PORTA })
+        mensagem: t('p.conexao.oServidorNaoRespondeuEm', { ip, PORTA: porta })
       }
     }
     if (!firewall) return { ok: false, mensagem: avisoFirewall }
@@ -302,19 +304,19 @@ export async function testarConexao(modo: unknown): Promise<ResultadoTeste> {
       ok: true,
       mensagem:
         modo === 'radmin'
-          ? t('p.conexao.elesPrecisamEstarNaMesma', { OK: ok(), ip, PORTA })
-          : t('p.conexao.elesPrecisamEstarNoMesmo', { OK: ok(), ip, PORTA })
+          ? t('p.conexao.elesPrecisamEstarNaMesma', { OK: ok(), ip, PORTA: porta })
+          : t('p.conexao.elesPrecisamEstarNoMesmo', { OK: ok(), ip, PORTA: porta })
     }
   }
 
   if (modo === 'porta') {
     const ip = await ipPublico()
     if (!ip) return { ok: false, mensagem: t('p.conexao.naoConseguiDescobrirOIp') }
-    if (await pingMinecraft(ip, PORTA)) {
+    if (await pingMinecraft(ip, porta)) {
       return firewall
         ? {
             ok: true,
-            mensagem: t('p.conexao.endereco', { OK: ok(), enderecoPlayit: `${ip}:${PORTA}` })
+            mensagem: t('p.conexao.endereco', { OK: ok(), enderecoPlayit: `${ip}:${porta}` })
           }
         : { ok: false, mensagem: avisoFirewall }
     }
@@ -346,9 +348,11 @@ export async function tentarUpnp(): Promise<ResultadoUpnp> {
   const local = ipLocal()
   if (!local) throw new ErroApp(t('p.conexao.naoAcheiARedeLocal'))
   const publico = await ipPublico()
+  const info = await servidorAtual()
+  const porta = info ? await portaDoServidor(info) : PORTA_PADRAO
   let ipDoRoteador: string | null
   try {
-    ipDoRoteador = await abrirPorta(PORTA, local)
+    ipDoRoteador = await abrirPorta(porta, local)
   } catch (e) {
     throw new ErroApp(t('p.conexao.oRoteadorNaoAceitouAbrir'), detalhar(e))
   }
@@ -362,7 +366,7 @@ export async function tentarUpnp(): Promise<ResultadoUpnp> {
   return {
     ok: true,
     ipPublico: publico,
-    mensagem: t('p.conexao.portaAbertaNoRoteadorPara', { PORTA, local })
+    mensagem: t('p.conexao.portaAbertaNoRoteadorPara', { PORTA: porta, local })
   }
 }
 

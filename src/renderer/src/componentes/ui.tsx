@@ -1,3 +1,4 @@
+import { IconeFechar, IconeOk, IconeSeta } from '../icones'
 import { Children, Fragment, isValidElement, useEffect, useId, useRef, useState } from 'react'
 import { Flutuante } from './Flutuante'
 import { campo, classesBotao, type Variante } from './estilos'
@@ -50,10 +51,7 @@ export function CaixaSelecao({
         aria-hidden="true"
         className="flex h-4 w-4 shrink-0 items-center justify-center border border-checkbox text-accent-text transition-colors duration-(--dur-fast) peer-checked:border-accent peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent [&>svg]:invisible peer-checked:[&>svg]:visible"
       >
-        <svg viewBox="0 0 16 16" className="h-3 w-3" fill="currentColor">
-          {/* ✓ em pixels */}
-          <path d="M13 3h2v2h-1v1h-1v1h-1v1h-1v1h-1v1H9v1H8v1H7v1H5v-1H4v-1H3V9H2V7h2v1h1v1h1v1h1V9h1V8h1V7h1V6h1V5h1V4h1z" />
-        </svg>
+        <IconeOk className="h-3 w-3" />
       </span>
       <span>{children}</span>
     </label>
@@ -81,30 +79,30 @@ export function Interruptor({
       aria-label={rotulo}
       disabled={disabled}
       onClick={() => aoMudar(!ligado)}
-      className={`relative h-[22px] w-11 shrink-0 transition-colors duration-(--dur-base) ease-(--ease-out) disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`relative h-[22px] w-11 shrink-0 transition-colors duration-(--dur-base) ease-(--ease-entrada) disabled:cursor-not-allowed disabled:opacity-50 ${
         ligado ? 'bg-accent text-accent-text' : 'bg-danger text-on-dark'
       }`}
     >
       {/* ✓ à esquerda quando ligado, ✕ à direita quando desligado; trocam com fade e escala leve. */}
       <span
         aria-hidden="true"
-        className={`absolute top-1/2 left-1.5 -translate-y-1/2 text-xs font-bold transition-[transform,opacity] duration-(--dur-fast) ease-(--ease-out) ${
+        className={`absolute top-1/2 left-1.5 -translate-y-1/2 text-xs font-bold transition-[transform,opacity] duration-(--dur-fast) ease-(--ease-entrada) ${
           ligado ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
         }`}
       >
-        ✓
+        <IconeOk className="h-3 w-3" />
       </span>
       <span
         aria-hidden="true"
-        className={`absolute top-1/2 right-1.5 -translate-y-1/2 text-xs font-bold transition-[transform,opacity] duration-(--dur-fast) ease-(--ease-out) ${
+        className={`absolute top-1/2 right-1.5 -translate-y-1/2 text-xs font-bold transition-[transform,opacity] duration-(--dur-fast) ease-(--ease-entrada) ${
           ligado ? 'scale-90 opacity-0' : 'scale-100 opacity-100'
         }`}
       >
-        ✕
+        <IconeFechar className="h-3 w-3" />
       </span>
       <span
         aria-hidden="true"
-        className={`absolute top-0.5 left-0.5 h-[18px] w-[18px] border-b-2 border-secondary-shadow bg-secondary shadow-[inset_0_1px_0_var(--relevo-brilho)] transition-transform duration-(--dur-base) ease-(--ease-out) ${
+        className={`absolute top-0.5 left-0.5 h-[18px] w-[18px] border-b-2 border-secondary-shadow bg-secondary shadow-[inset_0_1px_0_var(--relevo-brilho)] transition-transform duration-(--dur-base) ease-(--ease-entrada) ${
           ligado ? 'translate-x-[22px]' : 'translate-x-0'
         }`}
       />
@@ -476,9 +474,9 @@ export function Selecao({
       </button>
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-muted"
+        className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted"
       >
-        ▼
+        <IconeSeta className="h-3.5 w-3.5" />
       </span>
       <Flutuante ancora={botao} aberto={aberto} aoFechar={() => setAberto(false)} larguraDaAncora>
         <ul
@@ -504,7 +502,7 @@ export function Selecao({
               } ${i === ativo ? 'bg-tile-active' : ''} ${o.valor === atual ? 'font-bold' : ''}`}
             >
               <span aria-hidden="true" className="w-3 shrink-0 text-accent">
-                {o.valor === atual ? '✓' : ''}
+                {o.valor === atual && <IconeOk className="h-3 w-3" />}
               </span>
               <span className="min-w-0 flex-1">{o.rotulo}</span>
             </li>
@@ -695,12 +693,14 @@ export function Dialogo({
   titulo,
   children,
   aoCancelar,
-  acao
+  acao,
+  extra
 }: {
   aberto: boolean
   titulo: string
   children: React.ReactNode
   aoCancelar: () => void
+  extra?: React.ReactNode // outro botão de ação, antes do principal (ex.: e-mail e GitHub)
   acao: {
     rotulo: string
     variante?: Variante
@@ -733,6 +733,7 @@ export function Dialogo({
         <Botao onClick={aoCancelar} disabled={acao.ocupado}>
           {t('ui.cancelar')}
         </Botao>
+        {extra}
         <Botao
           variante={acao.variante ?? 'primario'}
           onClick={acao.aoClicar}

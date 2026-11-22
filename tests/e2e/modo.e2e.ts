@@ -14,7 +14,7 @@ import { MC } from './simulado'
 // Modo amigo (Fase M6): só o PlaySquare e nenhum serviço do ServSquare escutando a rede.
 
 const modoSalvo = (pasta: string): unknown =>
-  JSON.parse(readFileSync(join(pasta, 'appData', 'ServSquare', 'modo-app.json'), 'utf8')).modo
+  JSON.parse(readFileSync(join(pasta, 'appData', 'HubSquare', 'modo-app.json'), 'utf8')).modo
 
 test('modo amigo: primeira abertura, só o PlaySquare, nada escutando e fechar sai do app', async ({
   abrir
@@ -92,6 +92,6 @@ test('modo: trocar para o completo e voltar, sem perder o servidor', async ({ ab
   await expect.poll(async () => (await portasEscutando(a)).sort()).toEqual(base.sort())
   expect(modoSalvo(a.pasta)).toBe('amigo')
   const servidor = pastaServidor(a.pasta, 'Servidor Volta')
-  expect(existsSync(join(servidor, 'servsquare.json'))).toBe(true)
-  expect(existsSync(join(servidor, 'servsquare-convite.json'))).toBe(true)
+  expect(existsSync(join(servidor, 'hubsquare.json'))).toBe(true)
+  expect(existsSync(join(servidor, 'hubsquare-convite.json'))).toBe(true)
 })

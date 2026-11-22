@@ -19,7 +19,8 @@ import { ErroApp } from './erros'
 import { lerJogadores } from './jogadores'
 import { javaDaVersao } from './mojang'
 import * as playit from './playit'
-import { javaDoServidor, lerEstado, ligar, PORTA, servidorAtual } from './servidor'
+import { javaDoServidor, lerEstado, ligar, servidorAtual } from './servidor'
+import { portaDe } from '../shared/redeRegras'
 import { t } from '../shared/i18n'
 
 // Diagnóstico do dono (Fase M5), em Conexão e no Painel: confere em ordem o que os amigos
@@ -37,7 +38,7 @@ export async function diagnosticarDono(): Promise<LinhaDiagnostico[]> {
   const info = await servidorAtual()
   if (!info) throw new ErroApp(t('p.diagnostico.crieUmServidorPrimeiro'))
   const props = await lerArquivoPropriedades(info.pasta)
-  const porta = Number(props.get('server-port')) || PORTA
+  const porta = portaDe(props.get('server-port'))
   const { modo, enderecoPlayit } = await lerPreferencias()
   let enderecoDeFora: string | null = null
 

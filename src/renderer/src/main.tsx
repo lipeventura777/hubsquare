@@ -8,6 +8,8 @@ import { aplicarBiomaGuardado } from './aparencia/tema'
 import { ErroGlobal, LimiteDeErro } from './componentes/ErroGlobal'
 import { AvisoVersaoApp } from './componentes/AvisoVersaoApp'
 import { AvisoPedido } from './componentes/AvisoPedido'
+import { AvisoMigracao } from './componentes/AvisoMigracao'
+import { RelatarGlobal } from './componentes/RelatarProblema'
 
 // Antes de desenhar a tela, para não piscar o tema errado.
 aplicarBiomaGuardado()
@@ -20,5 +22,7 @@ createRoot(document.getElementById('root')!).render(
     <ErroGlobal />
     <AvisoVersaoApp />
     <AvisoPedido />
+    <AvisoMigracao />
+    <RelatarGlobal />
   </StrictMode>
 )

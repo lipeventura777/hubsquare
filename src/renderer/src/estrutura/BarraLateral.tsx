@@ -1,3 +1,4 @@
+import { Logo, Wordmark } from '../componentes/Logo'
 import { useState } from 'react'
 import {
   NOMES_TIPOS,
@@ -8,18 +9,19 @@ import {
 import { MensagemErro } from '../componentes/MensagemErro'
 import {
   IconeArquivos,
+  IconeAtencao,
   IconeAutomacao,
   IconeBackups,
   IconeCaptura,
-  IconeConexao,
-  IconeConteudo,
-  IconeExplorar,
-  IconeInstalacoes,
-  IconeConfiguracoes,
   IconeComandos,
+  IconeConexao,
+  IconeConfiguracoes,
   IconeConsole,
+  IconeConteudo,
   IconeDesempenho,
   IconeEngrenagem,
+  IconeExplorar,
+  IconeInstalacoes,
   IconeIntegracoes,
   IconeJogadores,
   IconeLigar,
@@ -31,12 +33,12 @@ import {
   IconeServidor,
   IconeSoftware,
   IconeSubmenu
-} from '../componentes/icones'
+} from '../icones'
 import { COR_STATUS, useIndicador } from '../componentes/movimento'
 import { Dialogo } from '../componentes/ui'
 import { IconeDoServidor } from '../componentes/IconeDoServidor'
 import { useIconeAtivo } from '../componentes/useIconeAtivo'
-import type { Area } from '../aparencia/useAparencia'
+import { useAparencia, type Area } from '../aparencia/useAparencia'
 import { TrocaDeArea } from './TrocaDeArea'
 import { t, tNome } from '../../../shared/i18n'
 
@@ -59,7 +61,7 @@ export type Pagina =
   | 'Conexão'
   | 'Aparência'
 
-// Telas da área PlaySquare (seção 6.1.2). Por enquanto todas "Em breve", menos Aparência.
+// Telas da área PlaySquare (seção 6.1.2).
 export type PaginaPlay =
   | 'Jogar'
   | 'Instalações'
@@ -123,7 +125,6 @@ function classeRotulo(recolhida: boolean): string {
 export function BarraLateral({
   area,
   areaEscolhida,
-  saindo,
   aoTrocarArea,
   animarArea,
   info,
@@ -139,9 +140,8 @@ export function BarraLateral({
   aoRecolher,
   semTrocaDeArea = false
 }: {
-  area: Area // a que está na tela (a lista troca depois do fade de saída)
+  area: Area // a que está na tela
   areaEscolhida: Area // a da aba (muda na hora do clique)
-  saindo: boolean
   aoTrocarArea: (area: Area) => void
   animarArea: boolean // false na primeira abertura: a barra não desliza ao abrir o app
   info: InfoServidor | null
@@ -158,6 +158,7 @@ export function BarraLateral({
   semTrocaDeArea?: boolean // modo amigo (Fase M6): só o PlaySquare
   aoRecolher: () => void
 }): React.JSX.Element {
+  const logoNaBarra = useAparencia().aparencia?.logoNaBarra !== false
   const [submenuAberto, setSubmenuAberto] = useState(pagina === 'Registro de eventos')
   // A barra de 3px desliza até o item ativo (seção 8).
   const { conteiner, indicador } = useIndicador(pagina, 'y')
@@ -165,18 +166,26 @@ export function BarraLateral({
   return (
     <nav
       aria-label={t('barraLateral.secoes')}
-      className={`m-2.5 mr-0 flex shrink-0 flex-col overflow-hidden bg-sidebar transition-[width] duration-(--dur-base) ease-(--ease-out) ${
+      className={`m-2.5 mr-0 flex shrink-0 flex-col overflow-hidden bg-sidebar ${
         recolhida ? 'w-14' : 'w-[180px]'
       }`}
     >
+      {/* Marca (DESIGN.md, Marca): logo pequena de 32 px e o nome; recolhida, só a logo. Escondida
+          (Aparência › Tema › Logo), a linha sai inteira e as abas Serv/Play sobem para o topo. */}
+      {logoNaBarra && (
+        <div
+          data-marca-barra
+          className={`flex h-11 shrink-0 items-center gap-2 ${recolhida ? 'justify-center' : 'px-3'}`}
+        >
+          <Logo tamanho={32} />
+          {!recolhida && <Wordmark className="text-[18px]" />}
+        </div>
+      )}
       {!semTrocaDeArea && (
         <TrocaDeArea area={areaEscolhida} aoTrocar={aoTrocarArea} recolhida={recolhida} />
       )}
 
-      <div
-        key={area}
-        className={`flex min-h-0 flex-col ${saindo ? 'anim-area-saindo' : animarArea ? `anim-area-${area}` : ''}`}
-      >
+      <div key={area} className={`flex min-h-0 flex-col ${animarArea ? `anim-area-${area}` : ''}`}>
         {area === 'serv' && (
           <CartaoServidor
             info={info}
@@ -261,7 +270,7 @@ export function BarraLateral({
           <span
             ref={indicador as React.RefObject<HTMLSpanElement>}
             aria-hidden="true"
-            className="pointer-events-none absolute top-0 left-0 w-[3px] bg-accent transition-transform duration-(--dur-base) ease-(--ease-out)"
+            className="pointer-events-none absolute top-0 left-0 w-[3px] bg-accent transition-transform duration-(--dur-base) ease-(--ease-entrada)"
           />
         </ul>
       </div>
@@ -292,7 +301,7 @@ export function BarraLateral({
             className="flex h-11 w-14 items-center justify-center transition-colors duration-(--dur-fast) hover:bg-tile-active"
           >
             <IconeRecolher
-              className={`h-4 w-4 transition-transform duration-(--dur-slow) ${recolhida ? 'rotate-180' : ''}`}
+              className={`h-4 w-4 transition-transform duration-(--dur-base) ${recolhida ? 'rotate-180' : ''}`}
             />
           </button>
         </div>
@@ -319,7 +328,8 @@ function Selos({
     <span className={recolhida ? 'absolute left-9 mt-[-18px]' : 'flex items-center gap-1'}>
       {alerta && (
         <span title={alerta} className="anim-estalo text-xs text-warning">
-          ⚠<span className="sr-only">{alerta}</span>
+          <IconeAtencao className="h-3 w-3" />
+          <span className="sr-only">{alerta}</span>
         </span>
       )}
       {novidade && (

@@ -14,7 +14,7 @@ const fundoDoApp = (): string =>
 
 function preparar(prefs: object) {
   return (p: string): void => {
-    const dados = join(p, 'appData', 'ServSquare')
+    const dados = join(p, 'appData', 'HubSquare')
     mkdirSync(dados, { recursive: true })
     writeFileSync(join(dados, 'aparencia.json'), JSON.stringify(prefs))
   }
@@ -74,7 +74,7 @@ test('Jogar: troca suave entre dois biomas novos no fundo da instalação', asyn
   await criarPeloAssistente(j, 'Servidor Troca', MC)
   await area(j, 'PlaySquare')
   await pagina(j, 'Jogar')
-  const indice = join(a.pasta, 'appData', 'ServSquare', 'instalacoes.json')
+  const indice = join(a.pasta, 'appData', 'HubSquare', 'instalacoes.json')
   const fundo = (): unknown => JSON.parse(readFileSync(indice, 'utf8')).instalacoes[0].fundo
   await j.getByRole('button', { name: 'Trocar o fundo' }).click()
   const painel = j.getByRole('dialog', { name: 'Trocar o fundo' })

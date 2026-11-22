@@ -126,7 +126,7 @@ export const ptBR = {
   'assistente.qualONomeDoServidor': 'Qual o nome do servidor?',
   'assistente.nomeDoServidor': 'Nome do servidor',
   'assistente.ate32LetrasNumerosEspacos':
-    'Até 32 letras, números, espaços, ".", "-" ou "_". Vira o nome da pasta em Documentos\\ServSquare\\servidores.',
+    'Até 32 letras, números, espaços, ".", "-" ou "_". Vira o nome da pasta em Documentos\\HubSquare\\servidores.',
   'assistente.whitelist': 'Whitelist',
   'assistente.seuNomeNoJogoOpcional': 'Seu nome no jogo (opcional)',
   'assistente.paraVoceJaEntrarNa': 'Para você já entrar na whitelist',
@@ -199,7 +199,7 @@ export const ptBR = {
   'atalhos.usar': 'Usar "{nome}"?',
   'atalhos.usar2': 'Usar',
   'atalhos.paraQualJogador': 'Para qual jogador ({jogador})',
-  'atalhos.esteAtalhoApagaCoisasOu': '⚠ Este atalho apaga coisas ou tira jogadores do jogo.',
+  'atalhos.esteAtalhoApagaCoisasOu': 'Este atalho apaga coisas ou tira jogadores do jogo.',
   'atalhos.usando': 'Usando...',
   'atalhos.atalhos': 'Atalhos',
   'atalhos.marqueAtalhosComEstrelaEm':
@@ -222,7 +222,7 @@ export const ptBR = {
   'atalhos.comandosUmPorLinhaUse':
     'Comandos, um por linha (use {VARIAVEL_JOGADOR} para o jogador escolhido na hora)',
   'atalhos.temComandoQueApagaCoisas':
-    '⚠ Tem comando que apaga coisas: o app vai pedir confirmação antes de usar.',
+    'Tem comando que apaga coisas: o app vai pedir confirmação antes de usar.',
   'atalhos.mostrarNoPainelEstrela': 'Mostrar no Painel (estrela)',
   'atalhos.cancelar': 'Cancelar',
   'atalhos.salvarAtalho': 'Salvar atalho',
@@ -447,6 +447,12 @@ export const ptBR = {
   'avisos.entrouNoServidor': 'entrou no servidor',
   'avisos.saiuDoServidor': 'saiu do servidor',
   'avisos.fecharAviso': 'Fechar aviso',
+  'avisoMigracao.fechar': 'Fechar',
+  'mensagemErro.trocarAPortaNasOpcoes': 'Trocar a porta nas Opções',
+  'camposDoJogo.portaDoServidor': 'Porta do servidor',
+  'camposDoJogo.portaPadrao25565':
+    'A padrão é 25565. Mude só se outro programa já usa essa porta; vale na próxima vez que ligar.',
+  'p.config.aPortaPrecisaSerUm': 'A porta precisa ser um número de 1 a 65535.',
   'avisoVersaoApp.hubsquareDisponivel': 'HubSquare {versao} disponível',
   'avisoVersaoApp.pularEstaVersao': 'Pular esta versão',
   'avisoVersaoApp.lembrarDepois': 'Lembrar depois',
@@ -519,7 +525,7 @@ export const ptBR = {
   'telaConexao.paraQuemEstaNoMesmo': 'Para quem está no mesmo Wi-Fi ou rede da casa.',
   'telaConexao.abrirAPortaNoRoteador':
     'Abrir a porta no roteador: seus amigos entram pelo seu IP público.',
-  'telaConexao.emUsoSeusAmigosEntram': '✓ Em uso: seus amigos entram por aqui',
+  'telaConexao.emUsoSeusAmigosEntram': 'Em uso: seus amigos entram por aqui',
   'telaConexao.usarEsteMetodo': 'Usar este método',
   'telaConexao.testarTudo': 'Testar tudo',
   'telaConexao.testarAConexaoDoServidor': 'Testar a conexão do servidor',
@@ -612,9 +618,9 @@ export const ptBR = {
     'Verificar atualizações automaticamente',
   'ajusteAtualizacoes.aoAbrirOAppE':
     'Ao abrir o app e a cada 6 horas, ele só confere se há versão nova do software, do Minecraft, dos mods ou do modpack, e mostra um aviso no Painel. Nada é atualizado sem você clicar.',
-  'ajusteAtualizacoes.avisarQuandoSairVersaoNova': 'Avisar quando sair versão nova do HubSquare',
+  'ajusteAtualizacoes.avisarQuandoSairVersaoNova': 'Atualizar o HubSquare automaticamente',
   'ajusteAtualizacoes.aoAbrirOAppE2':
-    'Ao abrir o app e a cada 6 horas, ele confere no GitHub se saiu versão nova. O aviso só abre a página para baixar; nada é instalado sozinho.',
+    'Ao abrir o app e a cada 6 horas, ele confere no GitHub se saiu versão nova e baixa em segundo plano. Instala só quando você pede ou ao fechar o app, nunca com o servidor ligado ou o jogo sendo preparado.',
   'camposDoJogo.jogo': 'Jogo',
   'camposDoJogo.modoDeJogo': 'Modo de jogo',
   'camposDoJogo.dificuldade': 'Dificuldade',
@@ -654,32 +660,10 @@ export const ptBR = {
     'Clique numa linha e depois numa cor ou estilo: o código entra onde está o cursor. Passando de {CARACTERES_POR_LINHA} letras, a linha pode ser cortada no jogo. Total: {length}/{MAX_MOTD}.',
   'editorMotd.previaNaListaDeServidores': 'Prévia na lista de servidores',
   'integracaoCurseForge.curseforge': 'CurseForge',
-  'integracaoCurseForge.opcionalComASuaChave':
-    'Opcional. Com a sua chave da API do CurseForge, a aba Mods › Explorar também procura e instala mods, plugins, modpacks e datapacks do CurseForge. A chave é sua: fica só neste PC, criptografada pelo Windows, e nunca é mostrada de novo.',
-  'integracaoCurseForge.chaveDoCurseforgeGuardada': 'Chave do CurseForge guardada.',
-  'integracaoCurseForge.removerChave': 'Remover chave',
-  'integracaoCurseForge.prontoJaDaParaEscolher':
-    'Pronto! Já dá para escolher o CurseForge no Explorar.',
-  'integracaoCurseForge.leia': 'Leia',
-  'integracaoCurseForge.eAbraOFormularioDe':
-    'e abra o formulário de pedido que está lá (precisa de uma conta no CurseForge).',
-  'integracaoCurseForge.comoPedirUmaChaveDa': 'como pedir uma chave da API',
-  'integracaoCurseForge.descrevaOUsoPorExemplo':
-    'Descreva o uso, por exemplo: "app pessoal que baixa mods para o meu próprio servidor e respeita a permissão de distribuição de cada autor". Aceite os',
-  'integracaoCurseForge.termosDaApi': 'termos da API',
-  'integracaoCurseForge.espereOEMailDe':
-    'Espere o e-mail de aprovação (pode levar alguns dias) e copie a chave.',
-  'integracaoCurseForge.coleAquiEmbaixoEClique':
-    'Cole aqui embaixo e clique em Salvar. O app confere a chave antes de guardar.',
-  'integracaoCurseForge.chaveDaApiDoCurseforge': 'Chave da API do CurseForge',
-  'integracaoCurseForge.colarUmaChaveNova': 'Colar uma chave nova',
-  'integracaoCurseForge.coleAChaveDaApi': 'Cole a chave da API aqui',
-  'integracaoCurseForge.conferindo': 'Conferindo...',
-  'integracaoCurseForge.salvar': 'Salvar',
-  'integracaoCurseForge.removerAChaveDoCurseforge': 'Remover a chave do CurseForge?',
-  'integracaoCurseForge.remover': 'Remover',
-  'integracaoCurseForge.oExplorarDeixaDeMostrar':
-    'O Explorar deixa de mostrar o CurseForge até você colar a chave de novo. O que já foi instalado continua no servidor.',
+  'integracaoCurseForge.ativo':
+    'Ativo: o Explorar procura e baixa do CurseForge com a chave oficial do HubSquare.',
+  'integracaoCurseForge.emBreve':
+    'Em breve: o CurseForge chega quando o HubSquare receber a chave oficial da API. Até lá, o Explorar usa o Modrinth (e o Hangar nos servidores Paper).',
   'opcoesDoJogo.salvando': 'Salvando...',
   'opcoesDoJogo.salvar': 'Salvar',
   'opcoesDoJogo.configuracoesSalvas': 'Configurações salvas.',
@@ -1055,7 +1039,7 @@ export const ptBR = {
   'detalhesProjeto.estavel': 'Estável',
   'detalhesProjeto.beta': 'Beta',
   'detalhesProjeto.alfa': 'Alfa',
-  'detalhesProjeto.voltarAoExplorar': '‹ Voltar ao Explorar',
+  'detalhesProjeto.voltarAoExplorar': 'Voltar ao Explorar',
   'detalhesProjeto.comOServidorLigadoEle':
     ' Com o servidor ligado, ele entra quando o servidor reiniciar.',
   'detalhesProjeto.atualizado': 'Atualizado.{reiniciar}',
@@ -1090,7 +1074,7 @@ export const ptBR = {
   'detalhesProjeto.naoServeParaEsteServidor': 'Não serve para este servidor',
   'detalhesProjeto.verificando': 'Verificando...',
   'detalhesProjeto.instalando': 'Instalando...',
-  'detalhesProjeto.naoHaVersaoParaO': '⚠ Não há versão para o Minecraft {versao}',
+  'detalhesProjeto.naoHaVersaoParaO': 'Não há versão para o Minecraft {versao}',
   'detalhesProjeto.com': ' com {nomeLoader}',
   'detalhesProjeto.baixePeloSite': 'Baixe pelo site',
   'detalhesProjeto.removerDoMundo': 'Remover do mundo',
@@ -1155,7 +1139,7 @@ export const ptBR = {
   'downloadsNecessarios.downloadsPendentes': 'Downloads pendentes ({n})',
   'downloadsNecessarios.aguardando': 'Aguardando',
   'downloadsNecessarios.detectadoConferindo': 'Detectado, conferindo…',
-  'downloadsNecessarios.pronto': 'Pronto ✓',
+  'downloadsNecessarios.pronto': 'Pronto',
   'downloadsNecessarios.arquivoDiferente': 'Arquivo diferente',
   'downloadsNecessarios.para': 'Para: {nomeAlvo}',
   'downloadsNecessarios.abrirPaginaDeDownload': 'Abrir página de download',
@@ -1223,8 +1207,7 @@ export const ptBR = {
   'explorar.fonte': 'Fonte',
   'explorar.tipoDeConteudo': 'Tipo de conteúdo',
   'explorar.paraProcurarNoCurseforgeO':
-    'Para procurar no CurseForge, o app precisa da sua chave da API do CurseForge (é grátis e leva alguns dias para aprovar).',
-  'explorar.configurar': 'Configurar',
+    'CurseForge em breve: ele chega quando o HubSquare receber a chave oficial da API. Por enquanto, use o Modrinth.',
   'explorar.noCurseforgeArquivosQueO':
     ' No CurseForge, arquivos que o autor não deixa outros apps baixarem aparecem com "Baixe pelo site".',
   'explorar.procurarNo': 'Procurar {toLowerCase} no {v}',
@@ -1248,7 +1231,7 @@ export const ptBR = {
   'explorar.porDownloads': 'por {autor} · {format} downloads · {format2} {card}',
   'explorar.noPacote': 'No pacote',
   'explorar.instalado': 'Instalado',
-  'explorar.soDoJogador': '⚠ Só do jogador',
+  'explorar.soDoJogador': 'Só do jogador',
   'fraseCompat.naoMostrarDeNovo': 'Não mostrar de novo',
   'instalados.modrinth': 'Modrinth',
   'instalados.hangar': 'Hangar',
@@ -1349,7 +1332,7 @@ export const ptBR = {
   'instalados.fonte2': 'Fonte',
   'instalados.versao': 'Versão',
   'instalados.instaladoEm': 'Instalado em',
-  'instalados.voltarAosInstalados': '‹ Voltar aos Instalados',
+  'instalados.voltarAosInstalados': 'Voltar aos Instalados',
   'instalados.oQueEstaInstalado': 'O que está instalado',
   'instalados.semConexaoComOModrinth':
     'Sem conexão com o Modrinth: alguns nomes, ícones e atualizações podem faltar.',
@@ -1445,7 +1428,7 @@ export const ptBR = {
   'modpackEAmigos.incluidosNoArquivoNaoEstao':
     'Incluídos no arquivo (não estão no Modrinth, mas a licença deixa):',
   'modpackEAmigos.baixeManualmenteNaoEstaoNo':
-    '⚠ Baixe manualmente (não estão no Modrinth e a licença não deixa incluir):',
+    'Baixe manualmente (não estão no Modrinth e a licença não deixa incluir):',
   'modpackEAmigos.mandeOArquivoJuntoCom': 'Mande o arquivo junto com este texto:',
   'modpackEAmigos.modpack': 'Modpack {nome}',
   'modpackEAmigos.desligueOServidorParaAtualizar': 'Desligue o servidor para atualizar o modpack',
@@ -1546,7 +1529,6 @@ export const ptBR = {
   'nomesModrinth.minecraft': 'Minecraft',
   'painelMod.mod': 'Mod {titulo}',
   'painelMod.semVersao': 'Sem versão',
-  'painelMod.texto': '×',
   'painelMod.fecharOPainel': 'Fechar o painel',
   'painelMod.partesDoMod': 'Partes do mod',
   'painelMod.visaoGeral': 'Visão geral',
@@ -1626,8 +1608,7 @@ export const ptBR = {
     'Trocado para {nome}. A versão de antes ficou guardada para voltar.{reiniciar}',
   'painelMod.trocando': 'Trocando...',
   'painelMod.usarEstaVersao': 'Usar esta versão',
-  'partesExplorar.filtros': '« Filtros',
-  'partesExplorar.filtros2': 'Filtros »',
+  'partesExplorar.filtros': 'Filtros',
   'partesExplorar.procurar': 'Procurar',
   'partesExplorar.ordenarPor': 'Ordenar por',
   'partesExplorar.ordenar': 'Ordenar: {rotulo}',
@@ -1636,7 +1617,6 @@ export const ptBR = {
   'partesExplorar.lista': 'Lista',
   'partesExplorar.filtrosAtivos': 'Filtros ativos',
   'partesExplorar.tirarOFiltro': 'Tirar o filtro {rotulo}',
-  'partesExplorar.texto': '×',
   'partesExplorar.limparFiltros': 'Limpar filtros',
   'partesExplorar.filtros3': 'Filtros',
   'partesExplorar.selecionar': 'Selecionar {titulo}',
@@ -1941,7 +1921,7 @@ export const ptBR = {
     'O relatório não aponta nenhum mod. Veja o arquivo na pasta crash-reports da instalação.',
   'telaJogar.aguardandoODownload': 'Aguardando o download',
   'telaJogar.detectadoConferindo': 'Detectado, conferindo…',
-  'telaJogar.instalado': 'Instalado ✓',
+  'telaJogar.instalado': 'Instalado',
   'telaJogar.arquivoDiferente': 'Arquivo diferente',
   'telaJogar.tudoInstaladoLigueOServidor': 'Tudo instalado. Ligue o servidor',
   'telaJogar.deNovo': 'de novo.',
@@ -2081,7 +2061,7 @@ export const ptBR = {
   'backups.istoEApagadoDeVez': 'Isto é apagado de vez (não vai para nenhuma lixeira):',
   'backups.libera': 'Libera',
   'backups.saoTodosOsBackupsDeste':
-    '⚠ São todos os backups deste servidor. Para confirmar, digite o nome dele:',
+    'São todos os backups deste servidor. Para confirmar, digite o nome dele:',
   'backups.nomeDoServidor': 'Nome do servidor',
   'banner.fundo': 'Fundo',
   'banner.trocarOFundo': 'Trocar o fundo',
@@ -2142,14 +2122,14 @@ export const ptBR = {
   'console.tabCompletaEscolheEscFecha': 'Tab completa · ↑↓ escolhe · Esc fecha',
   'console.comandosFavoritosEHistorico': 'Comandos favoritos e histórico',
   'console.favoritos': 'Favoritos',
-  'console.nenhumAindaUseNoHistorico': 'Nenhum ainda: use ☆ no histórico.',
+  'console.nenhumAindaUseNoHistorico': 'Nenhum ainda: marque um comando do histórico.',
   'console.tirarDosFavoritos': 'Tirar dos favoritos',
   'console.historico': 'Histórico',
   'console.salvarNosFavoritos': 'Salvar nos favoritos',
   'console.digiteUmComandoEAperte': 'Digite um comando e aperte Enter (Tab completa, ↑↓ histórico)',
   'console.ligueOServidorParaUsar': 'Ligue o servidor para usar comandos',
   'console.comandoDoServidor': 'Comando do servidor',
-  'console.favoritos2': '★ Favoritos',
+  'console.favoritos2': 'Favoritos',
   'listaJogadores.jogadores': 'Jogadores ({length})',
   'listaJogadores.ninguemOnlineAgora': 'Ninguém online agora.',
   'listaJogadores.acoesPara': 'Ações para {nome}',
@@ -2313,7 +2293,7 @@ export const ptBR = {
   'telaServidores.apagando': 'Apagando...',
   'telaServidores.apagarParaSempre': 'Apagar para sempre',
   'telaServidores.aPastaDoServidorE':
-    'A pasta do servidor e tudo dentro dela serão apagados. Antes, o app faz um backup final do mundo, que fica em Documentos\\ServSquare\\backups.',
+    'A pasta do servidor e tudo dentro dela serão apagados. Antes, o app faz um backup final do mundo, que fica em Documentos\\HubSquare\\backups.',
   'telaServidores.paraConfirmarDigiteONome': 'Para confirmar, digite o nome do servidor:',
   'telaServidores.recadoParaOsAmigosDe': 'Recado para os amigos de {nome}',
   'telaServidores.salvar': 'Salvar',
@@ -2372,7 +2352,7 @@ export const ptBR = {
   'p.arquivos.digiteSoONomeSem': 'Digite só o nome, sem barras.',
   'p.arquivos.aPastaDoServidorNao': 'A pasta do servidor não pode ser mudada.',
   'p.arquivos.esseArquivoEDoServsquare':
-    'Esse arquivo é do ServSquare e não pode ser apagado nem renomeado.',
+    'Esse arquivo é do HubSquare e não pode ser apagado nem renomeado.',
   'p.arquivos.essaEAPastaDo':
     'Essa é a pasta do mundo que está rodando. Desligue o servidor e tente de novo.',
   'p.arquivos.naoConseguiAbrirEssaPasta':
@@ -2520,12 +2500,6 @@ export const ptBR = {
   'p.central.esseAtalhoApagaCoisasOu':
     'Esse atalho apaga coisas ou tira jogadores: confirme antes.',
   'p.central.comandoVazio': 'Comando vazio.',
-  'p.chaveCurseForge.essaChaveNaoPareceCerta':
-    'Essa chave não parece certa. Copie a chave inteira do e-mail do CurseForge.',
-  'p.chaveCurseForge.oWindowsNaoDeixouCriptografar':
-    'O Windows não deixou criptografar a chave, então ela não foi guardada. Reinicie o PC e tente de novo.',
-  'p.chaveCurseForge.oCurseforgeRecusouEssaChave':
-    'O CurseForge recusou essa chave. Confira se copiou certo e se ela já foi aprovada.',
   'p.clienteLoader.oAindaNaoTemO':
     'O {v} ainda não tem o Minecraft {versao}. Escolha outra versão.',
   'p.clienteLoader.forge': 'Forge',
@@ -3070,7 +3044,7 @@ export const ptBR = {
     'O nome digitado não confere. Digite o nome do servidor exatamente como aparece.',
   'p.listaServidores.desligueOServidorAntesDe': 'Desligue o servidor antes de apagar.',
   'p.listaServidores.aPastaDesseServidorFica':
-    'A pasta desse servidor fica fora da pasta do ServSquare, então o app não apaga ela sozinho. Apague pelo Explorador, se quiser.',
+    'A pasta desse servidor fica fora da pasta do HubSquare, então o app não apaga ela sozinho. Apague pelo Explorador, se quiser.',
   'p.listaServidores.naoConseguiFazerOBackup':
     'Não consegui fazer o backup final do mundo, então o servidor não foi apagado. Tente de novo.',
   'p.listaServidores.naoConseguiApagarAPasta':
@@ -3162,6 +3136,8 @@ export const ptBR = {
   'p.mods.oNaoAceitaModsNem':
     'O {v} não aceita mods nem plugins. Troque o software na tela Software.',
   'p.mods.servsquareNaoConseguiMudar': '[ServSquare] Não consegui mudar {arquivo}: {detalhar}',
+  'p.migracao.naoDeuParaMoverAsPastas':
+    'Não deu para passar as pastas do {antiga} para o nome {nova}: um arquivo está em uso, o servidor ou o jogo está aberto, ou falta permissão. Nada foi apagado e, por enquanto, o app continua usando as pastas antigas. Feche o servidor e o jogo e abra o HubSquare de novo: ele tenta sozinho.',
   'p.mods.naoTemVersaoPara': '"{titulo}" não tem versão para {nome}.',
   'p.mods.eSoDoJogadorFunciona':
     '"{titulo}" é só do jogador: funciona no jogo de cada um, não no servidor. Ele não vai ser instalado.',
@@ -3323,14 +3299,26 @@ export const ptBR = {
     'O tempo para aprovar no navegador acabou. Clique em "Vincular" de novo.',
   'p.playit.naoConseguiVincularOPlayit': 'Não consegui vincular o playit.gg. Tente de novo.',
   'p.playit.codigoDeSaida': 'Código de saída: {codigoSaida}\n{saida}',
-  'p.rede.naoConseguiMeConectarA':
-    'Não consegui me conectar à internet. Confira sua conexão e tente de novo.',
-  'p.rede.oSiteDeDownloadRespondeu':
-    'O site de download respondeu com erro. Espere alguns minutos e tente de novo.',
+  'p.rede.falhaNaoExiste':
+    'Não deu para baixar {item}: o arquivo ou a versão não existe nesse site. Escolha outra versão; tentar de novo não resolve.',
+  'p.rede.falhaRecusado':
+    'Não deu para baixar {item}: o site recusou o download. Tentar de novo agora não resolve; se continuar, gere um relatório de erro em Opções › Ajuda.',
+  'p.rede.falhaSiteComProblema':
+    'Não deu para baixar {item}: o site está com problema agora. Tente mais tarde, daqui a alguns minutos.',
+  'p.rede.falhaSemConexao':
+    'Não deu para baixar {item}: sem conexão com a internet ou com o site. Confira a sua internet e tente de novo.',
   'p.rede.http': '{url}\nHTTP {status} {statusText}',
   'p.rede.oDownloadFoiInterrompidoConfira':
-    'O download foi interrompido. Confira sua internet e tente de novo.',
-  'p.rede.oArquivoBaixadoVeioCorrompido': 'O arquivo baixado veio corrompido. Tente de novo.',
+    'O download de {item} foi interrompido. Confira a sua internet e tente de novo.',
+  'p.rede.oArquivoBaixadoVeioCorrompido': 'O arquivo de {item} veio corrompido. Tente de novo.',
+  'p.rede.itemArquivoDe': 'um arquivo de {host}',
+  'p.rede.itemCliente': 'o cliente do {loader} {versao}',
+  'p.rede.itemJava': 'o Java {versao}',
+  'p.rede.itemMod': 'o mod {nome}',
+  'p.rede.itemServidor': 'o servidor {nome} {versao}',
+  'p.rede.itemModpack': 'o modpack {nome}',
+  'p.rede.itemPlayit': 'o programa do playit.gg',
+  'p.rede.itemInstalador': 'o instalador do {nome}',
   'p.relatorio.java': 'Java {name}',
   'p.relatorio.em': 'Em {em}\n{texto}',
   'p.relatorio.oRelatorioNaoFoiGerado':
@@ -3416,7 +3404,7 @@ export const ptBR = {
   'p.servidor.esteServidorEstaEnquantoSeu':
     'Este servidor está {replace}. Enquanto seu amigo hospeda, não ligue este servidor aqui, ou os dois mundos vão se separar. Ligue só se ele parou de hospedar.',
   'p.servidor.aPortaJaEstaEm':
-    'A porta {PORTA} já está em uso. Feche outro servidor de Minecraft aberto no PC e tente de novo.',
+    'A porta {porta} já está em uso por outro programa. Feche esse programa ou troque a porta deste servidor nas Opções.',
   'p.servidor.servsquareLigandoComGbDe': '[ServSquare] Ligando {nome} com {ram} GB de RAM{v}...',
   'p.servidor.eAConfiguracaoOtimizadaDo': ' e a configuração otimizada do Java',
   'p.servidor.oJavaNaoIniciouTente': 'O Java não iniciou. Tente ligar de novo ou reinicie o PC.',
@@ -3442,6 +3430,15 @@ export const ptBR = {
     'Não consegui fazer o backup antes de trocar, então nada foi mudado. Tente de novo.',
   'tipos.fabric.oFabricNaoTemUma': 'O Fabric não tem uma versão estável agora. Tente mais tarde.',
   'tipos.forge.oForgeAindaNaoTem': 'O Forge ainda não tem o {versao}. Escolha outra versão.',
+  'tipos.forge.forgeAntesDa1710':
+    'O Forge antes da 1.7.10 não é suportado. Escolha a 1.7.10 ou uma versão mais nova.',
+  'tipos.forge.estaVersaoUsaJava8': 'Esta versão usa Java 8, que o HubSquare baixa sozinho.',
+  'p.rede.itemListaDoForge': 'a lista de versões do Forge',
+  'p.clienteLoader.oInstaladorDoForgeVeio':
+    'O instalador do Forge veio num formato que o HubSquare não conhece. Escolha outra versão do Forge.',
+  'p.clienteLoader.bibliotecasDoForge': 'Preparando as bibliotecas do Forge ({i} de {total})',
+  'p.clienteLoader.semComoConferirABiblioteca':
+    'Não há como conferir a biblioteca {nome} do Forge, então ela não foi usada. Escolha outra versão do Forge.',
   'tipos.instalador.copiandoOsArquivosDo': 'Copiando os arquivos do {nome}',
   'tipos.instalador.instalandoOPodeLevarAlguns': 'Instalando o {nome} (pode levar alguns minutos)',
   'tipos.instalador.oInstaladorDoNaoAbriu': 'O instalador do {nome} não abriu. Tente de novo.',
@@ -3622,7 +3619,7 @@ export const ptBR = {
     'Servidor (ServSquare) e launcher (PlaySquare) de Minecraft Java no PC, para jogar com os amigos. Código aberto, sem conta própria e sem anúncios.',
   'sobre.versao': 'Versão {versao}',
   'sobre.fontes':
-    'Mods, plugins e modpacks vêm do Modrinth, do CurseForge (com a sua chave da API) e do Hangar. Nomes, descrições e imagens são dos seus autores.',
+    'Mods, plugins e modpacks vêm do Modrinth e do Hangar. Nomes, descrições e imagens são dos seus autores.',
   'sobre.links': 'Links',
   'sobre.repositorio': 'Código-fonte',
   'sobre.licenca': 'Licença',
@@ -3734,5 +3731,69 @@ export const ptBR = {
   'celular.eleDesligaELiga': 'Ele desliga (com backup) e liga de novo.',
   'celular.trocarDeServidor': 'Trocar de servidor?',
   'celular.estaLigado': 'O {atual} está ligado. Desligar ele (com backup) e ligar o {novo}?',
-  'celular.trocar': 'Trocar'
+  'celular.trocar': 'Trocar',
+  'relatar.relatarProblema': 'Relatar problema',
+  'relatar.explicacao':
+    'Conte o que aconteceu. Você escolhe por onde mandar: o e-mail abre no seu programa de e-mail e o GitHub abre no navegador, os dois já preenchidos. Nada sai do PC até você enviar.',
+  'relatar.sobreExplicacao':
+    'Achou um bug ou tem uma sugestão? Mande por e-mail ou pelo GitHub, com o relatório de erro pronto para anexar.',
+  'relatar.tipo': 'Tipo',
+  'relatar.tipoBug': 'Bug',
+  'relatar.tipoProblema': 'Problema',
+  'relatar.tipoSugestao': 'Sugestão',
+  'relatar.tipoOutro': 'Outro',
+  'relatar.descricao': 'Descrição',
+  'relatar.descricaoDica': 'O que você fez, o que aconteceu e o que esperava que acontecesse.',
+  'relatar.incluirRelatorio': 'Incluir relatório de erro',
+  'relatar.incluirRelatorioDica':
+    'Gera o .zip sem segredos na Área de Trabalho (logs, sistema, configurações e lista de mods; nunca mundos nem arquivos de mods) para você anexar.',
+  'relatar.enviarPorEmail': 'Enviar por e-mail',
+  'relatar.abrirNoGithub': 'Abrir no GitHub',
+  'relatar.preparando': 'Preparando...',
+  'relatar.anexeOArquivo':
+    'O e-mail abriu. Anexe o arquivo que acabou de aparecer ({arquivo}) e envie.',
+  'relatar.emailAberto': 'O e-mail abriu já preenchido. Confira e envie.',
+  'relatar.semProgramaDeEmail':
+    'Não achamos um programa de e-mail neste PC. Mande a mensagem pelo seu e-mail para este endereço:',
+  'relatar.copiar': 'Copiar',
+  'relatar.copiado': 'Copiado',
+  'relatar.arrasteParaAIssue':
+    'A issue abriu no navegador. Arraste o arquivo {arquivo} (na Área de Trabalho) para ela antes de enviar.',
+  'relatar.issueAberta': 'A issue abriu no navegador já preenchida. Confira e envie.',
+  'relatar.mostrarOArquivo': 'Mostrar o arquivo',
+  'relatar.corpoVersao': 'Versão do HubSquare',
+  'relatar.corpoWindows': 'Windows',
+  'relatar.corpoIdioma': 'Idioma',
+  'relatar.corpoRelatorio': 'Relatório de erro (anexado)',
+  'relatar.corpoSemRelatorio': 'Sem relatório de erro.',
+  'relatar.corpoCortado': 'texto cortado para caber no link',
+  'relatar.corpoVejaAcima': 'Descrita no campo acima.',
+  'relatar.corpoArrasteOArquivo':
+    'Arraste aqui o arquivo {arquivo}, que está na sua Área de Trabalho.',
+  'p.relatar.faltaADescricao': 'Escreva o que aconteceu antes de enviar.',
+  'p.relatar.semRelatorio': 'Nenhum relatório de erro foi gerado ainda.',
+  'p.bandeja.relatarProblema': 'Relatar problema...',
+  'avisoVersaoApp.versaoPronta': 'Versão {versao} pronta',
+  'avisoVersaoApp.prontaTexto':
+    'O HubSquare {versao} já foi baixado. Ele instala quando você reiniciar por aqui ou quando fechar o app.',
+  'avisoVersaoApp.reiniciarEAtualizar': 'Reiniciar e atualizar',
+  'avisoVersaoApp.aoFechar': 'Ao fechar',
+  'avisoVersaoApp.verNovidades': 'Ver novidades',
+  'avisoVersaoApp.esconderNovidades': 'Esconder novidades',
+  'avisoVersaoApp.esperandoServidor':
+    'Esperando o servidor desligar. Atualiza sozinho quando ele parar.',
+  'avisoVersaoApp.esperandoBackup': 'Esperando o backup terminar. Atualiza sozinho em seguida.',
+  'avisoVersaoApp.esperandoModpack':
+    'Esperando o modpack terminar de instalar. Atualiza sozinho em seguida.',
+  'avisoVersaoApp.esperandoJogar':
+    'Esperando o JOGAR terminar de preparar o jogo. Atualiza sozinho em seguida.',
+  'telaAparencia.logo': 'Logo',
+  'telaAparencia.mostrarLogoNaBarra': 'Mostrar logo na barra lateral',
+  'telaAparencia.mostrarLogoDica':
+    'Desligada, as abas Serv/Play sobem para o topo da barra. Em Sobre a logo aparece sempre.',
+  'telaAparencia.coresDaLogo': 'Cores da logo',
+  'telaAparencia.coresDoFundo': 'Acompanhar o fundo',
+  'telaAparencia.coresOficiais': 'Oficiais',
+  'telaAparencia.coresLogoDica':
+    'Acompanhando o fundo, a logo muda de cor com o bioma ou a imagem e continua legível. O ícone do Windows, a bandeja e o instalador ficam sempre com as cores oficiais.'
 }

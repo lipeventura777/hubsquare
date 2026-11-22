@@ -11,7 +11,7 @@ import {
   type Progresso
 } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeMods } from '../componentes/icones'
+import { IconeMods } from '../icones'
 import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import { CardPainel, corDoNome } from '../componentes/paineis'
 import { Aviso, Botao, EstadoVazio, PaginaAjustes } from '../componentes/ui'

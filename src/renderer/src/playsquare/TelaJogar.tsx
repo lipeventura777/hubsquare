@@ -1,3 +1,5 @@
+import { ehForgeAntigo } from '../../../shared/forgeAntigoRegras'
+import { DURACOES } from '../../../shared/animacaoRegras'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   ErroTela,
@@ -18,7 +20,7 @@ import { useAparencia } from '../aparencia/useAparencia'
 import { BlocoVitrine, BotaoVitrine } from '../componentes/Vitrine'
 import { IconeDoServidor } from '../componentes/IconeDoServidor'
 import { classesBotao } from '../componentes/estilos'
-import { IconeAtencao, IconeInstalacoes } from '../componentes/icones'
+import { IconeAtencao, IconeInstalacoes, IconeOk } from '../icones'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { BarraProgresso, BolinhaStatus, Esqueleto } from '../componentes/movimento'
 import { CabecaJogador } from '../componentes/paineis'
@@ -190,18 +192,6 @@ export function TelaJogar(): React.JSX.Element {
             aoJogar={(modo) => void fluxo.jogar(escolhida, undefined, modo)}
           />
         }
-        estado={
-          (fluxo.ocupado === escolhida.id || fluxo.erro) && (
-            <div className="flex min-w-0 flex-col gap-2 text-[13px]">
-              {fluxo.ocupado === escolhida.id && (
-                <span aria-live="polite">
-                  {fluxo.progresso?.etapa ?? t('telaJogar.preparando')}
-                </span>
-              )}
-              {fluxo.erro && <MensagemErro erro={fluxo.erro} />}
-            </div>
-          )
-        }
       />
       <div
         className="vitrine-sai"
@@ -255,15 +245,13 @@ function Banner({
   i,
   aoMudar,
   vitrine,
-  principal,
-  estado
+  principal
 }: {
   i: Instalacao
   aoMudar: () => Promise<void>
   // Fase V11: modo vitrine (o banner ocupa a tela e fica só o bloco com o JOGAR).
   vitrine: boolean
   principal: React.ReactNode
-  estado: React.ReactNode
 }): React.JSX.Element {
   const { aparencia, fundoApp, definirVitrine } = useAparencia()
   const imgs = useImagensFundo()
@@ -307,7 +295,8 @@ function Banner({
   }
   useEffect(() => {
     if (camadas.length < 2) return
-    const t = setTimeout(() => setCamadas((c) => c.slice(-1)), 400) // depois do --dur-slow
+    // A camada de baixo sai depois do crossfade (--dur-base).
+    const t = setTimeout(() => setCamadas((c) => c.slice(-1)), DURACOES.normal)
     return () => clearTimeout(t)
   }, [camadas.length])
   useEffect(() => () => clearTimeout(salvar.current), [])
@@ -377,25 +366,28 @@ function Banner({
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setSoltando(false)
       }}
       onDrop={(e) => void soltar(e)}
-      className={`vitrine-altura relative flex min-h-[260px] shrink-0 items-end overflow-hidden text-on-dark ${
+      className={`relative flex min-h-[260px] shrink-0 items-end overflow-hidden text-on-dark ${
         vitrine ? 'h-full' : 'h-[42vh]'
       }`}
     >
       {/* Fundo (Fase V4, seção 7.2): o bioma vivo (troca de instalação com a transição da V2) ou
           a imagem com os ajustes, com crossfade entre imagens. */}
       {efetivo.tipo === 'bioma' && (
-        <FundoAnimado bioma={efetivo.bioma} className="absolute inset-0 h-full w-full" />
+        <FundoAnimado
+          bioma={efetivo.bioma}
+          className="vitrine-some absolute inset-0 h-full w-full"
+        />
       )}
       {imagemEfetiva &&
         camadas.map((c) => (
           <CamadaFundo
             key={c.chave}
             escolha={{ ...imagemEfetiva, imagem: c.nome }}
-            className={c.entra ? 'anim-fundo' : ''}
+            className={`vitrine-some ${c.entra ? 'anim-fundo' : ''}`}
             aoFalhar={() => setFalhou(c.nome)}
           />
         ))}
-      <div aria-hidden="true" className="banner-gradiente absolute inset-0" />
+      <div aria-hidden="true" className="banner-gradiente vitrine-some absolute inset-0" />
       {/* Na vitrine, o nome do banner sai (fora do Tab e do leitor): o bloco mostra o nome. */}
       <div
         key={i.id}
@@ -433,12 +425,15 @@ function Banner({
           {t('telaJogar.solteAImagemParaUsar')}
         </div>
       )}
-      {!vitrine && (
-        <div className="absolute top-3 right-3 flex items-center gap-2">
+      {
+        <div
+          className="vitrine-some absolute top-3 right-3 flex items-center gap-2"
+          inert={vitrine}
+        >
           <BotaoVitrine ligada={false} aoAlternar={() => definirVitrine(true)} />
           {menuFundo}
         </div>
-      )}
+      }
       {vitrine && (
         <BlocoVitrine
           icone={
@@ -453,10 +448,7 @@ function Banner({
             )
           }
           nome={i.nome}
-          detalhe={`${NOMES_LOADER[i.loader]} ${i.versao}`}
           principal={principal}
-          estado={estado}
-          fundo={menuFundo}
           aoMostrar={() => definirVitrine(false)}
         />
       )}
@@ -587,6 +579,9 @@ function BotaoJogar({
           </div>
           {!compacto && (
             <span className="text-xs text-muted">{t('telaJogar.soAbreOJogoPelo')}</span>
+          )}
+          {!compacto && i.loader === 'forge' && ehForgeAntigo(i.versao) && (
+            <span className="text-xs text-muted">{t('tipos.forge.estaVersaoUsaJava8')}</span>
           )}
           {i.instalada && !ocupado && <AcoesDaInstalada key={i.id} i={i} compacto />}
         </div>
@@ -1045,7 +1040,14 @@ function CardModsFaltando({ i }: { i: Instalacao }): React.JSX.Element | null {
                   </span>
                 )}
               </span>
-              {e && <span className={`text-xs ${e.cor}`}>{d?.motivo ?? e.texto}</span>}
+              {e && (
+                <span className={`text-xs ${e.cor}`}>
+                  {d?.motivo ?? e.texto}
+                  {!d?.motivo && d?.estado === 'pronto' && (
+                    <IconeOk className="ml-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+                  )}
+                </span>
+              )}
               {d && d.estado !== 'pronto' && (
                 <Botao
                   tamanho="pequeno"
@@ -1111,7 +1113,7 @@ function CardInstalacao({
       aria-pressed={selecionada}
       style={{ '--ordem': ordem } as React.CSSProperties}
       // Hover: sobe 2px e a imagem dá zoom leve; clique: afunda 1px (seção 6.1.3).
-      className={`group anim-item isolate flex flex-col overflow-hidden border-2 bg-panel text-left transition-[transform,border-color] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 active:translate-y-px ${
+      className={`group anim-item isolate flex flex-col overflow-hidden border-2 bg-panel text-left transition-[transform,border-color] duration-(--dur-fast) ease-(--ease-entrada) hover:-translate-y-0.5 active:translate-y-px ${
         selecionada ? 'border-accent' : 'border-linha hover:border-muted'
       }`}
     >

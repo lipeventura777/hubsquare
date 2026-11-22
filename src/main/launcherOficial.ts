@@ -6,6 +6,8 @@ import { join } from 'path'
 import { promisify } from 'util'
 import { gravarComSeguranca, lerTexto } from './config'
 import { detalhar, ErroApp } from './erros'
+import { erroDaMigracao, perfisCorrigidos, perfisParaCorrigir, raizDocumentos } from './migracao'
+import { trocarCaminho } from '../shared/migracaoRegras'
 import {
   aplicarPerfil,
   escolherLauncher,
@@ -96,7 +98,7 @@ export async function anotarFalha(motivo: string): Promise<void> {
     .then(() =>
       appendFile(join(pasta, 'erros.log'), `[${new Date().toISOString()}] Jogar: ${motivo}\n`)
     )
-    .catch(() => {})
+    .catch(() => {}) // é o próprio registro: sem ele não há onde anotar
 }
 
 // shortcut: procura pelo nome do processo do launcher (clássico e Store usam MinecraftLauncher.exe
@@ -147,7 +149,7 @@ export function exigirPerfis(): void {
 }
 
 function pastaBackupsPerfis(): string {
-  return join(app.getPath('documents'), 'ServSquare', 'backups', 'launcher')
+  return join(raizDocumentos(), 'backups', 'launcher')
 }
 
 // Copia o arquivo de perfis antes de qualquer mudança e guarda só os últimos.
@@ -196,6 +198,37 @@ export async function gravarPerfil(chave: string, perfil: PerfilLauncher): Promi
     }
     await backupDosPerfis(arquivo)
     await gravarComSeguranca(arquivo, novo)
+  }
+}
+
+// Fase E2: depois de Documentos\ServSquare virar Documentos\HubSquare, o gameDir dos perfis
+// hubsquare-<id> aponta para a pasta antiga. Mesmo caminho do JOGAR: launcher fechado, backup e
+// gravação segura. Com o launcher aberto fica marcado e o próximo JOGAR (ou abertura) corrige.
+export async function corrigirPerfisMigrados(): Promise<void> {
+  const trocas = perfisParaCorrigir()
+  if (!trocas) return
+  if (await launcherAberto()) return
+  try {
+    for (const arquivo of arquivosDePerfis()) {
+      const dados = JSON.parse(await lerTexto(arquivo)) as {
+        profiles?: Record<string, { gameDir?: unknown }>
+      }
+      let mudou = false
+      for (const [chave, perfil] of Object.entries(dados.profiles ?? {})) {
+        if (!chave.startsWith('hubsquare-') || typeof perfil?.gameDir !== 'string') continue
+        const novo = trocarCaminho(perfil.gameDir, trocas)
+        if (novo !== perfil.gameDir) {
+          perfil.gameDir = novo
+          mudou = true
+        }
+      }
+      if (!mudou) continue
+      await backupDosPerfis(arquivo)
+      await gravarComSeguranca(arquivo, JSON.stringify(dados, null, 2))
+    }
+    perfisCorrigidos()
+  } catch (e) {
+    erroDaMigracao(`perfis do launcher: ${detalhar(e)}`)
   }
 }
 

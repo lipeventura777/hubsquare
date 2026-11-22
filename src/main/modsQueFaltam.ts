@@ -14,6 +14,7 @@ import { escolherVersao } from './modsRegras'
 import { baixar } from './rede'
 import { eventos, servidorAtual } from './servidor'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // O servidor não ligou porque faltam mods e o app não achou no modpack: cada mod é procurado no
 // Modrinth (o id do erro costuma ser o slug do projeto), para o Minecraft e o loader do servidor.
@@ -101,14 +102,14 @@ eventos.on('naoLigou', ({ info, linhas }) => {
     ultimos.set(info.id, { quando: new Date().toISOString(), mods })
     // Mesmo vazio, avisa a tela (downloads:mudou), e a tela Jogar lê o status de novo.
     await registrarPendencias(info, manuais)
-  })().catch(() => {})
+  })().catch(registrarErro('modsQueFaltam.ts', 'procurar os mods que faltaram ao ligar'))
 })
 
 eventos.on('estado', (e) => {
   if (e !== 'ligado') return
   void servidorAtual()
     .then((info) => info && ultimos.delete(info.id))
-    .catch(() => {})
+    .catch(() => {}) // só limpa a memória do último resultado
 })
 
 // Mod que o app não achou no Modrinth: abre a busca do Modrinth com o id.

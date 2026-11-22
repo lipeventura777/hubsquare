@@ -1,5 +1,6 @@
 import { Menu, Tray, nativeImage } from 'electron'
-import icone from '../../resources/icon.png?asset'
+// A logo em .ico (16 a 256 px): na bandeja o Windows usa a versão pequena de 16/32 px.
+import icone from '../../resources/hubsquare.ico?asset'
 import { paraTela } from './erros'
 import { avisarTela, desligar, eventos, lerEstado, ligar } from './servidor'
 import { t } from '../shared/i18n'
@@ -11,8 +12,12 @@ let bandeja: Tray | null = null
 // Remonta o menu e a dica (ex.: quando o idioma muda).
 export let atualizarBandeja = (): void => {}
 
-export function criarBandeja(acoes: { abrir: () => void; sair: () => void }): void {
-  bandeja = new Tray(nativeImage.createFromPath(icone).resize({ width: 16, height: 16 }))
+export function criarBandeja(acoes: {
+  abrir: () => void
+  relatar: () => void
+  sair: () => void
+}): void {
+  bandeja = new Tray(nativeImage.createFromPath(icone))
   bandeja.on('double-click', acoes.abrir)
 
   const atualizar = (): void => {
@@ -50,6 +55,7 @@ export function criarBandeja(acoes: { abrir: () => void; sair: () => void }): vo
         { label: t('p.bandeja.abrir'), click: acoes.abrir },
         itemServidor,
         { type: 'separator' },
+        { label: t('p.bandeja.relatarProblema'), click: acoes.relatar },
         { label: t('p.bandeja.sair'), click: acoes.sair }
       ])
     )

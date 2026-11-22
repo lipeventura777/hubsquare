@@ -3,9 +3,10 @@ import { join } from 'node:path'
 
 // Mede a instalação: tempo de cada etapa, memória (pico), travamento do event loop (o que
 // congelaria a janela no app) e quantos avisos de progresso iriam para a tela por segundo.
-// Grava tudo também na pasta de logs do app (%APPDATA%/ServSquare/logs).
+// Grava tudo também em <pasta de teste>/logs (nunca na pasta de dados de verdade: criar
+// %APPDATA%/HubSquare impediria a migração da 1.4.0, Fase E2).
 
-const logs = join(process.env.APPDATA ?? '.', 'ServSquare', 'logs')
+const logs = join(process.env.REPRO_BASE ?? '.', 'logs')
 mkdirSync(logs, { recursive: true })
 export const arquivoLog = join(
   logs,

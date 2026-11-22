@@ -11,6 +11,7 @@ import {
 import { gravarComSeguranca } from './config'
 import { ErroApp } from './erros'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Idioma do app (Fase I1), em idioma.json na pasta de dados. O instalador deixa a escolha dele em
 // idioma-instalador.txt, na mesma pasta; ela só vale como sugestão na primeira abertura.
@@ -46,7 +47,8 @@ export function iniciarIdioma(): void {
   definirIdioma(d.idioma)
   perguntar = d.perguntar
   // Instalação antiga: grava o português para não decidir de novo.
-  if (!ehIdioma(salvo) && !d.perguntar) void gravar(d.idioma).catch(() => {})
+  if (!ehIdioma(salvo) && !d.perguntar)
+    void gravar(d.idioma).catch(registrarErro('idioma.ts', 'gravar o idioma escolhido'))
 }
 
 const gravar = (idioma: Idioma): Promise<void> =>

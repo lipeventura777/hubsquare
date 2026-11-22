@@ -15,7 +15,7 @@ test('pedido: o amigo pede ao aceitar o convite, o dono aprova e o nick entra na
   await expect(amigo.janela.getByText('Servidor Amigos').first()).toBeVisible({ timeout: 60_000 })
   // O nick fica lembrado para os próximos convites.
   const ajustes = JSON.parse(
-    readFileSync(join(amigo.pasta, 'appData', 'ServSquare', 'ajustes-jogo.json'), 'utf8')
+    readFileSync(join(amigo.pasta, 'appData', 'HubSquare', 'ajustes-jogo.json'), 'utf8')
   )
   expect(ajustes.nick).toBe('AmigoTeste')
 
@@ -49,7 +49,7 @@ test('pedido: nick que não existe não cria a instalação nem manda pedido', a
   await expect(
     amigo.janela.getByText('Não existe conta do Minecraft com o nick "NinguemAqui123"').first()
   ).toBeVisible()
-  const arquivoIndice = join(amigo.pasta, 'appData', 'ServSquare', 'instalacoes.json')
+  const arquivoIndice = join(amigo.pasta, 'appData', 'HubSquare', 'instalacoes.json')
   const indice = existsSync(arquivoIndice)
     ? JSON.parse(readFileSync(arquivoIndice, 'utf8'))
     : { instalacoes: [] }
@@ -57,7 +57,7 @@ test('pedido: nick que não existe não cria a instalação nem manda pedido', a
     indice.instalacoes.some((i: { origem: { tipo: string } }) => i.origem.tipo === 'convite')
   ).toBe(false)
   expect(
-    existsSync(join(pastaServidor(dono.pasta, 'Servidor Amigos'), 'servsquare-pedidos.json'))
+    existsSync(join(pastaServidor(dono.pasta, 'Servidor Amigos'), 'hubsquare-pedidos.json'))
   ).toBe(false)
 })
 
@@ -94,7 +94,7 @@ test('pedido: segurança da rota (token, tamanho, caracteres, limite, repetido, 
   expect((await post(token, { nick: 'Amigo_21', uuid: uuid(21) })).status).toBe(400)
   const pedidos = JSON.parse(
     readFileSync(
-      join(pastaServidor(dono.pasta, 'Servidor Amigos'), 'servsquare-pedidos.json'),
+      join(pastaServidor(dono.pasta, 'Servidor Amigos'), 'hubsquare-pedidos.json'),
       'utf8'
     )
   )

@@ -10,15 +10,17 @@ import {
 } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import {
+  IconeAtencao,
   IconeAutomacao,
   IconeComida,
   IconeConsole,
   IconeCoracao,
   IconeDesempenho,
+  IconeFavorito,
   IconeJogadores,
   IconeMods,
   IconeMundos
-} from '../componentes/icones'
+} from '../icones'
 import { CardPainel } from '../componentes/paineis'
 import { Botao, CaixaSelecao, Campo, Dialogo, Selecao } from '../componentes/ui'
 import { COR_ETIQUETA } from '../mods/etiquetas'
@@ -106,7 +108,12 @@ function useRodarAtalho(ligado: boolean): {
               rotulo={t('atalhos.paraQualJogador')}
             />
           )}
-          {destrutivo && <p className="text-warning">{t('atalhos.esteAtalhoApagaCoisasOu')}</p>}
+          {destrutivo && (
+            <p className="text-warning">
+              <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+              {t('atalhos.esteAtalhoApagaCoisasOu')}
+            </p>
+          )}
           <p className="font-mono text-xs break-all whitespace-pre-line text-muted">
             {comandos.map((c) => `/${c}`).join('\n')}
           </p>
@@ -135,7 +142,7 @@ function BotaoAtalho({
       disabled={!ligado || rodando}
       onClick={aoUsar}
       title={a.comandos.map((c) => `/${c}`).join('\n')}
-      className="flex h-8 items-center gap-2 border-b-[3px] bg-panel-2 px-3 text-[13px] font-bold transition-[transform,filter] duration-(--dur-fast) ease-(--ease-out) enabled:hover:brightness-110 enabled:active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex h-8 items-center gap-2 border-b-[3px] bg-panel-2 px-3 text-[13px] font-bold transition-transform duration-(--dur-fast) ease-(--ease-entrada) enabled:hover:brightness-110 enabled:active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-50"
       style={{ borderBottomColor: COR_ETIQUETA[a.cor]?.hex }}
     >
       <span style={{ color: COR_ETIQUETA[a.cor]?.hex }}>
@@ -259,7 +266,7 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
                   onClick={() => estrela(a)}
                   className={`text-lg ${a.estrela ? 'text-warning' : 'text-muted'}`}
                 >
-                  {a.estrela ? '★' : '☆'}
+                  <IconeFavorito cheio={a.estrela} className="h-5 w-5" />
                 </button>
                 <BotaoAtalho
                   a={a}
@@ -357,7 +364,10 @@ export function Atalhos({ ligado }: { ligado: boolean }): React.JSX.Element {
               />
             </label>
             {linhas.some(comandoDestrutivo) && (
-              <p className="text-xs text-warning">{t('atalhos.temComandoQueApagaCoisas')}</p>
+              <p className="text-xs text-warning">
+                <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+                {t('atalhos.temComandoQueApagaCoisas')}
+              </p>
             )}
             <CaixaSelecao
               marcada={editando.estrela}

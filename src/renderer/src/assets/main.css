@@ -221,25 +221,26 @@ dialog {
 
 /* ---------- Catálogo de animações (seção 8) ---------- */
 
-/* Troca de página: entra com fade + 8px de baixo; sai só com fade de 100ms. */
+/* Troca de página (Fase P8): a tela nova monta na hora e entra com fade + 6 px de baixo; a
+   antiga fica por cima, parada, e some num fade rápido (não espera nada para carregar). */
 .anim-pagina {
-  animation: entrar-pagina var(--dur-base) var(--ease-out) both;
+  animation: entrar-pagina var(--dur-base) var(--ease-entrada) both;
 }
 .anim-pagina-saindo {
   opacity: 0;
-  transition: opacity 100ms var(--ease-out);
+  transition: opacity var(--dur-fast) var(--ease-saida);
 }
 @keyframes entrar-pagina {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
 }
 
 /* Listas e grades: fade + 6px, escalonado em 30ms (o atraso vem de --ordem, no máximo 7).
    "backwards" (e não "both"): depois de entrar, o transform fica livre para o hover e o clique. */
 .anim-item {
-  animation: entrar-item var(--dur-base) var(--ease-out) backwards;
+  animation: entrar-item var(--dur-base) var(--ease-entrada) backwards;
   animation-delay: calc(min(var(--ordem, 0), 7) * 30ms);
 }
 @keyframes entrar-item {
@@ -249,22 +250,23 @@ dialog {
   }
 }
 
-/* Avisos: entram 24px da direita; saem com fade + 8px. A barra de tempo esvazia em 5 s. */
+/* Avisos: entram 16 px da direita; saem com fade + 6 px, mais rápido. A barra de tempo esvazia
+   em 5 s (é um relógio, não um enfeite). */
 .anim-aviso {
   transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
+    opacity var(--dur-base) var(--ease-entrada),
+    transform var(--dur-base) var(--ease-entrada);
   @starting-style {
     opacity: 0;
-    transform: translateX(24px);
+    transform: translateX(16px);
   }
 }
 .anim-aviso-saindo {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(6px);
   transition:
-    opacity var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+    opacity var(--dur-fast) var(--ease-saida),
+    transform var(--dur-fast) var(--ease-saida);
 }
 .anim-tempo {
   transform-origin: left;
@@ -278,7 +280,7 @@ dialog {
 
 /* Linhas novas do console: só fade. */
 .anim-linha {
-  animation: aparecer var(--dur-fast) var(--ease-out) both;
+  animation: aparecer var(--dur-fast) var(--ease-entrada) both;
 }
 @keyframes aparecer {
   from {
@@ -288,7 +290,7 @@ dialog {
 
 /* Selos (⚠, novidade): de 0,9 a 1 com fade (nada surge do nada, sem exagero). */
 .anim-estalo {
-  animation: estalo var(--dur-base) var(--ease-out) backwards;
+  animation: estalo var(--dur-base) var(--ease-entrada) backwards;
 }
 @keyframes estalo {
   from {
@@ -311,10 +313,10 @@ dialog {
   background: inherit;
 }
 .pulso-loop::after {
-  animation: pulsar 1.2s var(--ease-out) infinite;
+  animation: pulsar 1.2s linear infinite;
 }
 .pulso-unico::after {
-  animation: pulsar 0.8s var(--ease-out) 1 both;
+  animation: pulsar var(--dur-modal) var(--ease-saida) 1 both;
 }
 @keyframes pulsar {
   from {
@@ -347,7 +349,7 @@ dialog {
   }
 }
 
-/* Barra de progresso: o preenchimento cresce por clip-path (movimento.tsx); as listras deslizam. */
+/* Barra de progresso: o preenchimento entra por translateX (movimento.tsx); as listras deslizam. */
 .anim-listras {
   position: absolute;
   inset: 0 -16px 0 -16px;
@@ -360,6 +362,11 @@ dialog {
   }
 }
 
+/* Esqueleto (Fase P8): ocupa o lugar desde o início (opacidade 0) e só aparece depois de 150 ms,
+   para um carregamento rápido não piscar. */
+.esqueleto-atraso {
+  animation: aparecer var(--dur-base) var(--ease-entrada) 150ms backwards;
+}
 /* Esqueleto de carregamento: faixa de brilho da esquerda para a direita a cada 1,4 s. */
 .anim-esqueleto {
   position: relative;
@@ -379,12 +386,13 @@ dialog {
   }
 }
 
-/* Diálogo: o fundo escurece com fade; a caixa entra com escala 0,96 → 1 + fade. */
+/* Diálogo: o fundo escurece com fade; a caixa entra com escala 0,96 → 1 + fade (a entrada de
+   modal, --dur-modal). Fecha na hora: o usuário já decidiu. */
 dialog[open] {
-  animation: dialogo-entrar var(--dur-slow) var(--ease-out) both;
+  animation: dialogo-entrar var(--dur-modal) var(--ease-entrada) both;
 }
 dialog[open]::backdrop {
-  animation: aparecer var(--dur-slow) var(--ease-out) both;
+  animation: aparecer var(--dur-modal) var(--ease-entrada) both;
 }
 @keyframes dialogo-entrar {
   from {
@@ -397,10 +405,9 @@ dialog[open]::backdrop {
    O app marca o <html> com data-reduzir-animacoes; as durações viram 0 e os loops de status
    param (a cor fica fixa). */
 [data-reduzir-animacoes] {
-  --dur-instant: 0ms;
-  --dur-fast: 100ms;
-  --dur-base: 150ms;
-  --dur-slow: 150ms;
+  --dur-fast: 60ms;
+  --dur-base: 100ms;
+  --dur-modal: 100ms;
 }
 /* Sem movimento: só cor e opacidade fazem transição (o transform muda na hora). */
 [data-reduzir-animacoes] *,
@@ -422,12 +429,12 @@ dialog[open]::backdrop {
   ),
 [data-reduzir-animacoes] dialog[open],
 [data-reduzir-animacoes] ::backdrop {
-  animation: aparecer var(--dur-base) var(--ease-out) backwards !important;
+  animation: aparecer var(--dur-base) var(--ease-entrada) backwards !important;
   animation-delay: 0ms !important;
 }
 /* A saída das listas flutuantes continua (a tela espera ela terminar), só sem deslizar. */
 [data-reduzir-animacoes] .flutuante-saindo {
-  animation: sumir var(--dur-fast) var(--ease-out) both !important;
+  animation: sumir var(--dur-fast) var(--ease-saida) both !important;
 }
 @keyframes sumir {
   to {
@@ -526,7 +533,7 @@ dialog[open]::backdrop {
   overflow-x: hidden;
   overflow-y: auto;
   z-index: var(--z-flutuante);
-  animation: flutuante-entrar var(--dur-fast) var(--ease-out) both;
+  animation: flutuante-entrar var(--dur-fast) var(--ease-entrada) both;
 }
 .flutuante-baixo {
   transform-origin: top;
@@ -537,7 +544,7 @@ dialog[open]::backdrop {
   --flutuante-de: 4px;
 }
 .flutuante-saindo {
-  animation: flutuante-sair var(--dur-fast) var(--ease-out) both;
+  animation: flutuante-sair var(--dur-fast) var(--ease-saida) both;
 }
 @keyframes flutuante-entrar {
   from {
@@ -552,21 +559,17 @@ dialog[open]::backdrop {
   }
 }
 
-/* Troca de área Serv/Play (seção 8): diferente da troca de página, a barra lateral e o conteúdo
-   deslizam 32px na direção da área nova (Play vem da direita, Serv da esquerda). */
+/* Troca de área Serv/Play (Fase P8): a área nova entra na hora, com fade e 8 px na direção da
+   aba escolhida (Play vem da direita, Serv da esquerda); nada espera a antiga sair. */
 .anim-area-play,
 .anim-area-serv {
-  animation: entrar-area var(--dur-slow) var(--ease-out) backwards;
+  animation: entrar-area var(--dur-base) var(--ease-entrada) backwards;
 }
 .anim-area-play {
-  --area-de: 24px;
+  --area-de: 8px;
 }
 .anim-area-serv {
-  --area-de: -24px;
-}
-.anim-area-saindo {
-  opacity: 0;
-  transition: opacity 100ms var(--ease-out);
+  --area-de: -8px;
 }
 @keyframes entrar-area {
   from {
@@ -575,16 +578,24 @@ dialog[open]::backdrop {
   }
 }
 
-/* Tela Jogar (seção 6.1.3): o fundo novo do banner entra com crossfade por cima do anterior,
-   com um desfoque leve que some junto (sem ele, parecem duas imagens se cruzando). */
+/* Tela Jogar (seção 6.1.3): o fundo novo do banner entra com crossfade por cima do anterior
+   (só opacidade: filtro animado custa caro com o vidro por cima). */
 .anim-fundo {
-  animation: entrar-fundo var(--dur-slow) var(--ease-out) backwards;
+  animation: aparecer var(--dur-base) var(--ease-entrada) backwards;
 }
-@keyframes entrar-fundo {
-  from {
-    opacity: 0;
-    filter: blur(4px);
-  }
+
+/* Logo e nome que acompanham o fundo: quando o fundo troca, as cores (--logo-*) mudam junto, em
+   300 ms, só por pintura. Com "Reduzir animações" (ou o Windows pedindo menos movimento), na hora. */
+.logo-cores * {
+  transition:
+    fill 300ms var(--ease-entrada),
+    stroke 300ms var(--ease-entrada);
+}
+.wordmark > span {
+  transition: color 300ms var(--ease-entrada);
+}
+[data-reduzir-animacoes] :is(.logo-cores *, .wordmark > span) {
+  transition: none !important;
 }
 
 /* ---------- Telas mais largas (Fase V8) ----------
@@ -642,26 +653,47 @@ main p {
 }
 
 /* ---------- Modo vitrine (Fase V11) ----------
-   Jogar e Painel sem o painel por cima do fundo: os cards e barras saem com fade e um deslize
-   curto para baixo (250 ms, ease-out, escalonados por --ordem), o banner cresce até ocupar a
-   tela e o bloco da vitrine entra. O título de cima recolhe. Com "Reduzir animações" (ou o
-   Windows pedindo menos movimento), troca na hora. */
+   Jogar e Painel com o fundo do app à mostra: o fundo (FundoDoApp) nunca é trocado, pausado nem
+   remontado; a vitrine só esconde o que está por cima dele. Somem com fade de 250 ms o
+   cabeçalho (com o medidor), os fundos e o canto do banner (Fundo e o olho) e os cards; o vidro
+   do painel fica transparente. Ficam a barra lateral (com o « para compactar) e o bloco (ícone,
+   nome, LIGAR/JOGAR e o olho que traz o painel de volta). Com "Reduzir animações" (ou o Windows pedindo menos
+   movimento), sem fades. */
 .vitrine-sai {
   transition:
-    opacity 250ms var(--ease-out),
-    transform 250ms var(--ease-out);
-  transition-delay: calc(var(--ordem, 0) * 40ms);
+    opacity 250ms var(--ease-saida),
+    transform 250ms var(--ease-saida);
+  transition-delay: calc(min(var(--ordem, 0), 7) * 30ms);
 }
 .vitrine-sai[data-escondido] {
   opacity: 0;
   transform: translateY(12px);
   pointer-events: none;
 }
-.vitrine-altura {
-  transition: height 250ms var(--ease-out);
+.vitrine-titulo,
+.vitrine-some {
+  transition: opacity 250ms var(--ease-saida);
+}
+.vitrine-titulo[data-escondido],
+[data-vitrine] .vitrine-some {
+  opacity: 0;
+  pointer-events: none;
+}
+main.vidro-painel {
+  transition:
+    background-color 250ms var(--ease-saida),
+    border-color 250ms var(--ease-saida),
+    box-shadow 250ms var(--ease-saida);
+}
+[data-vitrine] main.vidro-painel {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 .vitrine-bloco {
-  animation: vitrine-entra 250ms var(--ease-out) 120ms both;
+  animation: vitrine-entra var(--dur-base) var(--ease-entrada) var(--dur-fast) both;
 }
 @keyframes vitrine-entra {
   from {
@@ -669,21 +701,8 @@ main p {
     transform: translateY(12px);
   }
 }
-.vitrine-titulo {
-  transition:
-    height 250ms var(--ease-out),
-    margin 250ms var(--ease-out),
-    opacity 200ms var(--ease-out),
-    border-width 250ms var(--ease-out);
-}
-.vitrine-titulo[data-escondido] {
-  height: 0;
-  margin-top: 0;
-  opacity: 0;
-  border-width: 0;
-  overflow: hidden;
-}
-[data-reduzir-animacoes] :is(.vitrine-sai, .vitrine-altura, .vitrine-titulo) {
+[data-reduzir-animacoes] :is(.vitrine-sai, .vitrine-titulo, .vitrine-some),
+[data-reduzir-animacoes] main.vidro-painel {
   transition: none !important;
 }
 [data-reduzir-animacoes] .vitrine-bloco {

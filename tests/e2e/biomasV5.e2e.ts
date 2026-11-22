@@ -21,7 +21,7 @@ for (const bioma of NOVOS) {
   test(`bioma novo ${bioma}: Painel e Jogar`, async ({ abrir }) => {
     mkdirSync(PRINTS, { recursive: true })
     const a = await abrir(bioma, (p) => {
-      const dados = join(p, 'appData', 'ServSquare')
+      const dados = join(p, 'appData', 'HubSquare')
       mkdirSync(dados, { recursive: true })
       writeFileSync(join(dados, 'aparencia.json'), JSON.stringify({ bioma, vidroLeve: false }))
     })
@@ -107,7 +107,7 @@ test('doze biomas na escolha de fundo do app e da instalação, com Vidro leve n
   await painel.getByRole('radio', { name: 'Bioma' }).click()
   await expect(painel.getByRole('radiogroup', { name: 'Bioma' }).getByRole('radio')).toHaveCount(12)
   await painel.getByRole('radio', { name: 'Aurora Nevada' }).click()
-  const indice = join(a.pasta, 'appData', 'ServSquare', 'instalacoes.json')
+  const indice = join(a.pasta, 'appData', 'HubSquare', 'instalacoes.json')
   await expect
     .poll(() => JSON.parse(readFileSync(indice, 'utf8')).instalacoes[0].fundo)
     .toEqual({ tipo: 'bioma', bioma: 'aurora' })

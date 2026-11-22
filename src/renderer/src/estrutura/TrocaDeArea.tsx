@@ -71,7 +71,7 @@ export function TrocaDeArea({
         tabIndex={ativa ? 0 : -1}
         onClick={() => !ativa && aoTrocar(a.area)}
         style={estilo}
-        className={`texto-pixel relative flex min-h-11 items-center justify-center whitespace-nowrap ${RAIO_ABA} ${FOCO} transition-[color,background-color,width] duration-200 ease-(--ease-out) ${
+        className={`texto-pixel relative flex min-h-11 items-center justify-center whitespace-nowrap ${RAIO_ABA} ${FOCO} transition-colors duration-(--dur-fast) ease-(--ease-entrada) ${
           ativa
             ? 'cursor-default text-texto'
             : 'text-muted hover:bg-tile-active hover:text-texto active:translate-y-px'
@@ -110,13 +110,14 @@ export function TrocaDeArea({
         onKeyDown={teclas}
         className="relative flex gap-1 rounded-(--raio-item) bg-(--bg-panel-2) p-1"
       >
-        {/* Fundo da aba selecionada: desliza para o lado dela (posição e largura). */}
+        {/* Fundo da aba selecionada: desliza para o lado dela (transform; a largura é sempre a mesma). */}
         <span
           aria-hidden="true"
-          className={`pointer-events-none absolute top-1 bottom-1 ${RAIO_ABA} ${SELECIONADA} transition-[left,width] duration-200 ease-(--ease-out)`}
+          className={`pointer-events-none absolute top-1 bottom-1 ${RAIO_ABA} ${SELECIONADA} transition-transform duration-(--dur-base) ease-(--ease-entrada)`}
           style={{
-            left: servEscolhida ? ESPACO : ESPACO + OUTRA + ESPACO,
-            width: ESCOLHIDA
+            left: ESPACO,
+            width: ESCOLHIDA,
+            transform: `translateX(${servEscolhida ? 0 : OUTRA + ESPACO}px)`
           }}
         />
         {AREAS.map((a) => aba(a, 'text-[15px]', { width: a.area === area ? ESCOLHIDA : OUTRA }))}

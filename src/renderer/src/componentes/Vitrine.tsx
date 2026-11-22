@@ -1,10 +1,10 @@
 import { classesBotao } from './estilos'
-import { IconeOlho, IconeOlhoRiscado } from './icones'
+import { IconeOlho, IconeOlhoRiscado } from '../icones'
 import { t } from '../../../shared/i18n'
 
-// Modo vitrine (Fase V11, DESIGN.md seção 6.25): Jogar e Painel com o fundo à mostra. Aqui ficam
-// o botão de olho ("Esconder painel" / "Mostrar painel") e o bloco de vidro do canto de baixo à
-// esquerda. O bloco é uma placa de vidro (.placa-vidro, pelo menos 70%): 4,5:1 sobre qualquer
+// Modo vitrine (Fase V11, DESIGN.md seção 6.22.10): Jogar e Painel com o fundo do app à mostra (o
+// mesmo componente animado, que a vitrine nunca troca, pausa nem remonta: ela só esconde o que está
+// por cima). Aqui ficam o botão de olho e o bloco de vidro do canto de baixo à esquerda. O bloco é uma placa de vidro (.placa-vidro, pelo menos 70%): 4,5:1 sobre qualquer
 // fundo, a mesma regra do nome no banner (tests/contrasteRegras.test.ts).
 
 export function BotaoVitrine({
@@ -32,21 +32,17 @@ export function BotaoVitrine({
   )
 }
 
+// O bloco da vitrine: o ícone, o nome, o botão principal (LIGAR ou JOGAR, o mesmo da barra) e,
+// ao lado dele, o olho que traz o painel de volta (sempre visível).
 export function BlocoVitrine({
   icone,
   nome,
-  detalhe,
   principal,
-  estado,
-  fundo,
   aoMostrar
 }: {
   icone: React.ReactNode
   nome: string
-  detalhe?: string
-  principal: React.ReactNode // JOGAR ou LIGAR, exatamente o mesmo botão da barra
-  estado?: React.ReactNode // ao lado do botão: estado do servidor, progresso, erro
-  fundo: React.ReactNode // o mesmo botão "Fundo" do banner
+  principal: React.ReactNode
   aoMostrar: () => void
 }): React.JSX.Element {
   return (
@@ -57,22 +53,15 @@ export function BlocoVitrine({
     >
       <div className="flex min-w-0 items-center gap-4">
         {icone}
-        <div className="min-w-0">
-          <h2
-            className="texto-pixel truncate text-3xl [text-shadow:3px_3px_0_var(--sombra-texto)]"
-            title={nome}
-          >
-            {nome}
-          </h2>
-          {detalhe && <p className="truncate text-[13px] text-muted">{detalhe}</p>}
-        </div>
+        <h2
+          className="texto-pixel min-w-0 truncate text-3xl [text-shadow:3px_3px_0_var(--sombra-texto)]"
+          title={nome}
+        >
+          {nome}
+        </h2>
       </div>
       <div className="flex flex-wrap items-center gap-4">
         {principal}
-        {estado}
-      </div>
-      <div className="flex items-center gap-2">
-        {fundo}
         <BotaoVitrine ligada aoAlternar={aoMostrar} />
       </div>
     </div>

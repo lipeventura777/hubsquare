@@ -41,10 +41,10 @@ test('fundo: escolher uma imagem para a instalação troca o banner na hora e co
   await expect.poll(() => img.evaluate((e) => (e as HTMLImageElement).naturalWidth)).toBe(1)
 
   // A cópia pelo hash na pasta de fundos; a original pode sumir.
-  const fundos = join(a.pasta, 'appData', 'ServSquare', 'fundos')
+  const fundos = join(a.pasta, 'appData', 'HubSquare', 'fundos')
   const guardadas = readdirSync(fundos).filter((n) => HASH_PNG.test(n))
   expect(guardadas).toHaveLength(1)
-  const indice = lerJson(join(a.pasta, 'appData', 'ServSquare', 'instalacoes.json'))
+  const indice = lerJson(join(a.pasta, 'appData', 'HubSquare', 'instalacoes.json'))
   const inst = (
     indice.instalacoes as { nome: string; fundo: { tipo: string; imagem: string } }[]
   ).find((i) => i.nome === 'Servidor Fundo')!
@@ -83,15 +83,15 @@ test('fundo: arquivo que não é imagem é recusado com mensagem', async ({ abri
   await expect(
     painel.getByText('Esse arquivo não é uma imagem PNG, JPG ou WEBP').first()
   ).toBeVisible()
-  expect(existsSync(join(a.pasta, 'appData', 'ServSquare', 'fundos'))).toBe(false)
+  expect(existsSync(join(a.pasta, 'appData', 'HubSquare', 'fundos'))).toBe(false)
 })
 
 test('fundo: migração dos fundos antigos (imagem que existe vale, a que sumiu avisa)', async ({
   abrir
 }) => {
   const a = await abrir('app', (p) => {
-    const dados = join(p, 'appData', 'ServSquare')
-    const jogo = join(p, 'documents', 'ServSquare', 'jogo')
+    const dados = join(p, 'appData', 'HubSquare')
+    const jogo = join(p, 'documents', 'HubSquare', 'jogo')
     mkdirSync(join(dados, 'fundos'), { recursive: true })
     mk(join(jogo, 'Com Imagem'), { recursive: true })
     mk(join(jogo, 'Sem Arquivo'), { recursive: true })
@@ -155,7 +155,7 @@ test('fundo: migração dos fundos antigos (imagem que existe vale, a que sumiu 
   })
   const j = a.janela
   await expect(j.getByText(/A imagem de fundo de Sem Arquivo não existe mais/)).toBeVisible()
-  const dados = join(a.pasta, 'appData', 'ServSquare')
+  const dados = join(a.pasta, 'appData', 'HubSquare')
   const indice = lerJson(join(dados, 'instalacoes.json'))
   const [com, sem, bioma] = indice.instalacoes as { fundo: Record<string, unknown> | null }[]
   expect(com.fundo).toMatchObject({ tipo: 'imagem' })
@@ -168,8 +168,6 @@ test('fundo: migração dos fundos antigos (imagem que existe vale, a que sumiu 
   expect(aparencia.fundoApp).toMatchObject({ tipo: 'imagem', ajuste: { luz: -50 } })
   expect(existsSync(join(dados, 'fundos', 'fundo-123.png'))).toBe(true)
   expect(
-    existsSync(
-      join(a.pasta, 'documents', 'ServSquare', 'jogo', 'Com Imagem', 'hubsquare-fundo.png')
-    )
+    existsSync(join(a.pasta, 'documents', 'HubSquare', 'jogo', 'Com Imagem', 'hubsquare-fundo.png'))
   ).toBe(true)
 })

@@ -10,9 +10,13 @@ const FOTO = join(RESULTADOS, 'pastas-reais-antes.json')
 
 export function pastasReais(): string[] {
   const appData = process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming')
+  // Fase E2: as pastas de antes (ServSquare) e as de agora (HubSquare); a migração só pode mexer
+  // nas pastas de teste.
   return [
     join(appData, 'ServSquare'),
+    join(appData, 'HubSquare'),
     join(homedir(), 'Documents', 'ServSquare'),
+    join(homedir(), 'Documents', 'HubSquare'),
     join(appData, '.minecraft')
   ]
 }

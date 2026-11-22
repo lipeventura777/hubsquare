@@ -98,11 +98,11 @@ export function BarraProgresso({
       aria-valuenow={maximo ? valor : undefined}
       className="relative h-2 w-full overflow-hidden bg-panel-2"
     >
-      {/* O preenchimento cresce por recorte (clip-path), não por scaleX: assim as listras de
-          dentro não ficam espremidas no começo do download. */}
+      {/* O preenchimento entra da esquerda por translateX (Fase P8: só transform), não por
+          scaleX: assim as listras de dentro não ficam espremidas no começo do download. */}
       <div
-        className="absolute inset-0 overflow-hidden bg-accent transition-[clip-path] duration-(--dur-slow) ease-(--ease-out)"
-        style={{ clipPath: `inset(0 ${((1 - fracao) * 100).toFixed(2)}% 0 0)` }}
+        className="absolute inset-0 overflow-hidden bg-accent transition-transform duration-(--dur-base) ease-(--ease-entrada)"
+        style={{ transform: `translateX(-${((1 - fracao) * 100).toFixed(2)}%)` }}
       >
         <div aria-hidden="true" className="anim-listras" />
       </div>
@@ -111,16 +111,60 @@ export function BarraProgresso({
 }
 
 // Esqueleto de carregamento (seção 6.23): blocos --bg-panel-2 com brilho passando.
-export function Esqueleto({ linhas = 3 }: { linhas?: number }): React.JSX.Element {
+// Esqueleto (Fase P8): no formato do que vai aparecer (linhas de 80 px com o ícone, cards de
+// 300 px com a imagem 16:9 ou a grade de jogadores), para nada pular quando os dados chegam. Só
+// aparece depois de 150 ms (.esqueleto-atraso): carregamento rápido não pisca.
+type FormaEsqueleto = 'linhas' | 'lista' | 'cards' | 'jogadores'
+const BLOCO = 'anim-esqueleto bg-panel-2'
+export function Esqueleto({
+  linhas = 3,
+  forma = 'linhas'
+}: {
+  linhas?: number
+  forma?: FormaEsqueleto
+}): React.JSX.Element {
+  const itens = Array.from({ length: linhas }, (_, i) => i)
   return (
-    <div role="status" aria-label={t('movimento.carregando')} className="flex flex-col gap-3">
-      {Array.from({ length: linhas }, (_, i) => (
-        <div
-          key={i}
-          className="anim-esqueleto h-9 bg-panel-2"
-          style={{ width: `${[100, 80, 60][i % 3]}%` }}
-        />
-      ))}
+    <div
+      role="status"
+      aria-label={t('movimento.carregando')}
+      className={`esqueleto-atraso ${
+        forma === 'cards'
+          ? 'flex flex-wrap gap-4'
+          : forma === 'jogadores'
+            ? 'grid grid-cols-1 gap-3 min-[700px]:grid-cols-2 min-[1100px]:grid-cols-4'
+            : 'flex flex-col gap-3'
+      }`}
+    >
+      {itens.map((i) =>
+        forma === 'lista' ? (
+          <div key={i} className="flex h-20 items-center gap-3 border border-linha bg-panel px-5">
+            <div className={`${BLOCO} size-10 shrink-0`} />
+            <div className="flex flex-1 flex-col gap-2">
+              <div className={`${BLOCO} h-4 w-1/3`} />
+              <div className={`${BLOCO} h-3 w-1/5`} />
+            </div>
+          </div>
+        ) : forma === 'cards' ? (
+          <div key={i} className="flex w-[300px] flex-col border border-linha bg-panel">
+            <div className={`${BLOCO} aspect-video`} />
+            <div className="flex flex-col gap-3 p-3">
+              <div className={`${BLOCO} h-4 w-2/3`} />
+              <div className={`${BLOCO} h-8`} />
+            </div>
+          </div>
+        ) : forma === 'jogadores' ? (
+          <div
+            key={i}
+            className="flex h-[72px] items-center gap-3 border border-linha bg-panel px-4"
+          >
+            <div className={`${BLOCO} size-10 shrink-0`} />
+            <div className={`${BLOCO} h-4 w-1/2`} />
+          </div>
+        ) : (
+          <div key={i} className={`${BLOCO} h-9`} style={{ width: `${[100, 80, 60][i % 3]}%` }} />
+        )
+      )}
     </div>
   )
 }

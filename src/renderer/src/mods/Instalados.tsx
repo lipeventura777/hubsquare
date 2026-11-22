@@ -25,7 +25,7 @@ import {
 import { dependentes } from '../../../shared/dependentes'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { dataHora, tamanho } from '../componentes/formato'
-import { IconeMods, IconeAtencao } from '../componentes/icones'
+import { IconeAtencao, IconeMods, IconeVoltar } from '../icones'
 import { CardPainel } from '../componentes/paineis'
 import {
   Aviso,
@@ -723,7 +723,7 @@ export function Instalados({
               fonte={aberto.fonte}
               tipo={aberto.tipo}
               info={info}
-              rotuloVoltar="‹ Voltar aos Instalados"
+              rotuloVoltar={t('instalados.voltarAosInstalados')}
               aoVoltar={voltar}
               aoMudar={depoisDeMudar}
               extra={extra}
@@ -735,6 +735,7 @@ export function Instalados({
           // Fonte desconhecida: o mesmo layout, só com o que o app sabe do arquivo.
           <div className="flex flex-col gap-6">
             <Botao tamanho="pequeno" className="self-start" onClick={voltar}>
+              <IconeVoltar className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
               {t('instalados.voltarAosInstalados')}
             </Botao>
             <CabecalhoDetalhes icone={aberto.icone} titulo={aberto.titulo} linha={linha(aberto)} />

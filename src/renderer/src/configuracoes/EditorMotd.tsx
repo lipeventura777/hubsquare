@@ -69,7 +69,7 @@ export function EditorMotd({
             onMouseDown={(e) => e.preventDefault()} // não tira o foco do campo
             onClick={() => inserir(c.codigo)}
             style={{ background: c.cor }}
-            className="h-6 w-6 border border-linha transition-[border-color,transform] duration-(--dur-fast) hover:border-texto active:translate-y-px active:duration-(--dur-instant)"
+            className="h-6 w-6 border border-linha transition-[border-color,transform] duration-(--dur-fast) hover:border-texto active:translate-y-px active:duration-(--dur-fast)"
           />
         ))}
       </div>
@@ -82,7 +82,7 @@ export function EditorMotd({
             aria-label={e.nome}
             onMouseDown={(ev) => ev.preventDefault()}
             onClick={() => inserir(e.codigo)}
-            className="h-8 min-w-8 border border-linha bg-panel-2 px-2 text-[13px] transition-[background-color,transform] duration-(--dur-fast) hover:bg-tile-active active:translate-y-px active:duration-(--dur-instant)"
+            className="h-8 min-w-8 border border-linha bg-panel-2 px-2 text-[13px] transition-[background-color,transform] duration-(--dur-fast) hover:bg-tile-active active:translate-y-px active:duration-(--dur-fast)"
           >
             {ROTULO_ESTILO[e.codigo]}
           </button>

@@ -85,6 +85,7 @@ async function abrirApp(
     // Links e "Abrir pasta" só ficam anotados: nada abre navegador ou Explorer no teste.
     shell.openExternal = async (url: string) => void aberturas.push(`openExternal ${url}`)
     shell.openPath = async (p: string) => (aberturas.push(`openPath ${p}`), '')
+    shell.showItemInFolder = (p: string) => void aberturas.push(`showItemInFolder ${p}`)
     const spawnOriginal = cp.spawn
     cp.spawn = function (cmd: string, args: string[] = [], ...resto: unknown[]) {
       const texto = [cmd, ...args].join(' ')
@@ -176,8 +177,8 @@ export const test = base.extend<{
       mkdirSync(pasta, { recursive: true })
       // Fase I1: o app abre em português, como uma instalação que já escolheu o idioma. Quem
       // testa a primeira abertura apaga este arquivo no preparar.
-      mkdirSync(join(pasta, 'appData', 'ServSquare'), { recursive: true })
-      writeFileSync(join(pasta, 'appData', 'ServSquare', 'idioma.json'), '{"idioma":"pt-BR"}')
+      mkdirSync(join(pasta, 'appData', 'HubSquare'), { recursive: true })
+      writeFileSync(join(pasta, 'appData', 'HubSquare', 'idioma.json'), '{"idioma":"pt-BR"}')
       preparar?.(pasta)
       const log: string[] = []
       const a = await abrirApp(pasta, simulado, log, argumentos)
@@ -188,7 +189,7 @@ export const test = base.extend<{
     for (const { a, log, nome } of abertos) {
       if (falhou) {
         await a.janela.screenshot({ path: info.outputPath(`falha-${nome}.png`) }).catch(() => {})
-        const erros = join(a.pasta, 'appData', 'ServSquare', 'logs', 'erros.log')
+        const erros = join(a.pasta, 'appData', 'HubSquare', 'logs', 'erros.log')
         if (existsSync(erros)) copyFileSync(erros, info.outputPath(`erros-${nome}.log`))
       }
       const externos = info.project.name === 'lento' ? [] : await a.redeExterna().catch(() => [])
@@ -214,7 +215,7 @@ export const pagina = (j: Page, nome: string): Promise<void> =>
   j.locator(`[data-indicador="${nome}"]`).click()
 
 export const pastaServidor = (raiz: string, nome: string): string =>
-  join(raiz, 'documents', 'ServSquare', 'servidores', nome)
+  join(raiz, 'documents', 'HubSquare', 'servidores', nome)
 
 // Assistente de primeira vez: Paper (recomendado), versão mais nova, nome, EULA e criar.
 // ramMinima: o servidor vai ligar de verdade (teste lento); a RAM mínima cabe em qualquer PC.

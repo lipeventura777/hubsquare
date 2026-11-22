@@ -12,8 +12,9 @@ import {
   IconeInstalacoes,
   IconeLigar,
   IconeServidor
-} from './componentes/icones'
+} from './icones'
 import { animacoesReduzidas } from './componentes/movimento'
+import { DURACOES } from '../../shared/animacaoRegras'
 import { EstadoVazio, PaginaAjustes } from './componentes/ui'
 import { TelaArquivos } from './arquivos/TelaArquivos'
 import { TelaConexao } from './conexao/TelaConexao'
@@ -159,15 +160,10 @@ function Janela(): React.JSX.Element {
   const [abaAparenciaPlay, setAbaAparenciaPlay] = useState(
     voltouDoIdioma ? 'Idioma / Language' : ABAS.Aparência.abas[0]
   )
-  // A transição de área só roda depois da primeira troca, não ao abrir o app.
+  // A transição de área só roda depois da primeira troca, não ao abrir o app. Fase P8: a área nova
+  // monta na hora (nada espera a antiga sair) e entra deslizando para o lado da aba escolhida.
   const [animarArea, setAnimarArea] = useState(false)
-  const [areaVista, setAreaVista] = useState<Area>(area)
-  const saindoArea = areaVista !== area
-  useEffect(() => {
-    if (!saindoArea) return
-    const timer = setTimeout(() => setAreaVista(area), animacoesReduzidas() ? 0 : 100)
-    return () => clearTimeout(timer)
-  }, [saindoArea, area])
+  const areaVista = area
   // Lembra a aba escolhida em cada tela enquanto o app está aberto.
   const [abas, setAbas] = useState<Record<Pagina, string>>(() => ({
     ...(Object.fromEntries(
@@ -400,8 +396,8 @@ function Janela(): React.JSX.Element {
     setArea(nova)
   }
 
-  // A aba e a cor da área trocam na hora; a barra lateral e o conteúdo saem com fade de 100ms e
-  // só então a área nova entra deslizando (a mesma ideia da troca de página, seção 8).
+  // A aba e a cor da área trocam na hora; a barra lateral e o conteúdo da área nova entram com
+  // fade e 8 px na direção da aba (seção 8).
   const play = areaVista === 'play'
   const aba = play ? (paginaPlay === 'Aparência' ? abaAparenciaPlay : '') : abas[pagina]
   const cabecalho = play
@@ -409,13 +405,15 @@ function Janela(): React.JSX.Element {
       ? ABAS.Aparência
       : { titulo: paginaPlay, abas: [] }
     : ABAS[pagina]
-  const animacaoArea = saindoArea ? 'anim-area-saindo' : animarArea ? `anim-area-${areaVista}` : ''
+  const animacaoArea = animarArea ? `anim-area-${areaVista}` : ''
   return (
-    <div className="flex h-screen bg-app text-texto">
+    // Fase V11: na vitrine ficam o fundo do app (FundoDoApp, nunca trocado nem remontado), a barra
+    // lateral (com o « de sempre para compactar) e o bloco com o nome, o LIGAR/JOGAR e o olho que
+    // traz o painel de volta; o resto some com fade.
+    <div className="flex h-screen bg-app text-texto" data-vitrine={emVitrine || undefined}>
       <BarraLateral
         area={areaVista}
         areaEscolhida={area}
-        saindo={saindoArea}
         aoTrocarArea={trocarArea}
         animarArea={animarArea}
         info={info ?? null}
@@ -439,7 +437,7 @@ function Janela(): React.JSX.Element {
         }
         alertas={!play && alertaBackups ? { 'Cópias de segurança': alertaBackups } : {}}
         versao={versao}
-        recolhida={recolhida || emVitrine}
+        recolhida={recolhida}
         aoRecolher={alternarRecolhida}
         semTrocaDeArea={amigo}
       />
@@ -509,25 +507,31 @@ function Janela(): React.JSX.Element {
   )
 }
 
-// Troca de página (seção 8): o conteúdo antigo sai com fade de 100 ms e o novo entra com
-// fade + 8px. A barra lateral e o cabeçalho não se mexem.
-// A primeira tela de cada área não anima (a troca de área já anima): só as trocas seguintes.
-function useTrocaDePagina(chave: string): { exibida: string; saindo: boolean; trocou: boolean } {
-  const [exibida, setExibida] = useState(chave)
+// Troca de página (seção 8, Fase P8): a tela nova monta na hora (já começa a carregar) e entra
+// com fade + 6 px; a antiga fica por cima, parada e sem receber cliques, e some num fade rápido.
+// A barra lateral e o cabeçalho não se mexem. A primeira tela de cada área não anima (a troca de
+// área já anima): só as trocas seguintes.
+function useTrocaDePagina(chave: string): {
+  atual: string
+  anterior: string | null
+  trocou: boolean
+} {
+  const [atual, setAtual] = useState(chave)
+  const [anterior, setAnterior] = useState<string | null>(null)
   const [trocou, setTrocou] = useState(false)
-  const saindo = exibida !== chave
+  // Atualizar o estado durante o render (padrão do React para "estado que segue uma prop"): a
+  // tela nova aparece já no mesmo quadro, sem um render a mais.
+  if (chave !== atual) {
+    setAnterior(atual)
+    setAtual(chave)
+    setTrocou(true)
+  }
   useEffect(() => {
-    if (!saindo) return
-    const timer = setTimeout(
-      () => {
-        setExibida(chave)
-        setTrocou(true)
-      },
-      animacoesReduzidas() ? 0 : 100
-    )
+    if (anterior === null) return
+    const timer = setTimeout(() => setAnterior(null), animacoesReduzidas() ? 0 : DURACOES.rapida)
     return () => clearTimeout(timer)
-  }, [saindo, chave])
-  return { exibida, saindo, trocou }
+  }, [anterior])
+  return { atual, anterior, trocou }
 }
 
 interface AcoesTela {
@@ -550,17 +554,30 @@ function Conteudo({
   aba: string
   tela: (pagina: string, aba: string) => React.ReactNode
 }): React.JSX.Element {
-  const { exibida, saindo, trocou } = useTrocaDePagina(`${pagina}|${aba}`)
-  const [paginaVista, abaVista] = exibida.split('|') as [string, string]
+  const { atual, anterior, trocou } = useTrocaDePagina(`${pagina}|${aba}`)
+  // As duas telas na mesma lista com chave: a que sai continua sendo a mesma (não monta de novo).
+  const camadas = anterior ? [anterior, atual] : [atual]
   return (
     // overflow-clip (e não hidden): o navegador não consegue rolar este contêiner sozinho ao focar algo.
     <main className="vidro-painel relative m-2.5 flex min-h-0 flex-1 flex-col overflow-clip">
-      <div
-        key={exibida}
-        className={`relative flex min-h-0 flex-1 flex-col ${saindo ? 'anim-pagina-saindo' : trocou ? 'anim-pagina' : ''}`}
-      >
-        {tela(paginaVista, abaVista)}
-      </div>
+      {camadas.map((camada) => {
+        const saindo = camada === anterior
+        const [p, a] = camada.split('|') as [string, string]
+        return (
+          <div
+            key={camada}
+            inert={saindo}
+            aria-hidden={saindo || undefined}
+            className={
+              saindo
+                ? 'anim-pagina-saindo pointer-events-none absolute inset-0 z-10 flex min-h-0 flex-col'
+                : `relative flex min-h-0 flex-1 flex-col ${trocou ? 'anim-pagina' : ''}`
+            }
+          >
+            {tela(p, a)}
+          </div>
+        )
+      })}
     </main>
   )
 }

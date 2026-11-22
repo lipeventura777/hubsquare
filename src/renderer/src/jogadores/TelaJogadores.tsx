@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ErroTela, JogadorResumo } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeJogadores, IconeMundos, IconeServidor, IconeSubmenu } from '../componentes/icones'
+import { IconeJogadores, IconeMundos, IconeServidor, IconeSubmenu } from '../icones'
 import { Esqueleto } from '../componentes/movimento'
 import { BotoesBloco, CabecaJogador, CardPainel } from '../componentes/paineis'
 import { Campo, EstadoVazio } from '../componentes/ui'
@@ -102,7 +102,7 @@ export function TelaJogadores({
 
         {erro && <MensagemErro erro={erro} />}
         {jogadores === null && !erro ? (
-          <Esqueleto linhas={3} />
+          <Esqueleto linhas={4} forma="jogadores" />
         ) : visiveis.length === 0 ? (
           <EstadoVazio
             icone={<IconeJogadores />}

@@ -8,9 +8,9 @@ import { MC } from './simulado'
 // Prints do Painel de dois servidores com fundos diferentes em .teste/prints-v10/.
 
 const PRINTS = join(__dirname, '..', '..', '.teste', 'prints-v10')
-const IMAGEM = join(__dirname, '..', '..', 'build', 'icon.png') // arte do próprio app
+const IMAGEM = join(__dirname, '..', '..', 'build', 'logo', 'png', 'hubsquare-512.png') // arte do próprio app
 const infoDe = (raiz: string, nome: string): { fundo?: unknown } =>
-  JSON.parse(readFileSync(join(pastaServidor(raiz, nome), 'servsquare.json'), 'utf8'))
+  JSON.parse(readFileSync(join(pastaServidor(raiz, nome), 'hubsquare.json'), 'utf8'))
 const fundoDaJanela = (j: Page): Locator => j.locator('.fixed.-z-10 img[data-fundo]')
 
 async function abrirPainelFundo(j: Page): Promise<Locator> {

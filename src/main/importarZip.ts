@@ -28,6 +28,7 @@ import {
   type LoaderDetectado
 } from './zipSeguro'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Importar servidor ou mundo de um .zip (ex.: baixado do Aternos). Usa o tar do Windows,
 // que abre .zip, como os backups. Nenhum caminho do zip pode sair da pasta de destino.
@@ -89,7 +90,7 @@ export async function analisarZip(janela: BrowserWindow | null): Promise<Analise
   // Versão do mundo, lida do level.dat extraído sozinho numa pasta temporária.
   let versaoDoMundo: string | null = null
   if (conteudo.levelDat) {
-    const temporaria = join(tmpdir(), `servsquare-zip-${randomUUID()}`)
+    const temporaria = join(tmpdir(), `hubsquare-zip-${randomUUID()}`)
     try {
       await mkdir(temporaria)
       await tar(['-xf', zip, '-C', temporaria, conteudo.levelDat])
@@ -240,6 +241,8 @@ export async function criarDeZip(
   } finally {
     importando = false
     // A pasta provisória nunca é um servidor registrado; o que sobrou dela pode sair.
-    await rm(provisoria, { recursive: true, force: true }).catch(() => {})
+    await rm(provisoria, { recursive: true, force: true }).catch(
+      registrarErro('importarZip.ts', 'apagar a pasta provisória da importação')
+    )
   }
 }

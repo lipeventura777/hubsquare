@@ -32,5 +32,5 @@ test('não mexe quando o arquivo já existe no lugar padrão', async () => {
 
 test('mundo que nunca foi do Paper (ou ainda não existe) fica como está', async () => {
   assert.equal(await prepararMundoDoPaper(mundo()), false)
-  assert.equal(await prepararMundoDoPaper(join(tmpdir(), 'nao-existe-servsquare')), false)
+  assert.equal(await prepararMundoDoPaper(join(tmpdir(), 'nao-existe-hubsquare')), false)
 })

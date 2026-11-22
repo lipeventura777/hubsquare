@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { NOMES_TIPOS, type ErroTela, type ItemServidor } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeLigar, IconeParar, IconeServidor } from '../componentes/icones'
+import { IconeEditar, IconeLigar, IconeMaisAcoes, IconeParar, IconeServidor } from '../icones'
 import { COR_STATUS, Esqueleto } from '../componentes/movimento'
 import { TituloPagina } from '../componentes/paineis'
 import { Botao, Campo, Dialogo, EstadoVazio, Menu } from '../componentes/ui'
@@ -103,10 +103,11 @@ export function TelaServidores({
             <Botao
               aria-pressed={editando}
               title={t('telaServidores.renomearServidores')}
+              aria-label={t('telaServidores.renomearServidores')}
               onClick={() => setEditando((e) => !e)}
               className={editando ? 'outline-2 outline-accent' : ''}
             >
-              ✎
+              <IconeEditar />
             </Botao>
             <span title={ligado ? t('telaServidores.desligueOServidorParaCriar') : undefined}>
               <Menu
@@ -139,7 +140,7 @@ export function TelaServidores({
         )}
 
         {lista === null ? (
-          <Esqueleto linhas={3} />
+          <Esqueleto linhas={3} forma="lista" />
         ) : lista.length === 0 ? (
           <EstadoVazio icone={<IconeServidor />} titulo={t('telaServidores.nenhumServidorAinda')}>
             <Botao variante="primario" onClick={() => aoCriar('zero')}>
@@ -167,7 +168,9 @@ export function TelaServidores({
                 >
                   <span className="flex w-full items-center gap-2">
                     <span className="truncate text-lg font-bold">
-                      {editando && '✎ '}
+                      {editando && (
+                        <IconeEditar className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+                      )}
                       {s.nome}
                     </span>
                     {s.ativo && (
@@ -232,7 +235,7 @@ export function TelaServidores({
                     }
                   ]}
                 >
-                  ⋯
+                  <IconeMaisAcoes />
                 </Menu>
               </li>
             ))}

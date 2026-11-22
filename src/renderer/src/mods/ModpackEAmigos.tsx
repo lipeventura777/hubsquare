@@ -1,3 +1,4 @@
+import { IconeAtencao } from '../icones'
 import { useEffect, useState } from 'react'
 import type {
   AtualizacaoModpack,
@@ -124,6 +125,7 @@ export function BotaoPacoteAmigos({
             )}
             {pacote.manuais.length > 0 && (
               <p className="text-warning">
+                <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
                 {t('modpackEAmigos.baixeManualmenteNaoEstaoNo')} {pacote.manuais.join(', ')}
               </p>
             )}

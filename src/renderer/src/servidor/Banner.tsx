@@ -8,7 +8,7 @@ import { MensagemErro } from '../componentes/MensagemErro'
 import { EVENTO_FUNDO_SERVIDOR } from '../estrutura/navegar'
 import { useAparencia } from '../aparencia/useAparencia'
 import { Avisos } from '../componentes/Avisos'
-import { IconeCopiar } from '../componentes/icones'
+import { IconeCopiar } from '../icones'
 import { Botao, Menu } from '../componentes/ui'
 import { BotaoDiagnostico, consertoDoDono } from '../componentes/Diagnostico'
 import { BlocoVitrine, BotaoVitrine } from '../componentes/Vitrine'
@@ -25,7 +25,6 @@ export function Banner({
   aviso,
   vitrine,
   estado,
-  erroDoServidor,
   aoLigarDesligar
 }: {
   info: InfoServidor
@@ -34,7 +33,6 @@ export function Banner({
   // Fase V11: modo vitrine (o banner ocupa a tela e fica só o bloco com o LIGAR).
   vitrine: boolean
   estado: EstadoServidor
-  erroDoServidor: ErroTela | null
   aoLigarDesligar: () => void
 }): React.JSX.Element {
   const { definirVitrine } = useAparencia()
@@ -47,13 +45,11 @@ export function Banner({
   const [erro, setErro] = useState<ErroTela | null>(null)
   const imgs = useImagensFundo()
   const salvar = useRef<NodeJS.Timeout | undefined>(undefined)
-  const [maximo, setMaximo] = useState<number | null>(null)
 
   useEffect(() => {
     window.api.lerConfiguracoes().then((r) => {
       if (!r.ok) return
       setMotd(r.valor.configuracoes.motd)
-      setMaximo(r.valor.configuracoes.maxJogadores)
     })
     window.api.fundoDoServidor().then((r) => r.ok && setFundo(r.valor))
     return () => clearTimeout(salvar.current)
@@ -119,16 +115,20 @@ export function Banner({
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setSoltando(false)
       }}
       onDrop={(e) => void soltar(e)}
-      className={`vitrine-altura relative flex min-h-[300px] shrink-0 items-center overflow-hidden text-on-dark ${
+      className={`relative flex min-h-[300px] shrink-0 items-center overflow-hidden text-on-dark ${
         vitrine ? 'h-full' : 'h-[50vh]'
       }`}
     >
       {fundoUrl ? (
-        <img src={fundoUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img
+          src={fundoUrl}
+          alt=""
+          className="vitrine-some absolute inset-0 h-full w-full object-cover"
+        />
       ) : (
-        <div aria-hidden="true" className="banner-padrao absolute inset-0" />
+        <div aria-hidden="true" className="banner-padrao vitrine-some absolute inset-0" />
       )}
-      <div aria-hidden="true" className="banner-gradiente absolute inset-0" />
+      <div aria-hidden="true" className="banner-gradiente vitrine-some absolute inset-0" />
 
       {/* Na vitrine, o nome, o card dos amigos e os botões do canto saem (fora do Tab e do leitor). */}
       <div
@@ -159,8 +159,11 @@ export function Banner({
           {t('banner.solteAImagemParaUsar')}
         </div>
       )}
-      {fundo && !vitrine && (
-        <div className="absolute top-3 right-3 flex items-center gap-2">
+      {fundo && (
+        <div
+          className="vitrine-some absolute top-3 right-3 flex items-center gap-2"
+          inert={vitrine}
+        >
           <BotaoVitrine ligada={false} aoAlternar={() => definirVitrine(true)} />
           {menuFundo}
         </div>
@@ -170,13 +173,6 @@ export function Banner({
           icone={<IconeDoServidor icone={icone} nome={info.nome} tam={56} />}
           nome={info.nome}
           principal={<BotaoLigar estado={estado} aoLigarDesligar={aoLigarDesligar} />}
-          estado={
-            <div className="flex min-w-0 flex-col gap-2">
-              <EstadoNaVitrine estado={estado} maximo={maximo} />
-              {erroDoServidor && <MensagemErro erro={erroDoServidor} />}
-            </div>
-          }
-          fundo={menuFundo}
           aoMostrar={() => definirVitrine(false)}
         />
       )}
@@ -224,60 +220,5 @@ function CardAmigos({
         aoConsertar={consertoDoDono}
       />
     </div>
-  )
-}
-
-// Ao lado do LIGAR na vitrine: Desligado, "Ligando… 0:12" (o tempo desde que começou), "Online ·
-// 3/10 jogadores" ou Desligando.
-function EstadoNaVitrine({
-  estado,
-  maximo
-}: {
-  estado: EstadoServidor
-  maximo: number | null
-}): React.JSX.Element {
-  const [jogadores, setJogadores] = useState<string[]>([])
-  const [desde, setDesde] = useState<number | null>(null)
-  const [agora, setAgora] = useState(() => Date.now())
-  useEffect(() => {
-    window.api.lerJogadores().then(setJogadores)
-    return window.api.aoMudarJogadores(setJogadores)
-  }, [])
-  // O relógio do "Ligando…" começa quando o servidor começa a ligar.
-  useEffect(() => {
-    if (estado !== 'ligando') return
-    const inicio = Date.now()
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- o relógio começa ao ligar
-    setDesde(inicio)
-    setAgora(inicio)
-    const t = setInterval(() => setAgora(Date.now()), 1000)
-    return () => {
-      clearInterval(t)
-      setDesde(null)
-    }
-  }, [estado])
-  const segundos = desde === null ? 0 : Math.max(0, Math.floor((agora - desde) / 1000))
-  const texto =
-    estado === 'ligando'
-      ? `Ligando… ${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`
-      : estado === 'ligado'
-        ? t('banner.online', {
-            length: jogadores.length,
-            v: maximo ? `/${maximo}` : '',
-            v2: jogadores.length === 1 ? t('banner.jogador') : t('banner.jogadores')
-          })
-        : estado === 'desligando'
-          ? t('banner.desligando')
-          : t('banner.desligado')
-  return (
-    <p aria-live="polite" className="flex items-center gap-2 text-[15px] font-bold tabular-nums">
-      <span
-        aria-hidden="true"
-        className={`h-2.5 w-2.5 ${
-          estado === 'ligado' ? 'bg-online' : estado === 'desligado' ? 'bg-offline' : 'bg-warning'
-        }`}
-      />
-      {texto}
-    </p>
   )
 }

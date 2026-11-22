@@ -1,3 +1,4 @@
+import type { CoresDaCena } from '../../../shared/logoCoresRegras'
 import type { Bioma } from '../../../shared/tipos'
 import { intervaloRaro, onda, velocidadeMaxima } from '../../../shared/movimentoRegras'
 
@@ -2415,4 +2416,41 @@ export const ARTE: Record<Bioma, Arte> = {
   aurora: aurora(),
   ametista: ametista(),
   pantano: pantano()
+}
+
+// ---------- Cores da logo e do nome na barra lateral (DESIGN.md 1.1) ----------
+// Escolhidas à mão, só entre as cores que a própria cena usa acima: h = cor principal (face do
+// H, ServSquare), s = a secundária que contrasta com ela (face do S, PlaySquare), topo = o tom
+// mais claro da cena e contorno = o tom dominante bem escuro (perto do #1E2A2F oficial). A
+// claridade de h e s ainda é ajustada pela logoCoresRegras.ts, se faltar contraste.
+export const LOGO: Record<Bioma, CoresDaCena> = {
+  // Campo de dia: a folhagem, o céu e o sol; contorno no azul do céu.
+  diaClaro: { h: '#3e9b45', s: '#8fd0ff', topo: '#fff3b0', contorno: '#16283a' },
+  // Pôr do sol: a grama, a borda laranja do sol e a nuvem dourada; contorno no azul do céu alto.
+  dia: { h: '#3e8e4a', s: '#f4a259', topo: '#f6e2c4', contorno: '#0f2236' },
+  noite: { h: NOITE.estrela, s: NOITE.estrela2, topo: NOITE.lua, contorno: '#0a0a20' },
+  mar: { h: MAR.agua[2], s: MAR.peixe, topo: MAR.bolha, contorno: '#06283a' },
+  nether: { h: NETHER.ceu[4], s: NETHER.lava, topo: NETHER.lavaBrilho, contorno: '#1f0808' },
+  cerejeira: {
+    h: CEREJEIRA.copaSombra,
+    s: CEREJEIRA.ceu[0],
+    topo: CEREJEIRA.copaLuz,
+    contorno: '#2b1020'
+  },
+  caverna: { h: CAVERNA.musgo, s: CAVERNA.baga, topo: CAVERNA.bagaLuz, contorno: '#08130c' },
+  deepDark: {
+    h: DEEP_DARK.brilhante,
+    s: DEEP_DARK.fraco,
+    topo: DEEP_DARK.ponto,
+    contorno: '#03090c'
+  },
+  deserto: { h: DESERTO.duna1, s: DESERTO.ceu[4], topo: DESERTO.sol, contorno: '#2a1206' },
+  aurora: { h: AURORA.auroraVerde, s: AURORA.auroraRoxa, topo: AURORA.pico, contorno: '#061230' },
+  ametista: {
+    h: AMETISTA.cristal,
+    s: AMETISTA.calcita,
+    topo: AMETISTA.brilho,
+    contorno: '#0f0820'
+  },
+  pantano: { h: PANTANO.regia, s: PANTANO.flor, topo: PANTANO.lua, contorno: '#0d1a14' }
 }

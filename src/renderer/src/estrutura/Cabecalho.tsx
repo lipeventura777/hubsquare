@@ -55,7 +55,7 @@ export function Cabecalho({
         <span
           ref={indicador as React.RefObject<HTMLSpanElement>}
           aria-hidden="true"
-          className="absolute bottom-2 left-0 h-[3px] w-6 bg-accent transition-transform duration-(--dur-base) ease-(--ease-out)"
+          className="absolute bottom-2 left-0 h-[3px] w-6 bg-accent transition-transform duration-(--dur-base) ease-(--ease-entrada)"
         />
       </div>
       {estado === 'ligado' && <FaixaDeStats />}

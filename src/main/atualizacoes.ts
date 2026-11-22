@@ -33,6 +33,7 @@ import { versoesForge } from './tipos/forge'
 import { versoesNeoForge } from './tipos/neoforge'
 import { ultimaBuildPaper } from './tipos/paper'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Avisos de atualização (Fase 21): ao abrir o app e a cada 6 h, só VERIFICA. Nada é atualizado
 // sem o clique do usuário.
@@ -56,7 +57,8 @@ export async function salvarAjustes(valor: unknown): Promise<AjustesApp> {
     verificarAtualizacoes: (valor as Partial<AjustesApp> | null)?.verificarAtualizacoes !== false
   }
   await gravarComSeguranca(arquivoAjustes(), JSON.stringify(ajustes, null, 2))
-  if (ajustes.verificarAtualizacoes) void verificar().catch(() => {})
+  if (ajustes.verificarAtualizacoes)
+    void verificar().catch(registrarErro('atualizacoes.ts', 'verificar atualizações ao abrir'))
   return ajustes
 }
 
@@ -142,7 +144,10 @@ export async function lerAtualizacoes(): Promise<AtualizacoesDisponiveis | null>
   const info = await servidorAtual()
   if (!info) return null
   if (ultimo?.servidorId === info.id) return ultimo
-  if ((await lerAjustes()).verificarAtualizacoes) void verificar().catch(() => {})
+  if ((await lerAjustes()).verificarAtualizacoes)
+    void verificar().catch(
+      registrarErro('atualizacoes.ts', 'verificar atualizações depois de mudar o ajuste')
+    )
   return null
 }
 
@@ -152,8 +157,18 @@ export function iniciarVerificacao(): void {
     if (modoAtual() !== 'completo') return // modo amigo (Fase M6): não confere servidores
     if ((await lerAjustes()).verificarAtualizacoes) await verificar()
   }
-  setTimeout(() => void talvez().catch(() => {}), 15_000)
-  setInterval(() => void talvez().catch(() => {}), SEIS_HORAS)
+  setTimeout(
+    () =>
+      void talvez().catch(registrarErro('atualizacoes.ts', 'primeira verificação de atualizações')),
+    15_000
+  )
+  setInterval(
+    () =>
+      void talvez().catch(
+        registrarErro('atualizacoes.ts', 'verificação de atualizações a cada 6 h')
+      ),
+    SEIS_HORAS
+  )
 }
 
 // ---------- Atualizar a build (só com o clique) ----------
@@ -190,5 +205,5 @@ export async function atualizarBuild(
       })
     )
   })
-  void verificar().catch(() => {})
+  void verificar().catch(registrarErro('atualizacoes.ts', 'verificar atualizações de novo'))
 }

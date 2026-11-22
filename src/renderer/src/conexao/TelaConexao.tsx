@@ -1,3 +1,4 @@
+import { IconeOk } from '../icones'
 import { useCallback, useEffect, useState } from 'react'
 import type {
   ErroTela,
@@ -71,7 +72,10 @@ export function TelaConexao({ aba }: { aba: string }): React.JSX.Element {
       <div className="flex items-center gap-4 border border-linha bg-panel p-4">
         <p className="flex-1 text-[13px]">{descricao}</p>
         {emUso ? (
-          <span className="text-[13px] font-bold">{t('telaConexao.emUsoSeusAmigosEntram')}</span>
+          <span className="text-[13px] font-bold">
+            <IconeOk className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+            {t('telaConexao.emUsoSeusAmigosEntram')}
+          </span>
         ) : (
           <Botao variante="primario" onClick={() => usar(modo)}>
             {t('telaConexao.usarEsteMetodo')}

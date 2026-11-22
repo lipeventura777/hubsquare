@@ -1,3 +1,4 @@
+import { IconeAtencao, IconeFechar, IconeOk } from '../icones'
 import { useState } from 'react'
 import {
   acaoDestrutiva,
@@ -40,7 +41,13 @@ export function Respostas({
           }`}
         >
           <span className="mr-2" aria-hidden="true">
-            {r.ok === true ? '✓' : r.ok === false ? '✕' : '•'}
+            {r.ok === true ? (
+              <IconeOk className="inline h-[1em] w-[1em] align-[-0.125em]" />
+            ) : r.ok === false ? (
+              <IconeFechar className="inline h-[1em] w-[1em] align-[-0.125em]" />
+            ) : (
+              '•'
+            )}
           </span>
           {r.texto}
         </li>
@@ -57,7 +64,13 @@ export function Previa({
   comandos: string[]
   erro: string | null
 }): React.JSX.Element {
-  if (erro) return <p className="text-xs text-warning">⚠ {erro}</p>
+  if (erro)
+    return (
+      <p className="text-xs text-warning">
+        <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
+        {erro}
+      </p>
+    )
   return (
     <p
       className="font-mono text-xs break-all text-muted"

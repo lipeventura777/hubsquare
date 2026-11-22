@@ -1,6 +1,10 @@
 // Regras do fundo animado (Fase V2), sem DOM: testadas em tests/animacaoRegras.test.ts.
 // Quando animar, em que ritmo, e quando cair para o modo leve por desempenho.
 
+// Fase P8: as três durações da interface (ms), iguais às de tokens.css (--dur-fast, --dur-base e
+// --dur-modal; tests/animacoesTokens.test.ts confere). O JS usa estas para esperar uma saída.
+export const DURACOES = { rapida: 120, normal: 180, modal: 220 } as const
+
 export const MODOS_ANIMACAO = ['completa', 'leve', 'desligada'] as const
 export type ModoAnimacao = (typeof MODOS_ANIMACAO)[number]
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { ErroTela, MundoServidor, Resultado } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
 import { dataHora, tamanho } from '../componentes/formato'
-import { IconeMundos } from '../componentes/icones'
+import { IconeMundos } from '../icones'
 import { Esqueleto } from '../componentes/movimento'
 import {
   Aviso,
@@ -113,7 +113,7 @@ export function TelaMundos(): React.JSX.Element {
         {erro && <MensagemErro erro={erro} />}
 
         {!mundos ? (
-          !erro && <Esqueleto linhas={3} />
+          !erro && <Esqueleto linhas={3} forma="cards" />
         ) : mundos.length === 0 ? (
           <EstadoVazio
             icone={<IconeMundos />}

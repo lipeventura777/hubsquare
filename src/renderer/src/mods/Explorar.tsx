@@ -14,9 +14,8 @@ import {
   type TipoConteudo
 } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeMods } from '../componentes/icones'
+import { IconeAtencao, IconeMods } from '../icones'
 import { Aviso, Botao, CaixaSelecao, EstadoVazio, OpcaoRadio, Selecao } from '../componentes/ui'
-import { abrirTela } from '../estrutura/navegar'
 import { FONTES, NOMES_FONTES, type Fonte } from '../../../shared/fontes'
 import {
   muitosResultados,
@@ -188,7 +187,7 @@ export function Explorar({
   const controle = useRef<AbortController | null>(null)
   const topo = useRef<HTMLDivElement>(null)
   const rolagemAntes = useRef(0)
-  // CurseForge sem a chave do usuário: aviso com "Configurar" no lugar da busca.
+  // CurseForge sem a chave oficial no build (Fase L1): "em breve" no lugar da busca.
   const [temChave, setTemChave] = useState<boolean | null>(null)
   const fonte = filtros.fonte
   const semChave = fonte === 'curseforge' && temChave === false
@@ -406,13 +405,6 @@ export function Explorar({
       {semChave && (
         <Aviso tipo="atencao">
           <span className="flex-1">{t('explorar.paraProcurarNoCurseforgeO')}</span>
-          <Botao
-            variante="atencao"
-            tamanho="pequeno"
-            onClick={() => abrirTela('Opções', 'Integrações')}
-          >
-            {t('explorar.configurar')}
-          </Botao>
         </Aviso>
       )}
 
@@ -639,6 +631,7 @@ export function Explorar({
                           p.ambiente === 'jogador' &&
                           filtros.tipo !== 'shader' && (
                             <span className="text-xs text-warning">
+                              <IconeAtencao className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />
                               {t('explorar.soDoJogador')}
                             </span>
                           )}

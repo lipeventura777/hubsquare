@@ -1,19 +1,30 @@
 import { spawn } from 'child_process'
 import { existsSync } from 'fs'
-import { mkdir, readdir, rm, writeFile } from 'fs/promises'
+import { copyFile, mkdir, readdir, rename, rm, stat, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { randomUUID } from 'crypto'
 import type { LoaderCliente } from '../shared/tipos'
-import { ErroApp } from './erros'
+import {
+  ehForgeAntigo,
+  lerPerfilAntigo,
+  montarVersaoCliente,
+  urlDoMaven,
+  type BibliotecaAntiga,
+  type PerfilAntigo
+} from '../shared/forgeAntigoRegras'
+import { ErroApp, detalhar } from './erros'
+import { hashEmTrabalhador } from './hashTrabalhador'
+import { tar } from './importarZip'
 import { garantirJava } from './java'
 import { fotografarPerfis, MINECRAFT, exigirPerfis, restaurarPerfis } from './launcherOficial'
 import { javaDaVersao } from './mojang'
 import { baixar, buscarBytes, buscarJson, type AoProgredir } from './rede'
 import { maisNovaEstavel } from './tipos/fabric'
-import { versoesForge } from './tipos/forge'
+import { nomeDoForgeAntigo, versoesForge } from './tipos/forge'
 import { versoesNeoForge } from './tipos/neoforge'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Loaders em modo cliente para o launcher oficial (Fase P1), só de fontes oficiais. O resultado
 // fica em .minecraft/versions e libraries (onde o launcher procura). O jogo em si o launcher baixa.
@@ -68,7 +79,9 @@ export async function garantirVersaoCliente(
     })
     // Perfil oficial do Fabric para o launcher; ele baixa as bibliotecas sozinho ao abrir.
     const perfil = await buscarJson<{ id: string }>(
-      `${FABRIC}/versions/loader/${encodeURIComponent(versao)}/${encodeURIComponent(numero)}/profile/json`
+      `${FABRIC}/versions/loader/${encodeURIComponent(versao)}/${encodeURIComponent(numero)}/profile/json`,
+      undefined,
+      t('p.rede.itemCliente', { loader: 'Fabric', versao })
     )
     if (perfil.id !== id) throw new ErroApp(t('p.clienteLoader.oFabricRespondeuUmaVersao'))
     const pasta = join(MINECRAFT(), 'versions', id)
@@ -77,6 +90,11 @@ export async function garantirVersaoCliente(
     // O instalador oficial do Fabric também cria esse .jar vazio; o launcher espera achar um.
     await writeFile(join(pasta, `${id}.jar`), '')
     return id
+  }
+
+  // Fase F1: de 1.7.10 a 1.12.1 o instalador do Forge não instala o cliente pelo terminal.
+  if (loader === 'forge' && ehForgeAntigo(versao)) {
+    return garantirForgeAntigo(versao, numero, aoProgredir)
   }
 
   const nome = loader === 'forge' ? t('p.clienteLoader.forge') : 'NeoForge'
@@ -94,14 +112,17 @@ export async function garantirVersaoCliente(
   const foto = await fotografarPerfis()
   const antes = new Set(await readdir(join(MINECRAFT(), 'versions')).catch(() => []))
   try {
-    const sha1 = (await buscarBytes(`${url}.sha1`)).toString('utf8').trim()
+    const item = t('p.rede.itemCliente', { loader: nome, versao })
+    const sha1 = (await buscarBytes(`${url}.sha1`, item)).toString('utf8').trim()
     const jar = join(temporaria, 'instalador.jar')
     await baixar(
       url,
       jar,
       { algoritmo: 'sha1', valor: sha1 },
       t('p.clienteLoader.baixandoOInstaladorDo', { nome }),
-      aoProgredir
+      aoProgredir,
+      undefined,
+      item
     )
     const java = await garantirJava(await javaDaVersao(versao), aoProgredir)
     await executar(
@@ -113,8 +134,10 @@ export async function garantirVersaoCliente(
     )
   } finally {
     // O instalador cria um perfil "forge"/"NeoForge" no launcher: os perfis voltam a ser os de antes.
-    await restaurarPerfis(foto).catch(() => {})
-    await rm(temporaria, { recursive: true, force: true }).catch(() => {})
+    await restaurarPerfis(foto).catch(
+      registrarErro('clienteLoader.ts', 'devolver os perfis do launcher depois do instalador')
+    )
+    await rm(temporaria, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
   }
   if (temVersao(id)) return id
   // Nome diferente do esperado (instalador mudou o padrão): usa a versão que ele acabou de criar.
@@ -125,6 +148,107 @@ export async function garantirVersaoCliente(
     throw new ErroApp(t('p.clienteLoader.oInstaladorDoTerminouMas', { nome, id }))
   }
   return novas[0]
+}
+
+// Fase F1 (docs/forge-antigo.md): do instalador oficial só sai o install_profile.json (ele nunca
+// roda). O Forge (jar universal) e cada biblioteca vêm dos sites oficiais com o SHA-1 conferido e
+// ficam em .minecraft/libraries; a versão é gravada no formato que o launcher confere, com Java 8.
+async function garantirForgeAntigo(
+  versao: string,
+  numero: string,
+  aoProgredir: AoProgredir
+): Promise<string> {
+  const versoes = join(MINECRAFT(), 'versions')
+  // Já preparada antes (o id tem "Forge<número>" ou "forge<versão>-<número>").
+  const marcas = [`forge${numero}`, `forge${versao}-${numero}`].map((m) => m.toLowerCase())
+  const pronta = (await readdir(versoes).catch(() => [] as string[])).find(
+    (v) => idSeguro(v) && marcas.some((m) => v.toLowerCase().includes(m)) && temVersao(v)
+  )
+  if (pronta) return pronta
+
+  const nome = await nomeDoForgeAntigo(versao, numero)
+  const item = t('p.rede.itemCliente', { loader: 'Forge', versao })
+  const temporaria = join(tmpdir(), `hubsquare-forge-${randomUUID()}`)
+  await mkdir(temporaria, { recursive: true })
+  try {
+    const url = urlDoMaven(nome, 'installer')
+    const sha1 = (await buscarBytes(`${url}.sha1`, item)).toString('utf8').trim()
+    const jar = join(temporaria, 'instalador.jar')
+    await baixar(
+      url,
+      jar,
+      { algoritmo: 'sha1', valor: sha1 },
+      t('p.clienteLoader.baixandoOInstaladorDo', { nome: 'Forge' }),
+      aoProgredir,
+      undefined,
+      item
+    )
+    let perfil: PerfilAntigo
+    try {
+      perfil = lerPerfilAntigo(await tar(['-xOf', jar, 'install_profile.json']), nome)
+    } catch (e) {
+      throw new ErroApp(t('p.clienteLoader.oInstaladorDoForgeVeio'), detalhar(e))
+    }
+    const conferidas = new Map<string, { sha1: string; tamanho: number }>()
+    for (const [i, b] of perfil.bibliotecas.entries()) {
+      aoProgredir({
+        etapa: t('p.clienteLoader.bibliotecasDoForge', {
+          i: i + 1,
+          total: perfil.bibliotecas.length
+        }),
+        recebido: i,
+        total: perfil.bibliotecas.length
+      })
+      conferidas.set(b.nome, await garantirBiblioteca(b, temporaria, item))
+    }
+    const pasta = join(versoes, perfil.id)
+    await mkdir(pasta, { recursive: true })
+    await writeFile(
+      join(pasta, `${perfil.id}.json`),
+      JSON.stringify(montarVersaoCliente(perfil, conferidas), null, 2)
+    )
+    return perfil.id
+  } finally {
+    await rm(temporaria, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
+  }
+}
+
+// Uma biblioteca no lugar, com o SHA-1 conferido: o do install_profile.json (que veio de um
+// instalador conferido) ou, sem ele, o .sha1 do site. Sem nenhum dos dois, nada é usado.
+async function garantirBiblioteca(
+  b: BibliotecaAntiga,
+  temporaria: string,
+  item: string
+): Promise<{ sha1: string; tamanho: number }> {
+  const aceitos = b.sha1s.length
+    ? b.sha1s.map((s) => s.toLowerCase())
+    : [
+        (await buscarBytes(`${b.url}.sha1`, item))
+          .toString('utf8')
+          .trim()
+          .slice(0, 40)
+          .toLowerCase()
+      ]
+  if (!aceitos.every((s) => /^[0-9a-f]{40}$/.test(s))) {
+    throw new ErroApp(t('p.clienteLoader.semComoConferirABiblioteca', { nome: b.nome }))
+  }
+  const destino = join(MINECRAFT(), 'libraries', ...b.caminho.split('/'))
+  if (existsSync(destino)) {
+    const atual = await hashEmTrabalhador(destino).catch(() => '')
+    if (aceitos.includes(atual)) return { sha1: atual, tamanho: (await stat(destino)).size }
+  }
+  const baixado = join(temporaria, `${randomUUID()}.jar`)
+  await baixar(b.url, baixado, undefined, b.nome, () => {}, undefined, item)
+  const obtido = await hashEmTrabalhador(baixado)
+  if (!aceitos.includes(obtido)) {
+    throw new ErroApp(
+      t('p.rede.oArquivoBaixadoVeioCorrompido', { item: b.nome }),
+      `${b.url}\nsha1 esperado: ${aceitos.join(' ou ')}\nsha1 obtido: ${obtido}`
+    )
+  }
+  await mkdir(dirname(destino), { recursive: true })
+  await rename(baixado, destino).catch(() => copyFile(baixado, destino))
+  return { sha1: obtido, tamanho: (await stat(destino)).size }
 }
 
 function executar(

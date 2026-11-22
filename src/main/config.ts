@@ -10,6 +10,7 @@ import {
 } from '../shared/tipos'
 import { MAX_MOTD } from '../shared/motd'
 import { ErroApp } from './erros'
+import { portaDe, portaValida } from '../shared/redeRegras'
 import { lerPropriedades, mudarPropriedades } from './propriedades'
 import { t } from '../shared/i18n'
 
@@ -85,13 +86,14 @@ export async function lerConfiguracoes(info: InfoServidor): Promise<DadosConfigu
       maxJogadores: Number(p.get('max-players')) || 20,
       motd: p.get('motd') ?? 'A Minecraft Server',
       pvp: pvpEhRegraDoJogo(info.versao) ? (info.pvp ?? true) : p.get('pvp') !== 'false',
-      ramGb: ramDoServidor(info)
+      ramGb: ramDoServidor(info),
+      porta: portaDe(p.get('server-port'))
     },
     ram: limitesRam()
   }
 }
 
-// Valida tudo o que veio da tela, grava no server.properties e devolve o que vai no servsquare.json.
+// Valida tudo o que veio da tela, grava no server.properties e devolve o que vai no hubsquare.json.
 // shortcut: grava modo e dificuldade como nome; versões anteriores à 1.13 só entendem número.
 export async function salvarConfiguracoes(
   info: InfoServidor,
@@ -122,8 +124,12 @@ export async function salvarConfiguracoes(
     throw new ErroApp(t('p.config.aRamPrecisaFicarEntre', { min, max }))
   }
 
+  // Fase E3: a porta só muda aqui, pelo usuário; o app nunca troca sozinho.
+  if (!portaValida(c.porta)) throw new ErroApp(t('p.config.aPortaPrecisaSerUm'))
+
   const mudancas: Record<string, string> = {
     gamemode: c.modoDeJogo as string,
+    'server-port': String(c.porta),
     difficulty: c.dificuldade as string,
     'max-players': String(jogadores),
     motd: c.motd

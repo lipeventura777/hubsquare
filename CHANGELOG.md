@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-22
+
+### Added
+
+- New HubSquare logo (the chunk cube) in the sidebar, welcome screen, About, icons and installer. Inside the app it can be hidden from the sidebar and can follow the colors of each of the 12 backgrounds (Appearance › Theme › Logo), always with readable contrast.
+- Showcase mode on Play and Dashboard ("Hide panel"): only the animated background, the sidebar (which you can still collapse) and a glass block with the name, the main button and the eye that brings the panel back. Esc also leaves it.
+- Automatic updates: the app downloads a new version from the project's GitHub releases in the background and shows "Version X ready" inside the app, with **Restart and update**, **When I close**, **See what's new** and **Skip this version**. It never installs while a server is running, a backup is being made, a modpack is installing or PLAY is getting the game ready; it waits, says why, and installs right after. Turn it off under Options › General › Updates.
+- Release workflow: each `vX.Y.Z` tag builds the installer on GitHub Actions and creates a draft release with the installer, `latest.yml`, `.blockmap` and `SHA256SUMS.txt`, with the notes taken from this changelog. SignPath signing is prepared but off (`docs/assinatura.md`).
+- Report a problem (Gear › About, the tray menu or "See details" on an error): opens your email app or a new GitHub issue already filled in, with the error report ready to attach. Nothing is sent by the app.
+
+### Changed
+
+- About no longer mentions CurseForge.
+- CurseForge now uses HubSquare's official API key, added only when the release is built; until it exists, CurseForge shows as "coming soon" and the screen to paste your own key is gone.
+- Errors that the app used to ignore silently are now written to `erros.log` with where they happened and what was being done.
+
+- The app is now called HubSquare everywhere: app ID `com.hubsquare.app`, data in `%APPDATA%\HubSquare`, servers, backups and installations in `Documents\HubSquare`, and the app's own files named `hubsquare*` (ServSquare and PlaySquare stay as the names of the two areas).
+- License changed from MIT to GPL-3.0-or-later; the HubSquare name and logo are not covered by it.
+
+### Added
+
+- Upgrade from 1.4.0: on first launch the old `ServSquare` folders are moved to the new names, saved paths are rewritten (indexes, server and installation folders, backups and the launcher profiles' `gameDir`). If a move fails, nothing is deleted, the app keeps the old folders for that session, shows a notice and tries again next time.
+- The installer removes the old 1.4.0 entry (programs list and shortcuts) without touching your data, and suggests the same install folder.
+
 ## [1.4.0] - 2026-11-15
 
 ### Added

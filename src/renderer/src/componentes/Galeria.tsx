@@ -7,7 +7,13 @@ import { Assistente } from '../assistente/Assistente'
 import { BarraDeAcao } from '../servidor/BarraDeAcao'
 import { Banner } from '../servidor/Banner'
 import { useAparencia } from '../aparencia/useAparencia'
-import { IconeBackups, IconeJogadores, IconeMundos, IconeServidor } from './icones'
+import {
+  IconeBackups,
+  IconeJogadores,
+  IconeMundos,
+  IconeRecarregar,
+  IconeServidor
+} from '../icones'
 import { BarraProgresso, BolinhaStatus, Esqueleto, NumeroAnimado } from './movimento'
 import { Acordeao, BotoesBloco, CabecaJogador, CardPainel, TituloPagina } from './paineis'
 import {
@@ -60,7 +66,14 @@ export default function Galeria(): React.JSX.Element {
       <section className="flex flex-col gap-3">
         <h2 className={rotuloPequeno}>Card de painel, cabeça do jogador e botões-bloco</h2>
         <div className="grid gap-4 min-[1100px]:grid-cols-[2fr_1fr]">
-          <CardPainel titulo="Atalhos" acoes={<Botao tamanho="pequeno">⟳</Botao>}>
+          <CardPainel
+            titulo="Atalhos"
+            acoes={
+              <Botao tamanho="pequeno" aria-label="Atualizar">
+                <IconeRecarregar />
+              </Botao>
+            }
+          >
             <BotoesBloco
               itens={[
                 {
@@ -202,7 +215,6 @@ export default function Galeria(): React.JSX.Element {
           aviso=""
           vitrine={false}
           estado="desligado"
-          erroDoServidor={null}
           aoLigarDesligar={() => {}}
         />
         {ESTADOS.map((e) => (

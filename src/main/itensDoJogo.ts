@@ -70,7 +70,7 @@ async function baixarAgora(versao: string, aoProgredir: AoProgredir): Promise<vo
       throw new ErroApp(t('p.itensDoJogo.naoConseguiSepararOsIcones'), detalhar(e))
     })
     // A pasta "items" só existe a partir da 1.21.4.
-    await tar(['-x', '-f', jar, parte('items')], pasta).catch(() => {})
+    await tar(['-x', '-f', jar, parte('items')], pasta).catch(() => {}) // a pasta items só existe a partir da 1.21.4
   } finally {
     await rm(jar, { force: true })
   }

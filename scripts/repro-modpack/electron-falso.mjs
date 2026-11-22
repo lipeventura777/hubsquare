@@ -38,6 +38,7 @@ export const shell = {
 }
 export const BrowserWindow = { getAllWindows: () => [], fromWebContents: () => null }
 export const ipcMain = { handle: () => {}, on: () => {} }
+export const protocol = { handle: () => {}, registerSchemesAsPrivileged: () => {} }
 export const safeStorage = {
   isEncryptionAvailable: () => false,
   encryptString: (s) => Buffer.from(s),

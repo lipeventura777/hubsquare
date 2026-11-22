@@ -1,11 +1,13 @@
+import { IconeFechar } from '../icones'
 import { useEffect, useRef, useState } from 'react'
 import type { AvisoJogador } from '../../../shared/tipos'
 import { animacoesReduzidas } from './movimento'
 import { t } from '../../../shared/i18n'
+import { DURACOES } from '../../../shared/animacaoRegras'
 
 const MAXIMO = 3
 const DURACAO = 5000
-const SAIDA = 180 // --dur-base: tempo da animação de saída antes de tirar da tela
+const SAIDA = DURACOES.rapida // --dur-fast: tempo da animação de saída antes de tirar da tela
 
 type Item = AvisoJogador & { id: number; saindo: boolean }
 
@@ -89,7 +91,7 @@ export function AvisoDeJogador({
           aria-label={t('avisos.fecharAviso')}
           className="flex h-8 w-8 items-center justify-center transition-colors duration-(--dur-fast) hover:bg-accent-hover"
         >
-          ✕
+          <IconeFechar className="h-4 w-4" />
         </button>
       </div>
       {/* Barra de tempo de 2px que esvazia em 5 s. */}

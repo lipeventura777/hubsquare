@@ -1,3 +1,4 @@
+import { IconeMaisAcoes } from '../icones'
 import { useState } from 'react'
 import { MODOS, NOMES_MODOS, type ErroTela } from '../../../shared/tipos'
 import { rotuloPequeno } from '../componentes/estilos'
@@ -68,7 +69,7 @@ export function ListaJogadores({
                   { rotulo: t('listaJogadores.expulsar'), aoClicar: () => setExpulsando(nome) }
                 ]}
               >
-                ⋯
+                <IconeMaisAcoes />
               </Menu>
             </li>
           ))}

@@ -127,7 +127,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'assistente.qualONomeDoServidor': "What's the server's name?",
   'assistente.nomeDoServidor': 'Server name',
   'assistente.ate32LetrasNumerosEspacos':
-    'Up to 32 letters, numbers, spaces, ".", "-" or "_". It becomes the folder name in Documents\\ServSquare\\servidores.',
+    'Up to 32 letters, numbers, spaces, ".", "-" or "_". It becomes the folder name in Documents\\HubSquare\\servidores.',
   'assistente.whitelist': 'Whitelist',
   'assistente.seuNomeNoJogoOpcional': 'Your in-game name (optional)',
   'assistente.paraVoceJaEntrarNa': "So you're already on the whitelist",
@@ -201,7 +201,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'atalhos.usar2': 'Use',
   'atalhos.paraQualJogador': 'For which player ({jogador})',
   'atalhos.esteAtalhoApagaCoisasOu':
-    '⚠ This shortcut deletes things or removes players from the game.',
+    'This shortcut deletes things or removes players from the game.',
   'atalhos.usando': 'Using...',
   'atalhos.atalhos': 'Shortcuts',
   'atalhos.marqueAtalhosComEstrelaEm': 'Star shortcuts in Commands › Shortcuts to show them here.',
@@ -223,7 +223,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'atalhos.comandosUmPorLinhaUse':
     'Commands, one per line (use {VARIAVEL_JOGADOR} for the player picked at the time)',
   'atalhos.temComandoQueApagaCoisas':
-    '⚠ A command deletes things: the app will ask for confirmation before using it.',
+    'A command deletes things: the app will ask for confirmation before using it.',
   'atalhos.mostrarNoPainelEstrela': 'Show on Dashboard (star)',
   'atalhos.cancelar': 'Cancel',
   'atalhos.salvarAtalho': 'Save shortcut',
@@ -447,6 +447,12 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'avisos.entrouNoServidor': 'joined the server',
   'avisos.saiuDoServidor': 'left the server',
   'avisos.fecharAviso': 'Close notice',
+  'avisoMigracao.fechar': 'Close',
+  'mensagemErro.trocarAPortaNasOpcoes': 'Change the port in Options',
+  'camposDoJogo.portaDoServidor': 'Server port',
+  'camposDoJogo.portaPadrao25565':
+    'The default is 25565. Only change it if another program already uses that port; it applies the next time the server starts.',
+  'p.config.aPortaPrecisaSerUm': 'The port must be a number from 1 to 65535.',
   'avisoVersaoApp.hubsquareDisponivel': 'HubSquare {versao} available',
   'avisoVersaoApp.pularEstaVersao': 'Skip this version',
   'avisoVersaoApp.lembrarDepois': 'Remind me later',
@@ -519,7 +525,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'telaConexao.paraQuemEstaNoMesmo': 'For people on the same Wi-Fi or home network.',
   'telaConexao.abrirAPortaNoRoteador':
     'Open the port on your router: your friends connect through your public IP.',
-  'telaConexao.emUsoSeusAmigosEntram': '✓ In use: your friends connect this way',
+  'telaConexao.emUsoSeusAmigosEntram': 'In use: your friends connect this way',
   'telaConexao.usarEsteMetodo': 'Use this method',
   'telaConexao.testarTudo': 'Test everything',
   'telaConexao.testarAConexaoDoServidor': 'Test the server connection',
@@ -612,10 +618,9 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'ajusteAtualizacoes.verificarAtualizacoesAutomaticamente': 'Check for updates automatically',
   'ajusteAtualizacoes.aoAbrirOAppE':
     'When the app opens and every 6 hours, it only checks for new versions of the software, Minecraft, mods or the modpack, and shows a notice on the Dashboard. Nothing updates unless you click.',
-  'ajusteAtualizacoes.avisarQuandoSairVersaoNova':
-    'Let me know when a new HubSquare version comes out',
+  'ajusteAtualizacoes.avisarQuandoSairVersaoNova': 'Update HubSquare automatically',
   'ajusteAtualizacoes.aoAbrirOAppE2':
-    'When the app opens and every 6 hours, it checks GitHub for a new version. The notice only opens the download page; nothing installs on its own.',
+    'When the app opens and every 6 hours, it checks GitHub for a new version and downloads it in the background. It only installs when you ask or when you close the app, never with the server running or the game getting ready.',
   'camposDoJogo.jogo': 'Game',
   'camposDoJogo.modoDeJogo': 'Game mode',
   'camposDoJogo.dificuldade': 'Difficulty',
@@ -655,31 +660,10 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
     'Click a line and then a color or style: the code goes where the cursor is. Past {CARACTERES_POR_LINHA} characters, the line may get cut off in the game. Total: {length}/{MAX_MOTD}.',
   'editorMotd.previaNaListaDeServidores': 'Preview in the server list',
   'integracaoCurseForge.curseforge': 'CurseForge',
-  'integracaoCurseForge.opcionalComASuaChave':
-    'Optional. With your own CurseForge API key, the Mods › Browse tab also searches and installs CurseForge mods, plugins, modpacks and datapacks. The key is yours: it stays only on this PC, encrypted by Windows, and is never shown again.',
-  'integracaoCurseForge.chaveDoCurseforgeGuardada': 'CurseForge key saved.',
-  'integracaoCurseForge.removerChave': 'Remove key',
-  'integracaoCurseForge.prontoJaDaParaEscolher': 'Done! You can now pick CurseForge in Browse.',
-  'integracaoCurseForge.leia': 'Read',
-  'integracaoCurseForge.eAbraOFormularioDe':
-    'and open the request form there (you need a CurseForge account).',
-  'integracaoCurseForge.comoPedirUmaChaveDa': 'how to request an API key',
-  'integracaoCurseForge.descrevaOUsoPorExemplo':
-    'Describe how you\'ll use it, for example: "personal app that downloads mods for my own server and respects each author\'s distribution setting". Accept the',
-  'integracaoCurseForge.termosDaApi': 'API terms',
-  'integracaoCurseForge.espereOEMailDe':
-    'Wait for the approval email (it can take a few days) and copy the key.',
-  'integracaoCurseForge.coleAquiEmbaixoEClique':
-    'Paste it below and click Save. The app checks the key before saving it.',
-  'integracaoCurseForge.chaveDaApiDoCurseforge': 'CurseForge API key',
-  'integracaoCurseForge.colarUmaChaveNova': 'Paste a new key',
-  'integracaoCurseForge.coleAChaveDaApi': 'Paste the API key here',
-  'integracaoCurseForge.conferindo': 'Checking...',
-  'integracaoCurseForge.salvar': 'Save',
-  'integracaoCurseForge.removerAChaveDoCurseforge': 'Remove the CurseForge key?',
-  'integracaoCurseForge.remover': 'Remove',
-  'integracaoCurseForge.oExplorarDeixaDeMostrar':
-    "Browse stops showing CurseForge until you paste the key again. What's already installed stays on the server.",
+  'integracaoCurseForge.ativo':
+    "Active: Explore searches and downloads from CurseForge with HubSquare's official key.",
+  'integracaoCurseForge.emBreve':
+    'Coming soon: CurseForge arrives when HubSquare gets its official API key. Until then, Explore uses Modrinth (and Hangar on Paper servers).',
   'opcoesDoJogo.salvando': 'Saving...',
   'opcoesDoJogo.salvar': 'Save',
   'opcoesDoJogo.configuracoesSalvas': 'Settings saved.',
@@ -1052,7 +1036,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'detalhesProjeto.estavel': 'Release',
   'detalhesProjeto.beta': 'Beta',
   'detalhesProjeto.alfa': 'Alpha',
-  'detalhesProjeto.voltarAoExplorar': '‹ Back to Browse',
+  'detalhesProjeto.voltarAoExplorar': 'Back to Browse',
   'detalhesProjeto.comOServidorLigadoEle':
     ' With the server running, it kicks in when the server restarts.',
   'detalhesProjeto.atualizado': 'Updated.{reiniciar}',
@@ -1088,7 +1072,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'detalhesProjeto.naoServeParaEsteServidor': "Doesn't fit this server",
   'detalhesProjeto.verificando': 'Checking...',
   'detalhesProjeto.instalando': 'Installing...',
-  'detalhesProjeto.naoHaVersaoParaO': "⚠ There's no version for Minecraft {versao}",
+  'detalhesProjeto.naoHaVersaoParaO': "There's no version for Minecraft {versao}",
   'detalhesProjeto.com': ' with {nomeLoader}',
   'detalhesProjeto.baixePeloSite': 'Download from the website',
   'detalhesProjeto.removerDoMundo': 'Remove from world',
@@ -1155,7 +1139,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'downloadsNecessarios.downloadsPendentes': 'Pending downloads ({n})',
   'downloadsNecessarios.aguardando': 'Waiting',
   'downloadsNecessarios.detectadoConferindo': 'Found, checking…',
-  'downloadsNecessarios.pronto': 'Ready ✓',
+  'downloadsNecessarios.pronto': 'Ready',
   'downloadsNecessarios.arquivoDiferente': 'Different file',
   'downloadsNecessarios.para': 'For: {nomeAlvo}',
   'downloadsNecessarios.abrirPaginaDeDownload': 'Open download page',
@@ -1224,8 +1208,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'explorar.fonte': 'Source',
   'explorar.tipoDeConteudo': 'Content type',
   'explorar.paraProcurarNoCurseforgeO':
-    "To search CurseForge, the app needs your CurseForge API key (it's free and takes a few days to get approved).",
-  'explorar.configurar': 'Set up',
+    'CurseForge coming soon: it arrives when HubSquare gets its official API key. For now, use Modrinth.',
   'explorar.noCurseforgeArquivosQueO':
     ' On CurseForge, files whose author doesn\'t let other apps download them show up as "Download from the website".',
   'explorar.procurarNo': 'Search {toLowerCase} on {v}',
@@ -1248,7 +1231,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'explorar.porDownloads': 'by {autor} · {format} downloads · {format2} {card}',
   'explorar.noPacote': 'In the pack',
   'explorar.instalado': 'Installed',
-  'explorar.soDoJogador': '⚠ Client only',
+  'explorar.soDoJogador': 'Client only',
   'fraseCompat.naoMostrarDeNovo': "Don't show again",
   'instalados.modrinth': 'Modrinth',
   'instalados.hangar': 'Hangar',
@@ -1349,7 +1332,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'instalados.fonte2': 'Source',
   'instalados.versao': 'Version',
   'instalados.instaladoEm': 'Installed on',
-  'instalados.voltarAosInstalados': '‹ Back to Installed',
+  'instalados.voltarAosInstalados': 'Back to Installed',
   'instalados.oQueEstaInstalado': "What's installed",
   'instalados.semConexaoComOModrinth':
     'No connection to Modrinth: some names, icons and updates may be missing.',
@@ -1446,7 +1429,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'modpackEAmigos.incluidosNoArquivoNaoEstao':
     'Included in the file (not on Modrinth, but the license allows it):',
   'modpackEAmigos.baixeManualmenteNaoEstaoNo':
-    "⚠ Download manually (not on Modrinth and the license doesn't allow including them):",
+    "Download manually (not on Modrinth and the license doesn't allow including them):",
   'modpackEAmigos.mandeOArquivoJuntoCom': 'Send the file along with this text:',
   'modpackEAmigos.modpack': 'Modpack {nome}',
   'modpackEAmigos.desligueOServidorParaAtualizar': 'Stop the server to update the modpack',
@@ -1549,7 +1532,6 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'nomesModrinth.minecraft': 'Minecraft',
   'painelMod.mod': 'Mod {titulo}',
   'painelMod.semVersao': 'No version',
-  'painelMod.texto': '×',
   'painelMod.fecharOPainel': 'Close panel',
   'painelMod.partesDoMod': 'Mod sections',
   'painelMod.visaoGeral': 'Overview',
@@ -1631,8 +1613,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
     'Switched to {nome}. The previous version was kept so you can go back.{reiniciar}',
   'painelMod.trocando': 'Switching...',
   'painelMod.usarEstaVersao': 'Use this version',
-  'partesExplorar.filtros': '« Filters',
-  'partesExplorar.filtros2': 'Filters »',
+  'partesExplorar.filtros': 'Filters',
   'partesExplorar.procurar': 'Search',
   'partesExplorar.ordenarPor': 'Sort by',
   'partesExplorar.ordenar': 'Sort: {rotulo}',
@@ -1641,7 +1622,6 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'partesExplorar.lista': 'List',
   'partesExplorar.filtrosAtivos': 'Active filters',
   'partesExplorar.tirarOFiltro': 'Remove filter {rotulo}',
-  'partesExplorar.texto': '×',
   'partesExplorar.limparFiltros': 'Clear filters',
   'partesExplorar.filtros3': 'Filters',
   'partesExplorar.selecionar': 'Select {titulo}',
@@ -1948,7 +1928,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
     "The report doesn't point to any mod. Check the file in the installation's crash-reports folder.",
   'telaJogar.aguardandoODownload': 'Waiting for the download',
   'telaJogar.detectadoConferindo': 'Found, checking…',
-  'telaJogar.instalado': 'Installed ✓',
+  'telaJogar.instalado': 'Installed',
   'telaJogar.arquivoDiferente': 'Different file',
   'telaJogar.tudoInstaladoLigueOServidor': 'All installed. Start the server',
   'telaJogar.deNovo': 'again.',
@@ -2088,7 +2068,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'backups.istoEApagadoDeVez': "This is deleted for good (it doesn't go to any recycle bin):",
   'backups.libera': 'Frees',
   'backups.saoTodosOsBackupsDeste':
-    "⚠ These are all of this server's backups. To confirm, type its name:",
+    "These are all of this server's backups. To confirm, type its name:",
   'backups.nomeDoServidor': 'Server name',
   'banner.fundo': 'Background',
   'banner.trocarOFundo': 'Change background',
@@ -2149,14 +2129,14 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'console.tabCompletaEscolheEscFecha': 'Tab completes · ↑↓ picks · Esc closes',
   'console.comandosFavoritosEHistorico': 'Favorite commands and history',
   'console.favoritos': 'Favorites',
-  'console.nenhumAindaUseNoHistorico': 'None yet: use ☆ in the history.',
+  'console.nenhumAindaUseNoHistorico': 'None yet: mark a command in the history.',
   'console.tirarDosFavoritos': 'Remove from favorites',
   'console.historico': 'History',
   'console.salvarNosFavoritos': 'Save to favorites',
   'console.digiteUmComandoEAperte': 'Type a command and press Enter (Tab completes, ↑↓ history)',
   'console.ligueOServidorParaUsar': 'Start the server to use commands',
   'console.comandoDoServidor': 'Server command',
-  'console.favoritos2': '★ Favorites',
+  'console.favoritos2': 'Favorites',
   'listaJogadores.jogadores': 'Players ({length})',
   'listaJogadores.ninguemOnlineAgora': 'Nobody online right now.',
   'listaJogadores.acoesPara': 'Actions for {nome}',
@@ -2320,7 +2300,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'telaServidores.apagando': 'Deleting...',
   'telaServidores.apagarParaSempre': 'Delete forever',
   'telaServidores.aPastaDoServidorE':
-    'The server folder and everything in it will be deleted. First, the app makes a final world backup, kept in Documents\\ServSquare\\backups.',
+    'The server folder and everything in it will be deleted. First, the app makes a final world backup, kept in Documents\\HubSquare\\backups.',
   'telaServidores.paraConfirmarDigiteONome': 'To confirm, type the server name:',
   'telaServidores.recadoParaOsAmigosDe': "Message for {nome}'s friends",
   'telaServidores.salvar': 'Save',
@@ -2379,7 +2359,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'p.arquivos.digiteSoONomeSem': 'Type just the name, without slashes.',
   'p.arquivos.aPastaDoServidorNao': "The server folder can't be changed.",
   'p.arquivos.esseArquivoEDoServsquare':
-    "That file belongs to ServSquare and can't be deleted or renamed.",
+    "That file belongs to HubSquare and can't be deleted or renamed.",
   'p.arquivos.essaEAPastaDo':
     "That's the folder of the world that's running. Stop the server and try again.",
   'p.arquivos.naoConseguiAbrirEssaPasta': "Couldn't open that folder. It may have been deleted.",
@@ -2522,12 +2502,6 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'p.central.esseAtalhoApagaCoisasOu':
     'This shortcut deletes things or removes players: confirm first.',
   'p.central.comandoVazio': 'Empty command.',
-  'p.chaveCurseForge.essaChaveNaoPareceCerta':
-    "That key doesn't look right. Copy the whole key from the CurseForge email.",
-  'p.chaveCurseForge.oWindowsNaoDeixouCriptografar':
-    "Windows didn't let the app encrypt the key, so it wasn't saved. Restart the PC and try again.",
-  'p.chaveCurseForge.oCurseforgeRecusouEssaChave':
-    "CurseForge rejected that key. Check that you copied it correctly and that it's already approved.",
   'p.clienteLoader.oAindaNaoTemO':
     "{v} doesn't support Minecraft {versao} yet. Pick another version.",
   'p.clienteLoader.forge': 'Forge',
@@ -3070,7 +3044,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
     "The name you typed doesn't match. Type the server name exactly as it appears.",
   'p.listaServidores.desligueOServidorAntesDe': 'Stop the server before deleting.',
   'p.listaServidores.aPastaDesseServidorFica':
-    "This server's folder is outside the ServSquare folder, so the app doesn't delete it by itself. Delete it in File Explorer if you want.",
+    "This server's folder is outside the HubSquare folder, so the app doesn't delete it by itself. Delete it in File Explorer if you want.",
   'p.listaServidores.naoConseguiFazerOBackup':
     "Couldn't make the final world backup, so the server wasn't deleted. Try again.",
   'p.listaServidores.naoConseguiApagarAPasta':
@@ -3164,6 +3138,8 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'p.mods.oNaoAceitaModsNem':
     "{v} doesn't support mods or plugins. Switch the software on the Software screen.",
   'p.mods.servsquareNaoConseguiMudar': "[ServSquare] Couldn't change {arquivo}: {detalhar}",
+  'p.migracao.naoDeuParaMoverAsPastas':
+    "Couldn't move the {antiga} folders to the new {nova} name: a file is in use, the server or the game is open, or permission is missing. Nothing was deleted, and for now the app keeps using the old folders. Close the server and the game and open HubSquare again: it will try by itself.",
   'p.mods.naoTemVersaoPara': '"{titulo}" has no version for {nome}.',
   'p.mods.eSoDoJogadorFunciona':
     '"{titulo}" is client-only: it works in each player\'s game, not on the server. It won\'t be installed.',
@@ -3325,14 +3301,26 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'p.playit.oTempoParaAprovarNo': 'The time to approve in the browser ran out. Click "Link" again.',
   'p.playit.naoConseguiVincularOPlayit': "Couldn't link playit.gg. Try again.",
   'p.playit.codigoDeSaida': 'Exit code: {codigoSaida}\n{saida}',
-  'p.rede.naoConseguiMeConectarA':
-    "Couldn't connect to the internet. Check your connection and try again.",
-  'p.rede.oSiteDeDownloadRespondeu':
-    'The download site replied with an error. Wait a few minutes and try again.',
+  'p.rede.falhaNaoExiste':
+    "Couldn't download {item}: the file or the version doesn't exist on that site. Pick another version; trying again won't help.",
+  'p.rede.falhaRecusado':
+    "Couldn't download {item}: the site refused the download. Trying again now won't help; if it keeps happening, create an error report in Options › Help.",
+  'p.rede.falhaSiteComProblema':
+    "Couldn't download {item}: the site is having trouble right now. Try again later, in a few minutes.",
+  'p.rede.falhaSemConexao':
+    "Couldn't download {item}: no connection to the internet or to the site. Check your internet and try again.",
   'p.rede.http': '{url}\nHTTP {status} {statusText}',
   'p.rede.oDownloadFoiInterrompidoConfira':
-    'The download was interrupted. Check your internet and try again.',
-  'p.rede.oArquivoBaixadoVeioCorrompido': 'The downloaded file came corrupted. Try again.',
+    'The download of {item} was interrupted. Check your internet and try again.',
+  'p.rede.oArquivoBaixadoVeioCorrompido': 'The file for {item} came corrupted. Try again.',
+  'p.rede.itemArquivoDe': 'a file from {host}',
+  'p.rede.itemCliente': 'the {loader} {versao} client',
+  'p.rede.itemJava': 'Java {versao}',
+  'p.rede.itemMod': 'the mod {nome}',
+  'p.rede.itemServidor': 'the {nome} {versao} server',
+  'p.rede.itemModpack': 'the modpack {nome}',
+  'p.rede.itemPlayit': 'the playit.gg program',
+  'p.rede.itemInstalador': 'the {nome} installer',
   'p.relatorio.java': 'Java {name}',
   'p.relatorio.em': 'At {em}\n{texto}',
   'p.relatorio.oRelatorioNaoFoiGerado':
@@ -3415,7 +3403,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'p.servidor.esteServidorEstaEnquantoSeu':
     "This server is {replace}. While your friend is hosting, don't start this server here, or the two worlds will split apart. Only start it if they stopped hosting.",
   'p.servidor.aPortaJaEstaEm':
-    'Port {PORTA} is already in use. Close any other Minecraft server open on the PC and try again.',
+    "Port {porta} is already in use by another program. Close that program or change this server's port in Options.",
   'p.servidor.servsquareLigandoComGbDe': '[ServSquare] Starting {nome} with {ram} GB of RAM{v}...',
   'p.servidor.eAConfiguracaoOtimizadaDo': ' and the optimized Java settings',
   'p.servidor.oJavaNaoIniciouTente': "Java didn't start. Try starting again or restart the PC.",
@@ -3441,6 +3429,16 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'tipos.fabric.oFabricNaoTemUma':
     "Fabric doesn't have a stable version right now. Try again later.",
   'tipos.forge.oForgeAindaNaoTem': "Forge doesn't support {versao} yet. Pick another version.",
+  'tipos.forge.forgeAntesDa1710':
+    "Forge before 1.7.10 isn't supported. Pick 1.7.10 or a newer version.",
+  'tipos.forge.estaVersaoUsaJava8':
+    'This version uses Java 8, which HubSquare downloads by itself.',
+  'p.rede.itemListaDoForge': 'the Forge version list',
+  'p.clienteLoader.oInstaladorDoForgeVeio':
+    "The Forge installer came in a format HubSquare doesn't know. Pick another Forge version.",
+  'p.clienteLoader.bibliotecasDoForge': 'Preparing the Forge libraries ({i} of {total})',
+  'p.clienteLoader.semComoConferirABiblioteca':
+    "There's no way to check the Forge library {nome}, so it wasn't used. Pick another Forge version.",
   'tipos.instalador.copiandoOsArquivosDo': "Copying {nome}'s files",
   'tipos.instalador.instalandoOPodeLevarAlguns': 'Installing {nome} (this can take a few minutes)',
   'tipos.instalador.oInstaladorDoNaoAbriu': "The {nome} installer didn't open. Try again.",
@@ -3619,7 +3617,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
     'A Minecraft Java server (ServSquare) and launcher (PlaySquare) for your PC, to play with friends. Open source, no account of its own and no ads.',
   'sobre.versao': 'Version {versao}',
   'sobre.fontes':
-    'Mods, plugins and modpacks come from Modrinth, CurseForge (with your own API key) and Hangar. Names, descriptions and images belong to their authors.',
+    'Mods, plugins and modpacks come from Modrinth and Hangar. Names, descriptions and images belong to their authors.',
   'sobre.links': 'Links',
   'sobre.repositorio': 'Source code',
   'sobre.licenca': 'License',
@@ -3730,5 +3728,70 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'celular.eleDesligaELiga': 'It stops (with a backup) and starts again.',
   'celular.trocarDeServidor': 'Switch servers?',
   'celular.estaLigado': '{atual} is running. Stop it (with a backup) and start {novo}?',
-  'celular.trocar': 'Switch'
+  'celular.trocar': 'Switch',
+  'relatar.relatarProblema': 'Report a problem',
+  'relatar.explicacao':
+    'Tell us what happened. You choose how to send it: email opens in your email app and GitHub opens in your browser, both already filled in. Nothing leaves your PC until you send it.',
+  'relatar.sobreExplicacao':
+    'Found a bug or have a suggestion? Send it by email or on GitHub, with the error report ready to attach.',
+  'relatar.tipo': 'Type',
+  'relatar.tipoBug': 'Bug',
+  'relatar.tipoProblema': 'Problem',
+  'relatar.tipoSugestao': 'Suggestion',
+  'relatar.tipoOutro': 'Other',
+  'relatar.descricao': 'Description',
+  'relatar.descricaoDica': 'What you did, what happened and what you expected to happen.',
+  'relatar.incluirRelatorio': 'Include error report',
+  'relatar.incluirRelatorioDica':
+    'Creates the .zip without secrets on your Desktop (logs, system, settings and mod list; never worlds or mod files) for you to attach.',
+  'relatar.enviarPorEmail': 'Send by email',
+  'relatar.abrirNoGithub': 'Open on GitHub',
+  'relatar.preparando': 'Preparing...',
+  'relatar.anexeOArquivo':
+    'Your email opened. Attach the file that just appeared ({arquivo}) and send it.',
+  'relatar.emailAberto': 'Your email opened already filled in. Check it and send it.',
+  'relatar.semProgramaDeEmail':
+    "We couldn't find an email app on this PC. Send the message from your email to this address:",
+  'relatar.copiar': 'Copy',
+  'relatar.copiado': 'Copied',
+  'relatar.arrasteParaAIssue':
+    'The issue opened in your browser. Drag the file {arquivo} (on your Desktop) into it before submitting.',
+  'relatar.issueAberta':
+    'The issue opened in your browser already filled in. Check it and submit it.',
+  'relatar.mostrarOArquivo': 'Show the file',
+  'relatar.corpoVersao': 'HubSquare version',
+  'relatar.corpoWindows': 'Windows',
+  'relatar.corpoIdioma': 'Language',
+  'relatar.corpoRelatorio': 'Error report (attached)',
+  'relatar.corpoSemRelatorio': 'No error report.',
+  'relatar.corpoCortado': 'text cut to fit the link',
+  'relatar.corpoVejaAcima': 'Described in the field above.',
+  'relatar.corpoArrasteOArquivo': 'Drag the file {arquivo}, on your Desktop, here.',
+  'p.relatar.faltaADescricao': 'Write what happened before sending.',
+  'p.relatar.semRelatorio': 'No error report has been created yet.',
+  'p.bandeja.relatarProblema': 'Report a problem...',
+  'avisoVersaoApp.versaoPronta': 'Version {versao} ready',
+  'avisoVersaoApp.prontaTexto':
+    'HubSquare {versao} is already downloaded. It installs when you restart from here or when you close the app.',
+  'avisoVersaoApp.reiniciarEAtualizar': 'Restart and update',
+  'avisoVersaoApp.aoFechar': 'When I close',
+  'avisoVersaoApp.verNovidades': "See what's new",
+  'avisoVersaoApp.esconderNovidades': "Hide what's new",
+  'avisoVersaoApp.esperandoServidor':
+    'Waiting for the server to stop. It updates on its own once it stops.',
+  'avisoVersaoApp.esperandoBackup':
+    'Waiting for the backup to finish. It updates on its own right after.',
+  'avisoVersaoApp.esperandoModpack':
+    'Waiting for the modpack to finish installing. It updates on its own right after.',
+  'avisoVersaoApp.esperandoJogar':
+    'Waiting for PLAY to finish getting the game ready. It updates on its own right after.',
+  'telaAparencia.logo': 'Logo',
+  'telaAparencia.mostrarLogoNaBarra': 'Show the logo in the sidebar',
+  'telaAparencia.mostrarLogoDica':
+    'When off, the Serv/Play tabs move up to the top of the sidebar. About always shows the logo.',
+  'telaAparencia.coresDaLogo': 'Logo colors',
+  'telaAparencia.coresDoFundo': 'Match the background',
+  'telaAparencia.coresOficiais': 'Official',
+  'telaAparencia.coresLogoDica':
+    'When it matches the background, the logo changes color with the biome or the image and stays easy to read. The Windows icon, the tray and the installer always use the official colors.'
 }

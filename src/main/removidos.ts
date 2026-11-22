@@ -11,6 +11,7 @@ import { dentroDe } from './mundo'
 import { pastaLivre } from './pastaLivre'
 import { aoLigar, esperarTarefas, eventos, lerEstado, registrarNoConsole } from './servidor'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // "Removidos recentemente" (Fase 23.2): o que sai pela aba Instalados vem para cá por 7 dias,
 // dentro da pasta de backups do servidor. Cada item é uma pasta com item.json e o arquivo.
@@ -133,7 +134,7 @@ export async function apagarEntrada(info: InfoServidor, id: string): Promise<voi
 
 // Datapacks e outros arquivos que o mods.ts não cuida: com o servidor ligado, a remoção espera
 // ele desligar (o mundo usa os arquivos). A lista fica na pasta do servidor.
-const AGENDA = 'servsquare-remover.json'
+const AGENDA = 'hubsquare-remover.json'
 
 interface Agendado extends Pick<ItemRemovido, 'titulo' | 'categoria'> {
   origem: string
@@ -152,7 +153,7 @@ let fila: Promise<unknown> = Promise.resolve()
 
 function emFila<T>(tarefa: () => Promise<T>): Promise<T> {
   const r = fila.then(tarefa)
-  fila = r.catch(() => {})
+  fila = r.catch(() => {}) // a fila só não pode parar; quem esperou a tarefa recebe o erro
   return r
 }
 
@@ -208,7 +209,7 @@ eventos.on('desligou', ({ info }) => {
   setImmediate(() => {
     void esperarTarefas()
       .then(() => (lerEstado() === 'desligado' ? aplicarAgenda(info) : undefined))
-      .catch(() => {})
+      .catch(registrarErro('removidos.ts', 'aplicar as remoções agendadas ao desligar'))
   })
 })
 aoLigar((info) => aplicarAgenda(info))

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ErroTela, InventarioJogador, Progresso, SlotItem } from '../../../shared/tipos'
 import { Flutuante } from '../componentes/Flutuante'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeArquivos, IconeJogadores } from '../componentes/icones'
+import { IconeArquivos, IconeJogadores, IconeRecarregar } from '../icones'
 import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import { Acordeao, CardPainel } from '../componentes/paineis'
 import { Aviso, Botao, EstadoVazio } from '../componentes/ui'
@@ -53,7 +53,7 @@ export function AbaInventario({ nome }: { nome: string }): React.JSX.Element {
                 disabled={atualizando}
                 onClick={() => void carregar()}
               >
-                ⟳
+                <IconeRecarregar />
               </Botao>
             }
           >

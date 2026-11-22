@@ -35,7 +35,9 @@ export async function garantirJava(versao: number, aoProgredir: AoProgredir): Pr
     zip,
     { algoritmo: 'sha256', valor: pacote.checksum },
     `Baixando o Java ${versao}`,
-    aoProgredir
+    aoProgredir,
+    undefined,
+    t('p.rede.itemJava', { versao })
   )
 
   aoProgredir({ etapa: t('p.java.instalandoOJava', { versao }), recebido: 0, total: 0 })

@@ -8,7 +8,7 @@ import type {
   Progresso
 } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeComandos, IconePocao } from '../componentes/icones'
+import { IconeComandos, IconePocao } from '../icones'
 import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import { CardPainel } from '../componentes/paineis'
 import {

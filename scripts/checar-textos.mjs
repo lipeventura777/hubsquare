@@ -2,7 +2,7 @@
 // processo principal, fora de src/shared/i18n. Falha se achar. Confere:
 // - texto dentro de JSX e os atributos title, alt, aria-label, placeholder e label;
 // - no processo principal: dialog.show*(), new Notification(), label: de menus e setToolTip().
-// Nomes próprios e siglas (HubSquare, Modrinth, CPU, RAM...) não contam como texto a traduzir.
+// Nomes próprios e siglas (HubSquare e as metades do wordmark, Modrinth, CPU, RAM...) não contam como texto a traduzir.
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import ts from 'typescript'
@@ -19,7 +19,7 @@ const ARQUIVOS_FORA = {
 }
 
 const NOMES = new Set(
-  'hubsquare servsquare playsquare modrinth curseforge hangar minecraft mojang microsoft java paper vanilla fabric forge neoforge quilt iris oculus radmin vpn tailscale playit gg cpu ram tps kdr pin motd eula uuid op xp url tcp udp upnp ok gb mb kb json zip mrpack jar spark chunky bluemap dynmap discord github windows prism launcher nether end serv play the x y z f2 f3 rcon id lan ip ipv4 cgnat api v'.split(
+  'hubsquare hub square servsquare playsquare modrinth curseforge hangar minecraft mojang microsoft java paper vanilla fabric forge neoforge quilt iris oculus radmin vpn tailscale playit gg cpu ram tps kdr pin motd eula uuid op xp url tcp udp upnp ok gb mb kb json zip mrpack jar spark chunky bluemap dynmap discord github windows prism launcher nether end serv play the x y z f2 f3 rcon id lan ip ipv4 cgnat api v'.split(
     ' '
   )
 )

@@ -84,7 +84,7 @@ test('diagnóstico do amigo: instalação desatualizada, depois nick não aprova
     // O fluxo de sempre do ATUALIZAR: confirma os diálogos dele até a instalação ficar montada.
     const montada = (): boolean =>
       JSON.parse(
-        readFileSync(join(amigo.pasta, 'appData', 'ServSquare', 'instalacoes.json'), 'utf8')
+        readFileSync(join(amigo.pasta, 'appData', 'HubSquare', 'instalacoes.json'), 'utf8')
       ).instalacoes.some(
         (i: { origem: { tipo: string }; instaladaEm?: string }) =>
           i.origem.tipo === 'convite' && !!i.instaladaEm

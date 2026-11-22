@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { caminhoNoServidor } from '../src/main/caminhoServidor.ts'
 
 test('aceita caminhos dentro da pasta do servidor e recusa os de fora', async () => {
-  const tudo = mkdtempSync(join(tmpdir(), 'servsquare-caminho-'))
+  const tudo = mkdtempSync(join(tmpdir(), 'hubsquare-caminho-'))
   const raiz = join(tudo, 'servidor')
   const fora = join(tudo, 'segredo')
   mkdirSync(join(raiz, 'plugins'), { recursive: true })

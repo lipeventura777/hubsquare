@@ -305,7 +305,7 @@ async function doApp(info: InfoServidor): Promise<ItemInstalado[]> {
   }
 
   if (info.modpack) {
-    const copia = await stat(join(info.pasta, 'servsquare-modpack.mrpack')).catch(() => null)
+    const copia = await stat(join(info.pasta, 'hubsquare-modpack.mrpack')).catch(() => null)
     itens.push({
       ...base,
       chave: 'modpack',

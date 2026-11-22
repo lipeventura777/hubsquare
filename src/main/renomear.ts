@@ -12,7 +12,7 @@ export async function abrirPastaDoServidor(): Promise<void> {
   }
 }
 
-// Renomeia só o nome mostrado (índice e servsquare.json). A pasta do servidor e a de backups
+// Renomeia só o nome mostrado (índice e hubsquare.json). A pasta do servidor e a de backups
 // não mudam de lugar: nada é movido fora do fluxo "Apagar servidor".
 // Sem id, renomeia o servidor ativo.
 export async function renomearServidor(valor: unknown, id?: unknown): Promise<void> {

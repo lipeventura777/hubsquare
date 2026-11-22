@@ -1,5 +1,6 @@
-# appId fica o do ServSquare: assim o HubSquare instala por cima e substitui a versão antiga.
-appId: com.servsquare.app
+# Fase E2: appId do HubSquare. O build/installer.nsh tira a instalação antiga (com.servsquare.app)
+# antes de instalar, sem apagar dados.
+appId: com.hubsquare.app
 productName: HubSquare
 # Detalhes do .exe no Windows (Propriedades › Detalhes): nome, versão (do package.json), autor e
 # copyright.
@@ -43,7 +44,7 @@ nsis:
   perMachine: false
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
-  # A licença aparece numa tela do instalador.
+  # A licença (GPL-3.0-or-later, texto oficial) aparece numa tela do instalador.
   license: LICENSE
   artifactName: HubSquare-Setup-${version}.${ext}
   shortcutName: HubSquare
@@ -68,6 +69,15 @@ fileAssociations:
   - ext: hubsquare
     name: Convite do HubSquare
     description: Convite do HubSquare
+    # Logo nova: o .ico tem a versão pequena até 48 px e a completa de 64 px para cima.
+    icon: build/icon.ico
 npmRebuild: false
-# Sem atualização automática e sem publicar em lugar nenhum.
-publish: null
+# Fase L1: atualização automática pelos releases do GitHub do repositório (o mesmo do
+# package.json). Gera o latest.yml e o .blockmap no release/ e o app-update.yml dentro do app.
+# O npm run dist nunca publica (--publish never): quem sobe os arquivos é o release.yml, num
+# release em rascunho.
+publish:
+  provider: github
+  owner: lipeventura777
+  repo: hubsquare
+  releaseType: draft

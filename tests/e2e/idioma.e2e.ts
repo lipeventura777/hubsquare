@@ -16,7 +16,7 @@ import { MC } from './simulado'
 // sem reiniciar o app, instalação antiga sem a pergunta, formatos de número e data, e prints de
 // todas as telas nas duas línguas (.teste/prints-i1/<idioma>/) com a conferência de texto cortado.
 
-const dados = (pasta: string): string => join(pasta, 'appData', 'ServSquare')
+const dados = (pasta: string): string => join(pasta, 'appData', 'HubSquare')
 const idiomaSalvo = (pasta: string): unknown =>
   JSON.parse(readFileSync(join(dados(pasta), 'idioma.json'), 'utf8')).idioma
 const PRINTS = join(__dirname, '..', '..', '.teste', 'prints-i1')

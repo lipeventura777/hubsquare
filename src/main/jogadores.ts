@@ -307,7 +307,7 @@ export async function excluirDadosJogador(
       const campos = opcoes.flatMap((o) => CAMPOS_DAT[o] ?? [])
       const dat = await arquivoDoJogador(info, resumo.uuid, 'dat')
       if (!campos.length || !dat) return
-      const temporario = `${dat}.servsquare`
+      const temporario = `${dat}.hubsquare`
       await writeFile(temporario, limparNaRaiz(await readFile(dat), campos))
       await rename(temporario, dat)
     } catch (e) {

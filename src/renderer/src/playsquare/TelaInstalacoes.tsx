@@ -1,3 +1,4 @@
+import { ehForgeAntigo } from '../../../shared/forgeAntigoRegras'
 import { useCallback, useEffect, useState } from 'react'
 import { pegarConviteParaColar } from '../estrutura/navegar'
 import {
@@ -12,7 +13,7 @@ import {
 import { MensagemErro } from '../componentes/MensagemErro'
 import { desatualizada, useJogar } from './useJogar'
 import { JogarEmBreve, precisaInstalar, rotuloInstalar, useAbrirLauncherLigado } from './Instalar'
-import { IconeInstalacoes } from '../componentes/icones'
+import { IconeInstalacoes, IconeMaisAcoes } from '../icones'
 import { BarraProgresso, Esqueleto } from '../componentes/movimento'
 import { AndamentoModpack } from '../componentes/AndamentoModpack'
 import { TituloPagina } from '../componentes/paineis'
@@ -184,7 +185,7 @@ export function TelaInstalacoes(): React.JSX.Element {
         )}
 
         {lista === null ? (
-          <Esqueleto linhas={3} />
+          <Esqueleto linhas={3} forma="cards" />
         ) : lista.length === 0 ? (
           <EstadoVazio
             icone={<IconeInstalacoes />}
@@ -312,7 +313,7 @@ export function TelaInstalacoes(): React.JSX.Element {
                       }
                     ]}
                   >
-                    ⋯
+                    <IconeMaisAcoes />
                   </Menu>
                 </div>
               </CardImagem>
@@ -450,6 +451,10 @@ function CamposVersao({
           </Selecao>
         )}
       </label>
+      {/* Fase F1: Forge de 1.7.10 a 1.12.1 */}
+      {loader === 'forge' && ehForgeAntigo(versao) && (
+        <p className="col-span-2 text-xs text-muted">{t('tipos.forge.estaVersaoUsaJava8')}</p>
+      )}
     </div>
   )
 }

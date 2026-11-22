@@ -195,7 +195,7 @@ export async function importarMundoDePasta(
     } catch (e) {
       throw new ErroApp(t('p.mundos.naoConseguiCopiarOMundo'), detalhar(e))
     } finally {
-      await rm(temporaria, { recursive: true, force: true }).catch(() => {})
+      await rm(temporaria, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
     }
     return nome
   })
@@ -227,7 +227,7 @@ export async function importarMundoDeZip(
       }
       return nome
     } finally {
-      await rm(temporaria, { recursive: true, force: true }).catch(() => {})
+      await rm(temporaria, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
     }
   })
 }

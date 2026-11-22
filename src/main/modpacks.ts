@@ -73,13 +73,15 @@ import { ARQUIVO_INFO, registrar } from './servidores'
 import { maisNovaEstavel } from './tipos/fabric'
 import { argsDoRunBat } from './tipos/versoesLoader'
 import { pedidosDaPagina, tamanhoValido } from '../shared/paginaRegras'
+import { exigirForgeSuportado } from './tipos/forge'
 import { t } from '../shared/i18n'
+import { registrarErro } from './registroErros'
 
 // Modpacks no formato do Modrinth (.mrpack): criar servidor, atualizar o pack e gerar o
 // "Pacote pros amigos". O pack original fica guardado na pasta do servidor para as Fases 17 e 18.
 
-const ESTADO = 'servsquare-modpack.json' // índice do pack + hash do que ele pôs no servidor
-const COPIA = 'servsquare-modpack.mrpack'
+const ESTADO = 'hubsquare-modpack.json' // índice do pack + hash do que ele pôs no servidor
+const COPIA = 'hubsquare-modpack.mrpack'
 const LOADERS_MODRINTH = ['fabric', 'forge', 'neoforge']
 const DOWNLOADS_JUNTOS = 6
 
@@ -224,7 +226,7 @@ export async function abrirPack(
   sinal?: AbortSignal
 ): Promise<PackAberto> {
   const entradas = await listarPack(arquivo, 'modrinth.index.json')
-  const pasta = join(tmpdir(), `servsquare-mrpack-${randomUUID()}`)
+  const pasta = join(tmpdir(), `hubsquare-mrpack-${randomUUID()}`)
   try {
     await extrairSeguro(arquivo, pasta, entradas.length, aoProgredir, sinal)
     return { pasta, indice: lerIndice(await readFile(join(pasta, 'modrinth.index.json'), 'utf8')) }
@@ -314,7 +316,7 @@ async function copiarGrande(
   const relogio = setInterval(() => {
     stat(destino)
       .then((t) => aoProgredir({ etapa, recebido: t.size, total }))
-      .catch(() => {})
+      .catch(() => {}) // o arquivo de destino ainda não existe no começo da cópia
   }, 500)
   try {
     aoProgredir({ etapa, recebido: 0, total })
@@ -345,12 +347,12 @@ function hashDe(f: ArquivoIndice): { algoritmo: 'sha512' | 'sha1'; valor: string
 export async function limparCacheDe(arquivos: ArquivoIndice[]): Promise<void> {
   for (const f of arquivos) {
     const { valor } = hashDe(f)
-    if (HEX.test(valor)) await rm(join(pastaCache(), valor), { force: true }).catch(() => {})
+    if (HEX.test(valor)) await rm(join(pastaCache(), valor), { force: true }).catch(() => {}) // cache velho; tenta de novo na próxima limpeza
   }
   const limite = Date.now() - 7 * 24 * 3600_000
   for (const n of await readdir(pastaCache()).catch(() => [] as string[])) {
     const t = await stat(join(pastaCache(), n)).catch(() => null)
-    if (t && t.mtimeMs < limite) await rm(join(pastaCache(), n), { force: true }).catch(() => {})
+    if (t && t.mtimeMs < limite) await rm(join(pastaCache(), n), { force: true }).catch(() => {}) // cache velho; tenta de novo na próxima limpeza
   }
 }
 
@@ -424,7 +426,7 @@ async function baixarUm(
     let erro: unknown = null
     for (const url of urls) {
       try {
-        await baixar(url, cache, undefined, f.path, () => {}, sinal)
+        await baixar(url, cache, undefined, f.path, () => {}, sinal, f.path)
         if (await confere(cache)) {
           erro = null
           break
@@ -546,6 +548,8 @@ async function analisarPack(
       }
     })()
     const versaoJogo = indice.dependencies.minecraft
+    // Forge antes da 1.7.10 continua recusado (docs/forge-antigo.md). Servidor de modpack (todas as fontes).
+    exigirForgeSuportado(tipo, versaoJogo)
     await javaDaVersao(versaoJogo) // confere que a versão existe na Mojang
     const doServidor = indice.files.filter(vaiProServidor)
     // Mods nos overrides, pela lista de dentro do pack (sem extrair).
@@ -601,7 +605,7 @@ export async function baixarPack(
   if (!f || !urlDoModrinth(f.url) || !f.filename.endsWith('.mrpack')) {
     throw new ErroApp(t('p.modpacks.esseModpackNaoTemUm'))
   }
-  const temporario = join(tmpdir(), `servsquare-baixando-${randomUUID()}`)
+  const temporario = join(tmpdir(), `hubsquare-baixando-${randomUUID()}`)
   await mkdir(temporario, { recursive: true })
   const arquivo = join(temporario, 'pack.mrpack')
   try {
@@ -611,7 +615,8 @@ export async function baixarPack(
       { algoritmo: 'sha512', valor: f.hashes.sha512 },
       `Baixando o modpack ${v.version_number}`,
       limitarProgresso(aoProgredir),
-      sinal
+      sinal,
+      t('p.rede.itemModpack', { nome: v.version_number })
     )
   } catch (e) {
     await rm(temporario, { recursive: true, force: true })
@@ -672,7 +677,7 @@ export async function analisarDoCurseForge(
     )
   }
   return comCancelar(async (sinal) => {
-    const temporario = join(tmpdir(), `servsquare-baixando-${randomUUID()}`)
+    const temporario = join(tmpdir(), `hubsquare-baixando-${randomUUID()}`)
     await mkdir(temporario, { recursive: true })
     const arquivo = join(temporario, 'pack.zip')
     try {
@@ -682,7 +687,8 @@ export async function analisarDoCurseForge(
         { algoritmo: 'sha1', valor: sha1Pack },
         `Baixando o modpack ${pack.displayName}`,
         limitarProgresso(aoProgredir),
-        sinal
+        sinal,
+        t('p.rede.itemModpack', { nome: pack.displayName })
       )
       const manuais: ArquivoManual[] = []
       // Como no .mrpack: só a lista e o manifest.json, sem extrair o pack.
@@ -826,7 +832,7 @@ export async function criarDeModpack(
       const avisar = limitarProgresso(aoProgredir)
       // O pack só é extraído agora (a análise não extrai). Ao tentar de novo, reaproveita.
       if (!a.extraido || !existsSync(a.extraido)) {
-        const pastaPack = join(tmpdir(), `servsquare-mrpack-${randomUUID()}`)
+        const pastaPack = join(tmpdir(), `hubsquare-mrpack-${randomUUID()}`)
         await extrairSeguro(a.arquivo, pastaPack, a.entradas.length, avisar, sinal)
         a.extraido = pastaPack
       }
@@ -896,19 +902,25 @@ export async function criarDeModpack(
       await limparAnalise(a)
       await limparCacheDe(doServidor)
       // Fase D: o que o autor não deixa baixar abre a janela Downloads necessários.
-      await registrarPendencias({ ...info, id, pasta }, a.manuais).catch(() => {})
+      await registrarPendencias({ ...info, id, pasta }, a.manuais).catch(
+        registrarErro('modpacks.ts', 'registrar os downloads manuais do modpack')
+      )
       return { ...info, id, pasta }
     })
   } catch (e) {
     // Cancelou: o pack extraído pela metade também sai (a análise continua valendo).
     if ((e as ErroApp).cancelado && a.extraido) {
-      await apagarEmTrabalhador(a.extraido).catch(() => {})
+      await apagarEmTrabalhador(a.extraido).catch(
+        registrarErro('modpacks.ts', 'apagar o pack extraído')
+      )
       a.extraido = null
     }
     throw e
   } finally {
     criando = false
-    await apagarEmTrabalhador(provisoria).catch(() => {})
+    await apagarEmTrabalhador(provisoria).catch(
+      registrarErro('modpacks.ts', 'apagar a pasta provisória do servidor de modpack')
+    )
   }
 }
 
@@ -921,8 +933,11 @@ export async function descartarAnalise(token: unknown): Promise<void> {
 }
 
 async function limparAnalise(a: Analise): Promise<void> {
-  if (a.extraido) await apagarEmTrabalhador(a.extraido).catch(() => {})
-  if (a.temporario) await rm(a.temporario, { recursive: true, force: true }).catch(() => {})
+  if (a.extraido)
+    await apagarEmTrabalhador(a.extraido).catch(
+      registrarErro('modpacks.ts', 'apagar o pack extraído')
+    )
+  if (a.temporario) await rm(a.temporario, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
 }
 
 async function gravarEstado(pasta: string, estado: EstadoPack): Promise<void> {
@@ -1058,8 +1073,9 @@ export async function planejarAtualizacaoModpack(
     }
     // O mundo nunca é tocado ao atualizar, nem os arquivos do app.
     const mundo = new Set(pastasDoMundo(await nivelDoMundo(info.pasta)).map((p) => p.toLowerCase()))
+    // Arquivos do app com o nome de antes da Fase E2 (servsquare*) também contam.
     const protegido = (c: string): boolean =>
-      mundo.has(c.split('/')[0].toLowerCase()) || /^servsquare|^\.servsquare|^eula\.txt$/i.test(c)
+      mundo.has(c.split('/')[0].toLowerCase()) || /^\.?(hub|serv)square|^eula\.txt$/i.test(c)
     const comparacao = compararPack(estado.geridos, novos, (c) => disco.get(c) ?? null, protegido)
 
     const token = randomUUID()
@@ -1131,7 +1147,7 @@ export async function atualizarModpack(
     }
 
     // Baixa e copia tudo numa pasta de espera; só depois mexe no servidor.
-    const espera = join(info.pasta, '.servsquare-atualizando')
+    const espera = join(info.pasta, '.hubsquare-atualizando')
     await rm(espera, { recursive: true, force: true })
     const paraEscrever = new Set(escrever)
     const downloads = plano.aberto.indice.files.filter(
@@ -1162,8 +1178,10 @@ export async function atualizarModpack(
       modpack: { ...info.modpack!, versao: plano.aberto.indice.versionId, versaoId: plano.versaoId }
     })
   }).finally(async () => {
-    await apagarEmTrabalhador(plano.aberto.pasta).catch(() => {})
-    await rm(plano.temporario, { recursive: true, force: true }).catch(() => {})
+    await apagarEmTrabalhador(plano.aberto.pasta).catch(
+      registrarErro('modpacks.ts', 'apagar o pack aberto na atualização')
+    )
+    await rm(plano.temporario, { recursive: true, force: true }).catch(() => {}) // pasta temporária; o Windows limpa o que sobrar
   })
 }
 
@@ -1179,7 +1197,7 @@ async function backupDoServidor(info: InfoServidor): Promise<void> {
     ].map((p) => p.toLowerCase())
   )
   const itens = (await readdir(info.pasta)).filter(
-    (n) => !fora.has(n.toLowerCase()) && !n.startsWith('.servsquare')
+    (n) => !fora.has(n.toLowerCase()) && !/^\.(hub|serv)square/i.test(n) // serv: antes da Fase E2
   )
   if (!itens.length) return
   const pasta = join(pastaBackups(info), 'modpack')
@@ -1242,7 +1260,7 @@ export async function gerarPacoteAmigos(
     : await dialog.showSaveDialog(opcoes)
   if (escolha.canceled || !escolha.filePath) return null
 
-  const montagem = join(tmpdir(), `servsquare-amigos-${randomUUID()}`)
+  const montagem = join(tmpdir(), `hubsquare-amigos-${randomUUID()}`)
   try {
     const { arquivos, semModrinth, manuais, somados } = await montarPacoteAmigos(
       info,
@@ -1265,7 +1283,9 @@ export async function gerarPacoteAmigos(
       extras: somados
     }
   } finally {
-    await apagarEmTrabalhador(montagem).catch(() => {})
+    await apagarEmTrabalhador(montagem).catch(
+      registrarErro('modpacks.ts', 'apagar a pasta de montagem do modpack')
+    )
   }
 }
 
@@ -1389,7 +1409,7 @@ export async function montarPacoteAmigos(
   const indice: Indice = {
     formatVersion: 1,
     game: 'minecraft',
-    versionId: `servsquare-${new Date().toISOString().slice(0, 10)}`,
+    versionId: `hubsquare-${new Date().toISOString().slice(0, 10)}`,
     name: `${info.nome} (amigos)`,
     summary: t('p.modpacks.modsParaEntrarNoServidor', { nome: info.nome }),
     files: arquivos,

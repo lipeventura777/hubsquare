@@ -39,11 +39,11 @@ test('cria um servidor Paper pelo assistente', async ({ abrir }) => {
   const a = await abrir()
   await criarPeloAssistente(a.janela, 'Servidor Teste')
   const pasta = pastaServidor(a.pasta, 'Servidor Teste')
-  const info = JSON.parse(readFileSync(join(pasta, 'servsquare.json'), 'utf8'))
+  const info = JSON.parse(readFileSync(join(pasta, 'hubsquare.json'), 'utf8'))
   expect(info).toMatchObject({ nome: 'Servidor Teste', tipo: 'paper', versao: MC, java: 21 })
   expect(readFileSync(join(pasta, 'eula.txt'), 'utf8')).toContain('eula=true')
   expect(existsSync(join(pasta, 'server.jar'))).toBe(true)
-  expect(existsSync(join(a.pasta, 'appData', 'ServSquare', 'java', '21', 'bin', 'java.exe'))).toBe(
+  expect(existsSync(join(a.pasta, 'appData', 'HubSquare', 'java', '21', 'bin', 'java.exe'))).toBe(
     true
   )
   // O servidor novo vira o ativo: o cartão da barra lateral mostra o nome.
@@ -143,15 +143,15 @@ test('cria servidor a partir de um modpack pequeno (.mrpack)', async ({ abrir })
   await j.getByRole('button', { name: 'Criar servidor' }).click()
   await expect(j.getByText('Tudo pronto!')).toBeVisible({ timeout: 90_000 })
 
-  const servidores = join(a.pasta, 'documents', 'ServSquare', 'servidores')
+  const servidores = join(a.pasta, 'documents', 'HubSquare', 'servidores')
   const pasta = readdirSync(servidores)
     .map((n) => join(servidores, n))
-    .find((p) => existsSync(join(p, 'servsquare-modpack.json')))!
+    .find((p) => existsSync(join(p, 'hubsquare-modpack.json')))!
   expect(existsSync(join(pasta, 'mods', 'mod-de-teste-1.0.0.jar'))).toBe(true)
   expect(readFileSync(join(pasta, 'config', 'pack-de-teste.txt'), 'utf8')).toBe(
     'configuração do pack'
   )
-  expect(JSON.parse(readFileSync(join(pasta, 'servsquare.json'), 'utf8'))).toMatchObject({
+  expect(JSON.parse(readFileSync(join(pasta, 'hubsquare.json'), 'utf8'))).toMatchObject({
     tipo: 'fabric',
     versao: MC
   })
@@ -163,7 +163,7 @@ test('convite: o dono convida e o amigo, em outra instância, entra', async ({ a
   await expect(amigo.janela.getByText('Servidor Amigos').first()).toBeVisible({ timeout: 60_000 })
 
   const indice = JSON.parse(
-    readFileSync(join(amigo.pasta, 'appData', 'ServSquare', 'instalacoes.json'), 'utf8')
+    readFileSync(join(amigo.pasta, 'appData', 'HubSquare', 'instalacoes.json'), 'utf8')
   )
   const inst = indice.instalacoes.find(
     (i: { origem: { tipo: string } }) => i.origem.tipo === 'convite'
@@ -177,7 +177,7 @@ test('aparência: migra o tema antigo, troca o bioma, vidro leve e banner por in
 }) => {
   // Preferências de antes da Fase V1: tema claro, cor padrão antiga e uma cor própria no Play.
   const a = await abrir('app', (p) => {
-    const dados = join(p, 'appData', 'ServSquare')
+    const dados = join(p, 'appData', 'HubSquare')
     mkdirSync(dados, { recursive: true })
     writeFileSync(
       join(dados, 'aparencia.json'),
@@ -193,7 +193,7 @@ test('aparência: migra o tema antigo, troca o bioma, vidro leve e banner por in
     )
   })
   const j = a.janela
-  const arquivo = join(a.pasta, 'appData', 'ServSquare', 'aparencia.json')
+  const arquivo = join(a.pasta, 'appData', 'HubSquare', 'aparencia.json')
   const salvo = (): Record<string, unknown> => JSON.parse(readFileSync(arquivo, 'utf8'))
   await expect(j.locator('html')).toHaveAttribute('data-bioma', 'diaClaro')
   expect(salvo()).toMatchObject({
@@ -223,7 +223,7 @@ test('aparência: migra o tema antigo, troca o bioma, vidro leve e banner por in
   const painel = j.getByRole('dialog', { name: 'Trocar o fundo' })
   await painel.getByRole('radio', { name: 'Bioma' }).click()
   await painel.getByRole('radio', { name: 'Noite' }).click()
-  const indice = join(a.pasta, 'appData', 'ServSquare', 'instalacoes.json')
+  const indice = join(a.pasta, 'appData', 'HubSquare', 'instalacoes.json')
   await expect
     .poll(() => JSON.parse(readFileSync(indice, 'utf8')).instalacoes[0].fundo)
     .toEqual({ tipo: 'bioma', bioma: 'noite' })
