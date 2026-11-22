@@ -113,7 +113,7 @@ export const ptBR = {
   'assistente.criando': 'Criando',
   'assistente.criarServidor': 'Criar servidor',
   'assistente.irParaOPainel': 'Ir para o painel',
-  'assistente.bemVindoAoServsquare': 'Bem-vindo ao ServSquare',
+  'assistente.bemVindoAoHubsquare': 'Bem-vindo ao HubSquare',
   'assistente.vamosCriarOSeuServidor': 'Vamos criar o seu servidor em poucos passos.',
   'assistente.queTipoDeServidor': 'Que tipo de servidor?',
   'assistente.recomendado': 'recomendado',

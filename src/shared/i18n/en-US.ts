@@ -114,7 +114,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'assistente.criando': 'Creating',
   'assistente.criarServidor': 'Create server',
   'assistente.irParaOPainel': 'Go to the dashboard',
-  'assistente.bemVindoAoServsquare': 'Welcome to ServSquare',
+  'assistente.bemVindoAoHubsquare': 'Welcome to HubSquare',
   'assistente.vamosCriarOSeuServidor': "Let's create your server in a few steps.",
   'assistente.queTipoDeServidor': 'What kind of server?',
   'assistente.recomendado': 'recommended',

@@ -10,7 +10,8 @@ import {
   type TipoId
 } from '../../../shared/tipos'
 import { MensagemErro } from '../componentes/MensagemErro'
-import { IconeLogo, IconeOk } from '../icones'
+import { IconeOk } from '../icones'
+import { Logo } from '../componentes/Logo'
 import { classesBotao } from '../componentes/estilos'
 import { BarraProgresso } from '../componentes/movimento'
 import { Aviso, Botao, CaixaSelecao, Campo, Secao, Selecao } from '../componentes/ui'
@@ -155,9 +156,9 @@ export function Assistente({
     <div className="relative flex min-h-0 flex-1 flex-col">
       <header className="m-2.5 mb-0 flex shrink-0 flex-col gap-5 bg-panel px-10 py-6">
         <div className="flex items-center gap-3">
-          <IconeLogo className="h-8 w-8 text-accent" />
+          <Logo tamanho={32} />
           <div>
-            <div className="texto-pixel text-[22px]">{tx('assistente.bemVindoAoServsquare')}</div>
+            <div className="texto-pixel text-[22px]">{tx('assistente.bemVindoAoHubsquare')}</div>
             <div className="text-[13px] text-muted">{tx('assistente.vamosCriarOSeuServidor')}</div>
           </div>
         </div>

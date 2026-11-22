@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-11-22
+
+### Fixed
+
+- The first-run server wizard header showed the old icon and "Welcome to ServSquare"; it now shows the new HubSquare logo and "Welcome to HubSquare".
+
 ## [1.5.0] - 2026-11-22
 
 ### Added
