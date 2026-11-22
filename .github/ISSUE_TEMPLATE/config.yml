@@ -2,4 +2,4 @@ blank_issues_enabled: false
 contact_links:
   - name: Security problem / Falha de segurança
     url: https://github.com/lipeventura777/hubsquare/security/advisories/new
-    about: Report it privately. / Relate em particular.
+    about: Report it privately, never in a public issue. / Relate em particular, nunca numa issue pública.

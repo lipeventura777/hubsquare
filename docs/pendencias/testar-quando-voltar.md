@@ -1,5 +1,15 @@
 # Testar quando voltar
 
+## Docs: vitrine do repositório
+
+Passo a passo curto (About, prévia social, etiquetas, decisões): [o-que-fazer-vitrine.md](o-que-fazer-vitrine.md). As capturas e os GIFs já estão em `docs/assets/`.
+
+- [ ] Abrir a página do repositório público no navegador (tema claro e escuro do GitHub) e conferir:
+  logo e nome nos dois temas, selos carregando, GIF andando, botão "Baixar para Windows", troca
+  Português/English e perguntas frequentes abrindo.
+- [ ] Colar o texto de `docs/CONFIGURAR-GITHUB.md` na seção About e subir
+  `docs/assets/social-preview.png` em Settings › General › Social preview.
+
 ## Logo: esconder e cores pelo fundo
 
 - [ ] Aparência › Tema › Logo: com "Acompanhar o fundo", trocar o bioma do app (Aparência › Fundo)

@@ -1,20 +1,31 @@
-name: Bug report / Relatar um problema
+# O app (Relatar problema › Abrir no GitHub) preenche os campos versao, oque e relatorio pelo id:
+# não mude esses ids nem o nome deste arquivo.
+name: Bug report / Relatar um bug
 description: Something doesn't work as expected. / Algo não funciona como deveria.
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks! Please don't include passwords, tokens, PINs or your CurseForge key. For security problems, see SECURITY.md instead.
-        Obrigado! Não inclua senhas, tokens, PIN nem a sua chave do CurseForge. Falhas de segurança: veja o SECURITY.md.
+        Thanks! Don't include passwords, tokens, PINs or invite codes. For security problems, see [SECURITY.md](https://github.com/lipeventura777/hubsquare/blob/main/SECURITY.md) instead.
+        Obrigado! Não inclua senhas, tokens, PIN nem códigos de convite. Falhas de segurança: veja o [SECURITY.md](https://github.com/lipeventura777/hubsquare/blob/main/SECURITY.md).
   - type: input
     id: versao
     attributes:
       label: HubSquare version / Versão do HubSquare
       description: Gear › About. / Engrenagem › Sobre.
-      placeholder: 1.3.0
+      placeholder: 1.5.0
     validations:
       required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did it happen? / Onde aconteceu?
+      options:
+        - ServSquare (server / servidor)
+        - PlaySquare (game / jogo)
+        - Installer or update / Instalador ou atualização
+        - Not sure / Não sei
   - type: textarea
     id: oque
     attributes:
@@ -28,14 +39,17 @@ body:
       placeholder: |
         1. ...
         2. ...
-    validations:
-      required: true
   - type: textarea
     id: esperado
     attributes:
       label: What did you expect? / O que você esperava?
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version / Versão do Windows
+      placeholder: Windows 11 23H2
   - type: textarea
     id: relatorio
     attributes:
       label: Error report / Relatório de erro
-      description: Options › General › Help › "Create error report" saves a .zip without secrets on your Desktop; you can attach it here. / Opções › Gerais › Ajuda › "Gerar relatório de erro" salva um .zip sem segredos na Área de Trabalho; dá para anexar aqui.
+      description: Options › General › Help › "Create error report" saves a .zip without secrets on your Desktop; drag it here. / Opções › Gerais › Ajuda › "Gerar relatório de erro" salva um .zip sem segredos na Área de Trabalho; arraste para cá.

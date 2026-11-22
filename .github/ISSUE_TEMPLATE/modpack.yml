@@ -1,0 +1,59 @@
+name: Modpack problem / Problema com modpack
+description: A modpack doesn't install, doesn't start or crashes. / Um modpack não instala, não liga ou trava.
+labels: [modpack]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening: try **Start** again once (the app fixes some missing mods and Java versions by itself), and check whether the pack works without HubSquare. Don't include passwords, tokens or invite codes.
+        Antes de abrir: tente **Ligar** de novo uma vez (o app conserta sozinho alguns mods que faltam e a versão do Java) e veja se o pack funciona sem o HubSquare. Não inclua senhas, tokens nem códigos de convite.
+  - type: input
+    id: versao
+    attributes:
+      label: HubSquare version / Versão do HubSquare
+      description: Gear › About. / Engrenagem › Sobre.
+      placeholder: 1.5.0
+    validations:
+      required: true
+  - type: input
+    id: pack
+    attributes:
+      label: Modpack link and version / Link e versão do modpack
+      description: The page on Modrinth or CurseForge, or the file name (.mrpack or .zip). / A página no Modrinth ou no CurseForge, ou o nome do arquivo (.mrpack ou .zip).
+      placeholder: https://modrinth.com/modpack/...
+    validations:
+      required: true
+  - type: dropdown
+    id: onde
+    attributes:
+      label: Where? / Onde?
+      options:
+        - Server (ServSquare) / Servidor (ServSquare)
+        - Player installation (PlaySquare) / Instalação do jogador (PlaySquare)
+        - Both / Os dois
+    validations:
+      required: true
+  - type: dropdown
+    id: etapa
+    attributes:
+      label: What fails? / O que falha?
+      options:
+        - Installing / Instalar
+        - Starting the server / Ligar o servidor
+        - Opening the game / Abrir o jogo
+        - Joining the server / Entrar no servidor
+        - Crashes while playing / Trava jogando
+    validations:
+      required: true
+  - type: textarea
+    id: oque
+    attributes:
+      label: What happened? / O que aconteceu?
+      description: The error message, and what "See details" shows. / A mensagem de erro e o que aparece em "Ver detalhes".
+    validations:
+      required: true
+  - type: textarea
+    id: relatorio
+    attributes:
+      label: Error report / Relatório de erro
+      description: Options › General › Help › "Create error report" saves a .zip with the server log and crash reports (no worlds or mod files); drag it here. / Opções › Gerais › Ajuda › "Gerar relatório de erro" salva um .zip com o log do servidor e os relatórios de travamento (sem mundos nem mods); arraste para cá.

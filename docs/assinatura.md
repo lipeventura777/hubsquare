@@ -2,8 +2,7 @@
 
 O `release.yml` já tem os passos da assinatura, **comentados**. Eles só podem ser ligados depois
 que o HubSquare for aceito pelo SignPath Foundation, e isso só acontece com o repositório público
-(veja `CODE_SIGNING_POLICY.md`). Até lá, os releases saem sem assinatura e o Windows mostra o aviso
-do SmartScreen.
+(veja `CODE_SIGNING_POLICY.md`). Até lá, os releases saem sem assinatura.
 
 ## O que precisa existir antes
 

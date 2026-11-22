@@ -89,6 +89,7 @@ Este arquivo é a fonte de verdade do projeto.
 - **Plataforma:** só Windows na 1.x. Login próprio pela Mojang só na v2; até lá vale a regra de nunca fazer login (seção Nome e áreas).
 - **CurseForge:** aparece como "em breve" até o app ter a chave oficial, que entra só no build pelo segredo `CURSEFORGE_API_KEY` do GitHub (Fase L1).
 - **Assinatura e lojas:** o .exe é assinado pelo SignPath (`CODE_SIGNING_POLICY.md`). Microsoft Store só depois de testar o MSIX.
+- **Vitrine do repositório:** README.md em português (principal) e README.en.md em inglês, com as mesmas seções (o README.pt-BR.md só aponta para eles); capturas e GIFs em `docs/assets/` (lista em `docs/assets/CAPTURAS.md`), prévia social em `docs/assets/`, modelos de issue (bug, sugestão, modpack), notas automáticas por etiqueta (`.github/release.yml`), `FUNDING.yml` comentado até escolher a plataforma, `docs/RELEASE_TEMPLATE.md`, `docs/CONFIGURAR-GITHUB.md` e `node docs/ferramentas/verificar-links.mjs` (links e imagens relativos dos .md).
 - **Suporte:** GitHub Issues e o botão "Relatar problema" (Fase R1), que abre o e-mail de suporte (suporte.hubsquare@gmail.com) ou a issue já preenchidos. Sem Discord.
 - **Forge antigo:** suportado desde a Fase F1 a partir do 1.7.10 (seção Escopo); abaixo do 1.7.10 continua fora.
 

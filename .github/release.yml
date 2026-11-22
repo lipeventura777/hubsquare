@@ -1,0 +1,32 @@
+# Notas de versão automáticas do GitHub ("Generate release notes"): agrupa os pull requests pelas
+# etiquetas. Não é o workflow de build (esse fica em .github/workflows/release.yml).
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - duplicate
+      - invalid
+  categories:
+    - title: Novidades / New features
+      labels:
+        - enhancement
+        - feature
+    - title: Correções / Fixes
+      labels:
+        - bug
+        - modpack
+    - title: Segurança / Security
+      labels:
+        - security
+    - title: Tradução / Translation
+      labels:
+        - i18n
+    - title: Documentação / Documentation
+      labels:
+        - documentation
+    - title: Dependências / Dependencies
+      labels:
+        - dependencies
+    - title: Outras mudanças / Other changes
+      labels:
+        - "*"

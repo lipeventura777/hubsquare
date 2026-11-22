@@ -2,7 +2,7 @@
 
 Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
 
-> Status: HubSquare has **not** been accepted by SignPath Foundation yet. Until it is, releases are not code-signed. This page describes the policy the project follows once signing is in place.
+> **Status: planned, not submitted yet** (planejado, ainda não enviado). HubSquare has not applied to SignPath Foundation yet, and **releases are not code-signed**. This page describes the policy the project will follow once signing is in place. How to check a download in the meantime: [README](README.en.md#check-the-file).
 
 ## License
 

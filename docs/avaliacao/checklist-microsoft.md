@@ -21,7 +21,7 @@ Sources: the user's requirements for this phase, the [Minecraft Usage Guidelines
 | 11 | Icon with every common size | Met — `build/icon.ico` (16, 20, 24, 32, 40 and 48 px from the small logo; 64, 128 and 256 px from the full logo) | `scripts/gerar-icone.mjs`, `build/logo/` |
 | 12 | Installer with the license and the right name, in both languages | Met | `electron-builder.yml` (`appId: com.hubsquare.app`, `productName: HubSquare`, `nsis.license`, `multiLanguageInstaller`); `build/installer.nsh` removes the old `com.servsquare.app` entry when installing over 1.4.0 |
 | 13 | SHA-256 checksums for each release | Met — `npm run dist` writes `release/SHA256SUMS.txt` | `scripts/checksums.mjs` |
-| 14 | Code signing (SmartScreen) | **Not yet** — policy ready for SignPath Foundation | `CODE_SIGNING_POLICY.md` |
+| 14 | Code signing | **Not yet** — policy ready for SignPath Foundation | `CODE_SIGNING_POLICY.md` |
 | 15 | Microsoft Store / Defender submission requirements | **To check** — depends on which Microsoft review you submit to | — |
 | 16 | Uninstaller that removes the app | Met — standard NSIS uninstaller (keeps the user's worlds) | `electron-builder.yml` |
 
@@ -54,7 +54,7 @@ Fontes: o pedido desta fase, as [Regras de uso do Minecraft](https://www.minecra
 | 11 | Ícone com todos os tamanhos comuns | Atendida — 16, 20, 24, 32, 40 e 48 px da logo pequena; 64, 128 e 256 px da completa | `scripts/gerar-icone.mjs`, `build/logo/` |
 | 12 | Instalador com a licença e o nome certo, nas duas línguas | Atendida | `electron-builder.yml` (`appId: com.hubsquare.app`, `productName: HubSquare`); `build/installer.nsh` tira a entrada antiga `com.servsquare.app` ao instalar por cima da 1.4.0 |
 | 13 | Checksums SHA-256 de cada versão | Atendida — `npm run dist` grava `release/SHA256SUMS.txt` | `scripts/checksums.mjs` |
-| 14 | Assinatura de código (SmartScreen) | **Ainda não** — política pronta para a SignPath Foundation | `CODE_SIGNING_POLICY.md` |
+| 14 | Assinatura de código | **Ainda não** — política pronta para a SignPath Foundation | `CODE_SIGNING_POLICY.md` |
 | 15 | Exigências da Microsoft Store / Defender | **Conferir** — depende de qual análise da Microsoft você vai pedir | — |
 | 16 | Desinstalador | Atendida — desinstalador padrão do NSIS (mantém os mundos) | `electron-builder.yml` |
 

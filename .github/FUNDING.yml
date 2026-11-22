@@ -1,0 +1,11 @@
+# Botão "Sponsor" do repositório. Tudo comentado até a plataforma de doação ser escolhida:
+# tire o "#" só da linha da plataforma escolhida e troque pelo seu usuário nela.
+# Formato: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# github: [seu-usuario]
+# ko_fi: seu-usuario
+# buy_me_a_coffee: seu-usuario
+# liberapay: seu-usuario
+# open_collective: seu-projeto
+# patreon: seu-usuario
+# custom: ["https://link-da-sua-pagina-de-doacao"]
