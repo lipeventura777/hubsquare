@@ -30,12 +30,28 @@ export async function lerTexto(arquivo: string): Promise<string> {
 // duas trocas (rename) juntas sobre o mesmo destino falham no Windows (ENOENT no temporário que a
 // outra já levou, ou EPERM no destino).
 const filas = new Map<string, Promise<unknown>>()
+
+// No Windows, a troca recusa (EPERM/EACCES/EBUSY) por um instante quando outro processo está com o
+// destino aberto, como o antivírus olhando o arquivo recém-gravado ou outra leitura do app. Tenta de
+// novo algumas vezes, com espera crescente (até ~1,5 s no total); outro erro sobe na hora.
+export async function trocarComPaciencia(de: string, para: string, tentativas = 6): Promise<void> {
+  for (let i = 1; ; i++) {
+    try {
+      return await rename(de, para)
+    } catch (e) {
+      const codigo = (e as NodeJS.ErrnoException).code
+      if (i >= tentativas || !['EPERM', 'EACCES', 'EBUSY'].includes(codigo ?? '')) throw e
+      await new Promise((ok) => setTimeout(ok, 50 * i))
+    }
+  }
+}
+
 export function gravarComSeguranca(arquivo: string, texto: string): Promise<void> {
   const vez = (filas.get(arquivo) ?? Promise.resolve())
     .catch(() => undefined)
     .then(async () => {
       await writeFile(`${arquivo}.tmp`, texto)
-      await rename(`${arquivo}.tmp`, arquivo)
+      await trocarComPaciencia(`${arquivo}.tmp`, arquivo)
     })
   filas.set(arquivo, vez)
   void vez.then(

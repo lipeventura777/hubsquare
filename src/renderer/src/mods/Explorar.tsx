@@ -645,7 +645,9 @@ export function Explorar({
                 ))}
               </ListaDeCards>
             )}
-            {itens && !erro && (
+            {/* Fica enquanto a página nova carrega (com o total já conhecido): dá para trocar de
+                novo, e a troca cancela a anterior (seção 6.9.2 do DESIGN). */}
+            {total > 0 && !erro && (
               <BarraDePaginas
                 pagina={filtros.pagina}
                 tamanho={filtros.tamanho}

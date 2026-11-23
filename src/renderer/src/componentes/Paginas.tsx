@@ -118,7 +118,8 @@ export function BarraDePaginas({
         onSubmit={(e) => {
           e.preventDefault()
           const p = Number(destino)
-          if (Number.isInteger(p)) ir(p)
+          // Campo vazio não é a página 0: não faz nada.
+          if (destino.trim() && Number.isInteger(p)) ir(p)
           setDestino('')
         }}
       >
