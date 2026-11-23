@@ -97,7 +97,7 @@ for (const bioma of BIOMAS) {
 
 test('print da logo na barra lateral sobre uma imagem de fundo', async ({ abrir }) => {
   mkdirSync(PRINTS, { recursive: true })
-  const imagem = join(RAIZ, 'docs', 'imagens', 'en-jogar.png')
+  const imagem = join(RAIZ, 'docs', 'assets', 'en-jogar.png')
   const nome = `${createHash('sha256').update(readFileSync(imagem)).digest('hex')}.png`
   const a = await abrir('imagem', (p) => {
     preparar({

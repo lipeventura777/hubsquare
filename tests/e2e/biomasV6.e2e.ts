@@ -28,6 +28,8 @@ for (const bioma of NOVOS) {
     await expect(j.getByText('Bem-vindo ao HubSquare')).toBeVisible()
     const quadros: string[] = []
     for (let i = 0; i < 8; i++) {
+      // O canvas do fundo pode ainda não estar montado logo depois das boas-vindas aparecerem.
+      await j.locator('canvas.fixed').waitFor({ state: 'attached' })
       quadros.push(await j.evaluate(fundoDoApp))
       await j.waitForTimeout(1000)
     }
