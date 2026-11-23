@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-11-23
+
+### Added
+
+- Support the project (Gear › About): a small card that opens, only when you click it, a dialog with the Pix QR code (made by the app itself, no internet needed) and a "Copy Pix code" button. In English the card only appears once GitHub Sponsors is set up. Donating is entirely optional and unlocks nothing new in the app. HubSquare is and will stay free.
+
+### Fixed
+
+- Explore: the page bar stays on screen while the next page loads, so you can jump again (the slower page is cancelled), and "Go" with an empty box no longer sends you back to page 1.
+- Saving the app's files waits a moment and tries again when Windows briefly locks the file (for example, while the antivirus checks it). This could make deleting a background image fail with an error.
+- Two saves of the same file at the same time (such as the installations list) no longer fail, and syncing installations with your servers no longer runs twice at once.
+- When a friend's app can't reach the invite server, `erros.log` now says which address, at which step and how long it took (never the invite token).
+
 ## [1.5.1] - 2026-11-22
 
 ### Fixed
