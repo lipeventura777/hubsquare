@@ -155,6 +155,8 @@ test('Explorar: trocar de página, tamanho salvo, filtro volta para a 1, detalhe
 
   // Trocar rápido: a página que demora (24 por página, página 8) é cancelada pela seguinte.
   await j.getByLabel('Itens por página').selectOption('24')
+  // Trocar o tamanho volta para a página 1; espera essa volta, senão ela desfaz o "Ir" abaixo.
+  await expect(mostrando).toHaveText('Mostrando 1–24 de 1.234')
   await j.getByLabel('Ir para a página').fill('8')
   await j.getByRole('button', { name: 'Ir', exact: true }).click()
   await j.getByLabel('Ir para a página').fill('9')
