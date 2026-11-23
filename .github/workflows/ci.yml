@@ -23,6 +23,32 @@ jobs:
       - run: npm run build
       - run: npm run lint
       - run: npm test
+      # Os testes de convite abrem duas instâncias do app (dono e amigo) que conversam pelo IP da
+      # rede do runner. No PC do dono o Electron já tem permissão no Firewall; no runner, não.
+      # Informativo: mostra o Firewall e se o runner alcança o próprio IP de rede (é o que os testes de
+      # convite precisam). Nunca derruba o CI.
+      - name: Diagnóstico de rede do runner (informativo)
+        shell: bash
+        continue-on-error: true
+        run: |
+          powershell -NoProfile -Command "Get-NetFirewallProfile | Format-Table Name, Enabled -AutoSize | Out-String"
+          node -e "
+            const os = require('os'), net = require('net')
+            const ip = Object.values(os.networkInterfaces()).flat().find((i) => i.family === 'IPv4' && !i.internal)?.address
+            console.log('IP de rede do runner:', ip)
+            for (const [nome, l] of Object.entries(os.networkInterfaces())) for (const e of l) if (e.family === 'IPv4') console.log('adaptador:', JSON.stringify(nome), e.address, 'interno=' + e.internal)
+            const s = net.createServer((c) => c.end('ok')).listen(0, ip, () => {
+              const porta = s.address().port
+              const c = net.connect(porta, ip)
+              c.setTimeout(3000)
+              c.on('data', () => { console.log('conectou em', ip + ':' + porta); process.exit(0) })
+              c.on('error', (e) => { console.log('falhou:', e.code); process.exit(0) })
+              c.on('timeout', () => { console.log('tempo esgotado'); process.exit(0) })
+            })
+          "
+      - name: Liberar o Electron dos testes no Firewall do runner
+        shell: pwsh
+        run: New-NetFirewallRule -DisplayName 'HubSquare e2e' -Direction Inbound -Action Allow -Profile Any -Program "$env:GITHUB_WORKSPACE\node_modules\electron\dist\electron.exe" | Out-Null
       - run: npx playwright test -c tests/e2e/playwright.config.ts --project=rapido
       - name: Resultados das falhas
         if: failure()

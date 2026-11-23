@@ -256,7 +256,16 @@ async function imagemDe(i: Salva): Promise<string | null> {
 
 // Cada servidor do ServSquare tem a sua instalação: cria as que faltam e acompanha nome, versão
 // e loader do servidor. As de servidores apagados continuam (viram instalações comuns).
-async function sincronizarComServidores(): Promise<void> {
+// A tela chama isto de vários lugares ao mesmo tempo (fundo da janela, banner, lista de instalações):
+// duas execuções juntas viam "faltou a instalação deste servidor" e criavam duas, e as gravações do
+// índice se atropelavam. Quem chega com uma em andamento espera essa mesma.
+let sincronizacao: Promise<void> | null = null
+function sincronizarComServidores(): Promise<void> {
+  sincronizacao ??= sincronizar().finally(() => (sincronizacao = null))
+  return sincronizacao
+}
+
+async function sincronizar(): Promise<void> {
   const indice = await lerIndice()
   const servidores = (await lerIndiceServidores()).servidores
   let mudou = false
@@ -758,14 +767,28 @@ async function lerManifesto(pasta: string, nome: string): Promise<Manifesto | nu
 // Pergunta ao servidor do convite, tentando cada endereço (5 s cada). null: ninguém respondeu.
 async function baixarManifesto(enderecos: string[], token: string): Promise<Manifesto | null> {
   for (const e of enderecos) {
+    const inicio = Date.now()
+    let etapa = 'conectar'
     try {
       const r = await fetch(urlDoManifesto(e, token), { signal: AbortSignal.timeout(5000) })
-      if (!r.ok) continue
+      etapa = 'ler a resposta'
+      if (!r.ok) {
+        registrarErro(
+          'instalacoes.ts',
+          `falar com o servidor do convite em ${e}`
+        )(`resposta HTTP ${r.status}`)
+        continue
+      }
       const texto = await r.text()
       if (texto.length > 5_000_000) continue
       return validarManifesto(JSON.parse(texto))
-    } catch {
-      // próximo endereço
+    } catch (erro) {
+      // próximo endereço; o motivo (sem o token) vai para o erros.log
+      const causa = (erro as { cause?: { code?: string } }).cause?.code
+      registrarErro(
+        'instalacoes.ts',
+        `falar com o servidor do convite em ${e} (parou ao ${etapa}, ${Date.now() - inicio} ms)`
+      )(causa ? `${(erro as Error).message} (${causa})` : erro)
     }
   }
   return null

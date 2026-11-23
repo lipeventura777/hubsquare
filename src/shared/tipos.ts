@@ -1384,6 +1384,15 @@ export interface PedidoRelato {
   incluirRelatorio: boolean
   via: 'email' | 'github'
 }
+// Doações (Engrenagem › Sobre › Apoiar o projeto): o que a tela precisa para mostrar o Pix e o Sponsors.
+export interface DadosApoio {
+  pix: string // copia e cola
+  titular: string
+  cidade: string
+  chave: string
+  sponsorsAtivo: boolean
+}
+
 export interface RelatoEnviado {
   url: string // o mailto: ou a issue nova, já preenchidos
   abriu: boolean // false: o Windows não tem programa de e-mail para o mailto:

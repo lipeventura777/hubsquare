@@ -24,6 +24,8 @@
 
 <p align="center"><strong>Português (Brasil)</strong> · <a href="README.en.md">English</a></p>
 
+<p align="center"><sub>NÃO É UM PRODUTO OFICIAL MINECRAFT. NÃO APROVADO NEM ASSOCIADO À MOJANG OU À MICROSOFT.</sub></p>
+
 <p align="center">
   <img src="docs/assets/pt-demo.gif" width="860" alt="Criando um servidor e indo para a tela Jogar do HubSquare">
 </p>
@@ -177,17 +179,31 @@ O histórico de cada versão está no [CHANGELOG.md](CHANGELOG.md).
 
 Quer ajudar no código? Veja [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Doações
+## Apoie o projeto
 
-O HubSquare é gratuito e vai continuar assim. A forma de doar ainda está sendo escolhida; quando existir, o botão **Sponsor** aparece no topo do repositório.
+> **A doação é totalmente opcional e não desbloqueia nada de novo no app. O HubSquare é e continuará gratuito.**
+
+<p align="center">
+  <img src="docs/assets/pix-apoie-pt.png" width="720" alt="Cartão para apoiar o HubSquare pelo Pix, com o QR Code, o nome do recebedor (Felipe Segantini Ventura) e o aviso de que a doação é opcional">
+</p>
+
+O Pix só funciona com conta em banco brasileiro. Para doar, aponte a câmera do app do seu banco para o QR acima ou use o **Pix copia e cola**:
+
+```text
+00020126580014BR.GOV.BCB.PIX0136c7635702-b5df-4323-8885-c5216230c3c65204000053039865802BR5924Felipe Segantini Ventura6009SAO PAULO62140510XWemeFnmCm63049010
+```
+
+- **Chave aleatória:** `c7635702-b5df-4323-8885-c5216230c3c6`
+- **Recebedor:** Felipe Segantini Ventura (SÃO PAULO)
 
 ## Licença
 
 [GNU General Public License v3.0 ou posterior](LICENSE) (`GPL-3.0-or-later`). Componentes e fontes de terceiros: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-O nome e o logo HubSquare não são cobertos pela licença (marca em registro no INPI). Você pode copiar e mudar o código seguindo a GPL, mas uma versão modificada precisa usar outro nome e outro logo.
+O nome e o logo HubSquare não são cobertos pela licença (marca em registro no INPI). Você pode copiar e mudar o código seguindo a GPL, mas uma versão modificada precisa usar outro nome e outro logo. Detalhes em [TRADEMARK.md](TRADEMARK.md).
 
 ---
 
-<sub>NÃO É UM PRODUTO OFICIAL DO MINECRAFT. NÃO APROVADO PELA OU ASSOCIADO À MOJANG OU MICROSOFT.<br>
+<sub>NÃO É UM PRODUTO OFICIAL MINECRAFT. NÃO APROVADO NEM ASSOCIADO À MOJANG OU À MICROSOFT.<br>
+NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.<br>
 Nomes, descrições e imagens de mods, plugins e modpacks são dos seus autores e aparecem como vêm do Modrinth e do Hangar.</sub>

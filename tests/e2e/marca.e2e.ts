@@ -37,7 +37,8 @@ for (const bioma of ['diaClaro', 'noite'] as const) {
     await j.screenshot({ path: join(PRINTS, `boas-vindas-${bioma}.png`) })
 
     // Barra lateral: a pequena de 32 px com o nome.
-    await j.getByRole('button', { name: /Vou hospedar servidores/ }).click()
+    // Quem clica em "Vou hospedar servidores" é o criarPeloAssistente (clicar aqui também travava
+    // quando a tela antiga ainda estava saindo, num PC mais lento).
     await criarPeloAssistente(j, 'Servidor Marca', MC)
     const nav = j.getByRole('navigation')
     await expect(nav.getByText('Hub', { exact: true })).toBeVisible()

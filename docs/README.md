@@ -14,9 +14,10 @@
 | [avaliacao/checklist-curseforge.md](avaliacao/checklist-curseforge.md) | English + Português | CurseForge review checklist |
 | [avaliacao/checklist-microsoft.md](avaliacao/checklist-microsoft.md) | English + Português | Microsoft / Mojang review checklist |
 | [CONFIGURAR-GITHUB.md](CONFIGURAR-GITHUB.md) | Português | About text, topics, social preview and other repository settings to set on GitHub |
+| [GITHUB-SPONSORS.md](GITHUB-SPONSORS.md) | Português + English | checklist and ready-to-paste profile texts to open the GitHub Sponsors page |
+| [ATIVAR-SPONSORS.md](ATIVAR-SPONSORS.md) | Português | the one command that turns Sponsors on in the app, README and FUNDING.yml |
 | [RELEASE_TEMPLATE.md](RELEASE_TEMPLATE.md) | Português + English | release notes template (what's new, fixes, install, SHA-256, VirusTotal) |
 | [assets/](assets/) | — | logo, social preview and the README screenshots ([assets/CAPTURAS.md](assets/CAPTURAS.md) lists them) |
 | [ferramentas/verificar-links.mjs](ferramentas/verificar-links.mjs) | — | checks that every relative link and image in the `.md` files points to a real file |
-| [imagens/](imagens/) | — | older screenshots (the README now uses [assets/](assets/)) |
 
 Root files: [README](../README.md) (Português; [English](../README.en.md)), [CHANGELOG](../CHANGELOG.md), [CONTRIBUTING](../CONTRIBUTING.md), [SECURITY](../SECURITY.md), [PRIVACY](../PRIVACY.md) ([pt-BR](../PRIVACY.pt-BR.md)), [THIRD_PARTY_NOTICES](../THIRD_PARTY_NOTICES.md), [CODE_SIGNING_POLICY](../CODE_SIGNING_POLICY.md), [LICENSE](../LICENSE). Project rules for contributors and AI assistants: [PROJETO.md](../PROJETO.md) and [DESIGN.md](../DESIGN.md) (Portuguese).

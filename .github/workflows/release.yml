@@ -1,7 +1,8 @@
-# Fase L1: cada tag vX.Y.Z gera um release em RASCUNHO no GitHub com tudo o que o atualizador do
-# app (electron-updater) precisa: o instalador, o latest.yml, o .blockmap e o SHA256SUMS.txt. As
-# novidades vêm da seção da versão no CHANGELOG.md. Quem publica o rascunho é o dono, à mão.
-# O único segredo é CURSEFORGE_API_KEY, usado só no passo do build (nunca impresso).
+# Cada tag vX.Y.Z roda as checagens e o build do instalador num Windows limpo. A release é criada
+# pelo dono, à mão (gh release create, com as notas, o SHA-256 e o VirusTotal); este workflow NUNCA
+# cria outra: só anexa à release que já existe os arquivos que ainda faltam nela (o instalador, o
+# .blockmap, o latest.yml e o SHA256SUMS.txt). O que o dono já subiu nunca é trocado, para o SHA-256
+# da nota continuar certo. O único segredo é CURSEFORGE_API_KEY, usado só no build (nunca impresso).
 name: Release
 
 on:
@@ -10,7 +11,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: write # criar o release em rascunho e subir os arquivos
+  contents: write # anexar os arquivos à release que o dono criou
 
 jobs:
   release:
@@ -91,28 +92,22 @@ jobs:
       #     " "$exe"
       #     node scripts/checksums.mjs
 
-      # As novidades da versão: a seção "## [X.Y.Z]" do CHANGELOG.md, até a próxima seção.
-      - name: Novidades do CHANGELOG
-        run: |
-          node -e "
-            const fs = require('fs')
-            const linhas = fs.readFileSync('CHANGELOG.md', 'utf8').split(/\r?\n/)
-            const i = linhas.findIndex((l) => l.startsWith('## [' + process.env.VERSAO + ']'))
-            let fim = linhas.findIndex((l, n) => n > i && l.startsWith('## ['))
-            if (fim < 0) fim = linhas.length
-            const notas = i < 0 ? 'Veja o CHANGELOG.md.' : linhas.slice(i + 1, fim).join('\n').trim()
-            fs.writeFileSync('notas.md', notas + '\n')
-          "
-
-      # Release em RASCUNHO: nada fica público nem chega ao atualizador até o dono publicar.
-      - name: Criar o release em rascunho
+      # A release precisa existir (o dono cria antes, à mão). Se não existir, para com uma
+      # mensagem: este workflow não cria release.
+      - name: Anexar à release que já existe
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --draft \
-            --title "HubSquare $VERSAO" \
-            --notes-file notas.md \
-            "release/HubSquare-Setup-$VERSAO.exe" \
-            "release/HubSquare-Setup-$VERSAO.exe.blockmap" \
-            release/latest.yml \
-            release/SHA256SUMS.txt
+          if ! gh release view "$GITHUB_REF_NAME" --json tagName > /dev/null 2>&1; then
+            echo "Não há release para $GITHUB_REF_NAME. Crie a release à mão (gh release create) e rode este workflow de novo."
+            exit 1
+          fi
+          ja_tem="$(gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name')"
+          for arquivo in "HubSquare-Setup-$VERSAO.exe" "HubSquare-Setup-$VERSAO.exe.blockmap" latest.yml SHA256SUMS.txt; do
+            if grep -qxF "$arquivo" <<< "$ja_tem"; then
+              echo "A release já tem $arquivo: nada foi trocado."
+            else
+              gh release upload "$GITHUB_REF_NAME" "release/$arquivo"
+              echo "Anexado: $arquivo"
+            fi
+          done

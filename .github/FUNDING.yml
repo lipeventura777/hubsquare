@@ -1,11 +1,10 @@
-# Botão "Sponsor" do repositório. Tudo comentado até a plataforma de doação ser escolhida:
-# tire o "#" só da linha da plataforma escolhida e troque pelo seu usuário nela.
+# Botão "Sponsor" do repositório. A doação é totalmente opcional e não desbloqueia nada no app.
+#
+# custom: leva à seção "Apoie o projeto" do README em português (Pix).
+# github: ainda comentado, porque a conta do GitHub Sponsors não existe. Quando existir, rode
+#   npm run ativar:sponsors -- <usuario> <url>
+# (docs/ATIVAR-SPONSORS.md): o script troca o marcador e tira o "#" da linha.
 # Formato: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
 
-# github: [seu-usuario]
-# ko_fi: seu-usuario
-# buy_me_a_coffee: seu-usuario
-# liberapay: seu-usuario
-# open_collective: seu-projeto
-# patreon: seu-usuario
-# custom: ["https://link-da-sua-pagina-de-doacao"]
+custom: ['https://github.com/lipeventura777/hubsquare#apoie-o-projeto']
+# github: [USUARIO_GITHUB]

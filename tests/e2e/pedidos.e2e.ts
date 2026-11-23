@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { amigoAceita, donoComConvite, expect, pagina, pastaServidor, test } from './apoio'
+import { amigoAceita, donoComConvite, expect, pagina, pastaServidor, test, soNoPc } from './apoio'
 import { MC } from './simulado'
 
 // Fase M4: ao aceitar o convite, o amigo pede para entrar na whitelist; o dono aprova.
@@ -10,6 +10,7 @@ const UUID = '069a79f4-44e9-4726-a5be-fca90e38aaf5' // da conta AmigoTeste no si
 test('pedido: o amigo pede ao aceitar o convite, o dono aprova e o nick entra na whitelist', async ({
   abrir
 }) => {
+  soNoPc()
   const { dono, texto } = await donoComConvite(abrir, MC)
   const amigo = await amigoAceita(abrir, texto, 'AmigoTeste', MC, 'Oi, posso entrar?')
   await expect(amigo.janela.getByText('Servidor Amigos').first()).toBeVisible({ timeout: 60_000 })
@@ -44,6 +45,7 @@ test('pedido: o amigo pede ao aceitar o convite, o dono aprova e o nick entra na
 })
 
 test('pedido: nick que não existe não cria a instalação nem manda pedido', async ({ abrir }) => {
+  soNoPc()
   const { dono, texto } = await donoComConvite(abrir, MC)
   const amigo = await amigoAceita(abrir, texto, 'NinguemAqui123', MC)
   await expect(

@@ -8,8 +8,8 @@ import { test } from 'node:test'
 
 const RAIZ = join(import.meta.dirname, '..')
 const TELAS = join(RAIZ, 'src', 'renderer', 'src')
-// <svg> que não é ícone: o gráfico de linha da tela Desempenho.
-const SVG_PERMITIDO = new Set(['desempenho/TelaDesempenho.tsx'])
+// <svg> que não é ícone: o gráfico de linha da tela Desempenho e o QR do Pix de "Apoiar o projeto".
+const SVG_PERMITIDO = new Set(['desempenho/TelaDesempenho.tsx', 'aparencia/ApoiarProjeto.tsx'])
 // Caracteres que eram usados como ícone. Ficam de fora os de texto: setas dentro de frases
 // (→ ↑ ↓ ←), o › de "Opções › Integrações" e o × de medidas (64×64, largura × altura).
 const GLIFOS = /[⋯⋮★☆⟳↻✎✓✔✕✗✖⚠‹«»▶■▼▾▲▴]/u

@@ -532,7 +532,7 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'telaConexao.n1VincularSuaContaSo': '1. Link your account (just once)',
   'telaConexao.contaDoPlayitGgVinculada': 'playit.gg account linked.',
   'telaConexao.oAppBaixaOPrograma':
-    'The app downloads the official playit.gg program and opens the website in your browser. There, create a free account (or sign in) and approve ServSquare.',
+    'The app downloads the official playit.gg program and opens the website in your browser. There, create a free account (or sign in) and approve HubSquare.',
   'telaConexao.esperandoVoceAprovarNoNavegador': 'Waiting for you to approve in the browser...',
   'telaConexao.vincularPlayitGg': 'Link playit.gg',
   'telaConexao.n2CriarOTunelNo': '2. Create the tunnel on the website (just once)',
@@ -3732,6 +3732,21 @@ export const enUS: Record<keyof typeof ptBR, Texto> = {
   'relatar.relatarProblema': 'Report a problem',
   'relatar.explicacao':
     'Tell us what happened. You choose how to send it: email opens in your email app and GitHub opens in your browser, both already filled in. Nothing leaves your PC until you send it.',
+  'apoio.titulo': 'Support the project',
+  'apoio.frase':
+    'Donating is entirely optional and unlocks nothing new in the app. HubSquare is and will stay free.',
+  'apoio.abrir': 'Support the project',
+  'apoio.fechar': 'Close',
+  'apoio.copiar': 'Copy Pix code',
+  'apoio.copiado': 'Pix code copied',
+  'apoio.escanear':
+    'Scan the QR with your bank app, or copy the code and use "Pix copy and paste".',
+  'apoio.titular': 'Account holder: {nome} ({cidade})',
+  'apoio.chave': 'Random key',
+  'apoio.qr': 'Pix QR code to support HubSquare',
+  'apoio.sponsors': 'Support on GitHub Sponsors',
+  'apoio.brasileiro': 'Brazilian? Pix (Brazil only)',
+  'p.apoio.indisponivel': 'The support page is not available yet.',
   'relatar.sobreExplicacao':
     'Found a bug or have a suggestion? Send it by email or on GitHub, with the error report ready to attach.',
   'relatar.tipo': 'Type',

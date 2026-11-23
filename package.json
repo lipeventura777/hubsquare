@@ -25,7 +25,7 @@
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "install-electron && electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder --win --x64 --publish never && node scripts/checksums.mjs",
+    "dist": "npm run build && electron-builder --win --x64 --publish never && node scripts/varredura-ia.mjs asar release/win-unpacked/resources/app.asar && node scripts/checksums.mjs",
     "test": "node --import ./tests/ts-sem-extensao.mjs --test \"tests/*.test.ts\"",
     "icone": "electron scripts/gerar-icone.mjs",
     "repro:modpack": "node --import ./scripts/repro-modpack/ganchos.mjs scripts/repro-modpack/repro.ts",
@@ -34,6 +34,7 @@
     "test:e2e": "npm run build && playwright test -c tests/e2e/playwright.config.ts --project=rapido",
     "test:e2e:lento": "npm run build && playwright test -c tests/e2e/playwright.config.ts --project=lento",
     "desempenho:fundo": "npm run build && playwright test -c tests/e2e/playwright.config.ts --project=desempenho",
+    "ativar:sponsors": "node scripts/ativar-sponsors.mjs",
     "ler-relatorio": "node scripts/ler-relatorio.mjs"
   },
   "dependencies": {

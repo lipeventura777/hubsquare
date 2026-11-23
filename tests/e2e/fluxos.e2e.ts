@@ -17,7 +17,8 @@ import {
   pagina,
   pastaServidor,
   prepararLauncherFalso,
-  test
+  test,
+  soNoPc
 } from './apoio'
 import { arquivosFalsos, MC } from './simulado'
 
@@ -158,6 +159,7 @@ test('cria servidor a partir de um modpack pequeno (.mrpack)', async ({ abrir })
 })
 
 test('convite: o dono convida e o amigo, em outra instância, entra', async ({ abrir }) => {
+  soNoPc()
   const { texto } = await donoComConvite(abrir, MC)
   const amigo = await amigoAceita(abrir, texto, 'AmigoTeste', MC)
   await expect(amigo.janela.getByText('Servidor Amigos').first()).toBeVisible({ timeout: 60_000 })

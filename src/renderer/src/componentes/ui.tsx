@@ -694,12 +694,14 @@ export function Dialogo({
   children,
   aoCancelar,
   acao,
-  extra
+  extra,
+  rotuloCancelar
 }: {
   aberto: boolean
   titulo: string
   children: React.ReactNode
   aoCancelar: () => void
+  rotuloCancelar?: string // padrão: Cancelar
   extra?: React.ReactNode // outro botão de ação, antes do principal (ex.: e-mail e GitHub)
   acao: {
     rotulo: string
@@ -731,7 +733,7 @@ export function Dialogo({
       <div className="mt-3 text-sm">{children}</div>
       <div className="mt-6 flex justify-end gap-2">
         <Botao onClick={aoCancelar} disabled={acao.ocupado}>
-          {t('ui.cancelar')}
+          {rotuloCancelar ?? t('ui.cancelar')}
         </Botao>
         {extra}
         <Botao

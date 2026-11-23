@@ -84,6 +84,7 @@ import type {
   OpcoesRelatorio,
   PedidoRelatorio,
   PedidoRelato,
+  DadosApoio,
   RelatoEnviado,
   RelatorioGerado,
   PreviaPassar,
@@ -262,6 +263,9 @@ const api = {
   enviarRelato: (pedido: PedidoRelato): Promise<Resultado<RelatoEnviado>> =>
     ipcRenderer.invoke('relatar:enviar', pedido),
   mostrarRelatorio: (): Promise<Resultado<void>> => ipcRenderer.invoke('relatar:mostrarArquivo'),
+  // Apoiar o projeto: dados do Pix e do Sponsors; o Sponsors abre no navegador (link fixo do app).
+  dadosApoio: (): Promise<Resultado<DadosApoio>> => ipcRenderer.invoke('apoio:dados'),
+  abrirSponsors: (): Promise<Resultado<void>> => ipcRenderer.invoke('apoio:sponsors'),
   // O item Relatar problema da bandeja.
   aoRelatar: (f: () => void) => ouvir('app:relatar', f),
   // Passar o servidor (Fase M7).

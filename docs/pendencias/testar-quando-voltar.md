@@ -105,11 +105,12 @@ Indicators): fica para uma fase própria. Falta o launcher oficial de verdade e 
 Já passou nos testes (`tests/redeRegras.test.ts` e `tests/e2e/portaEForge.e2e.ts`); falta ver no
 seu PC, com as suas instalações e servidores.
 
-1. **Naruto Storm Online (Forge 1.7.10):** PlaySquare › Jogar, escolha a instalação e clique em JOGAR.
-   - [ ] Aparece "Forge antigo (antes da 1.12.2) ainda não é suportado." com "O suporte chega numa
-     próxima versão." embaixo, na hora, sem barra de download.
+1. **Forge antes da 1.7.10 (ex.: 1.6.4):** PlaySquare › Jogar numa instalação dessas e clique em JOGAR.
+   (A Fase F1 passou a suportar o Forge do 1.7.10 em diante; o teste do 1.7.10 está na seção
+   "Fase F1" acima.)
+   - [ ] Aparece "O Forge antes da 1.7.10 não é suportado. Escolha a 1.7.10 ou uma versão mais
+     nova.", na hora, sem barra de download.
    - [ ] A instalação continua na lista (nada apagado).
-   - [ ] Criar uma instalação ou um servidor com um modpack de Forge 1.7.10 mostra a mesma mensagem.
 2. **Porta 25570:** ServSquare › Opções do servidor, "Porta do servidor" = 25570, Salvar.
    - [ ] Conexão mostra os endereços com `:25570` (Radmin e rede local) e a porta 25570 para o playit.
    - [ ] Ligar o servidor; no console aparece "Starting Minecraft server on *:25570".

@@ -532,7 +532,7 @@ export const ptBR = {
   'telaConexao.n1VincularSuaContaSo': '1. Vincular sua conta (só uma vez)',
   'telaConexao.contaDoPlayitGgVinculada': 'Conta do playit.gg vinculada.',
   'telaConexao.oAppBaixaOPrograma':
-    'O app baixa o programa oficial do playit.gg e abre o site no navegador. Lá, crie uma conta grátis (ou entre) e aprove o ServSquare.',
+    'O app baixa o programa oficial do playit.gg e abre o site no navegador. Lá, crie uma conta grátis (ou entre) e aprove o HubSquare.',
   'telaConexao.esperandoVoceAprovarNoNavegador': 'Esperando você aprovar no navegador...',
   'telaConexao.vincularPlayitGg': 'Vincular playit.gg',
   'telaConexao.n2CriarOTunelNo': '2. Criar o túnel no site (só uma vez)',
@@ -3628,7 +3628,7 @@ export const ptBR = {
   'sobre.copiar': 'Copiar',
   'sobre.copiado': 'Copiado!',
   'sobre.avisoMojang':
-    'NÃO É UM PRODUTO OFICIAL DO MINECRAFT. NÃO É APROVADO PELA MOJANG OU PELA MICROSOFT NEM ASSOCIADO A ELAS.',
+    'NÃO É UM PRODUTO OFICIAL MINECRAFT. NÃO APROVADO NEM ASSOCIADO À MOJANG OU À MICROSOFT.',
   'telaAutomacao.domingo': 'domingo',
   'telaAutomacao.segunda': 'segunda',
   'telaAutomacao.quarta': 'quarta',
@@ -3735,6 +3735,21 @@ export const ptBR = {
   'relatar.relatarProblema': 'Relatar problema',
   'relatar.explicacao':
     'Conte o que aconteceu. Você escolhe por onde mandar: o e-mail abre no seu programa de e-mail e o GitHub abre no navegador, os dois já preenchidos. Nada sai do PC até você enviar.',
+  'apoio.titulo': 'Apoiar o projeto',
+  'apoio.frase':
+    'A doação é totalmente opcional e não desbloqueia nada de novo no app. O HubSquare é e continuará gratuito.',
+  'apoio.abrir': 'Apoiar o projeto',
+  'apoio.fechar': 'Fechar',
+  'apoio.copiar': 'Copiar código Pix',
+  'apoio.copiado': 'Código Pix copiado',
+  'apoio.escanear':
+    'Aponte a câmera do app do seu banco para o QR, ou copie o código e use o "Pix copia e cola".',
+  'apoio.titular': 'Titular: {nome} ({cidade})',
+  'apoio.chave': 'Chave aleatória',
+  'apoio.qr': 'QR Code do Pix para apoiar o HubSquare',
+  'apoio.sponsors': 'Apoiar pelo GitHub Sponsors',
+  'apoio.brasileiro': 'Brasileiro? Pix (só no Brasil)',
+  'p.apoio.indisponivel': 'A página de apoio ainda não está disponível.',
   'relatar.sobreExplicacao':
     'Achou um bug ou tem uma sugestão? Mande por e-mail ou pelo GitHub, com o relatório de erro pronto para anexar.',
   'relatar.tipo': 'Tipo',

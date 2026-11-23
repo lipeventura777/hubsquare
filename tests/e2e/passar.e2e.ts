@@ -20,7 +20,8 @@ import {
   pagina,
   pastaServidor,
   test,
-  type AppDeTeste
+  type AppDeTeste,
+  soNoPc
 } from './apoio'
 import { MC } from './simulado'
 
@@ -87,6 +88,7 @@ async function convidar(j: Page): Promise<string> {
 test('passar o servidor: sem segredos, outro PC hospeda, volta e atualiza o original', async ({
   abrir
 }) => {
+  soNoPc()
   test.setTimeout(8 * 60_000)
   const { dono, texto, token } = await donoComConvite(abrir, MC)
   const amigo = await amigoAceita(abrir, texto, 'AmigoTeste', MC)
@@ -257,6 +259,7 @@ async function receberNoAssistente(
 test('passar o servidor leva o fundo: com a imagem e, sem ela, fica igual ao app', async ({
   abrir
 }) => {
+  soNoPc()
   test.setTimeout(8 * 60_000)
   const dono = await abrir('dono')
   await criarPeloAssistente(dono.janela, NOME, MC)

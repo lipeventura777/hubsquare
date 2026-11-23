@@ -1,7 +1,15 @@
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { type Locator, type Page } from '@playwright/test'
-import { area, criarPeloAssistente, expect, pagina, pastaServidor, test } from './apoio'
+import {
+  area,
+  biomaPadrao,
+  criarPeloAssistente,
+  expect,
+  pagina,
+  pastaServidor,
+  test
+} from './apoio'
 import { MC } from './simulado'
 
 // Fase V10: fundo próprio de cada servidor do ServSquare, pelo MESMO painel "Fundo" da tela Jogar.
@@ -92,7 +100,7 @@ test('fundo do servidor: imagem, bioma, trocar de servidor, igual à instalaçã
   await painel.getByRole('radio', { name: 'Igual à instalação deste servidor' }).click()
   await j.keyboard.press('Escape')
   await expect.poll(() => infoDe(a.pasta, 'Servidor Bioma').fundo).toEqual({ tipo: 'instalacao' })
-  await expect(html).toHaveAttribute('data-bioma', 'dia') // a instalação está igual ao app
+  await expect(html).toHaveAttribute('data-bioma', await biomaPadrao(a)) // a instalação está igual ao app
   await area(j, 'PlaySquare')
   await pagina(j, 'Jogar')
   // A instalação deste servidor, no cartão da lista de instalações do Jogar.

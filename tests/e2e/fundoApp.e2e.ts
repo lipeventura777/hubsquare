@@ -1,7 +1,7 @@
 import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { type Page } from '@playwright/test'
-import { area, criarPeloAssistente, expect, pagina, test } from './apoio'
+import { area, biomaPadrao, criarPeloAssistente, expect, pagina, test } from './apoio'
 import { MC } from './simulado'
 
 // Fase V4: fundo do app inteiro (Aparência › Fundo), o painel Fundo da tela Jogar e a imagem que
@@ -30,7 +30,8 @@ test('fundo do app: bioma com desfazer, imagem minha, Jogar igual ao app e image
   const j = a.janela
   await criarPeloAssistente(j, 'Servidor Visual', MC)
   const html = j.locator('html')
-  await expect(html).toHaveAttribute('data-bioma', 'dia')
+  const padrao = await biomaPadrao(a)
+  await expect(html).toHaveAttribute('data-bioma', padrao)
   const dados = join(a.pasta, 'appData', 'HubSquare')
 
   await j.getByRole('button', { name: 'Aparência' }).click()
@@ -40,7 +41,7 @@ test('fundo do app: bioma com desfazer, imagem minha, Jogar igual ao app e image
   await j.getByRole('radio', { name: 'Noite' }).click()
   await expect(html).toHaveAttribute('data-bioma', 'noite')
   await j.getByRole('button', { name: 'Desfazer' }).click()
-  await expect(html).toHaveAttribute('data-bioma', 'dia')
+  await expect(html).toHaveAttribute('data-bioma', padrao)
 
   // Imagem minha: vira o fundo de todas as telas, pelo protocolo do app.
   await a.escolherArquivo(IMAGEM)
@@ -85,6 +86,6 @@ test('fundo do app: bioma com desfazer, imagem minha, Jogar igual ao app e image
   for (const n of readdirSync(join(dados, 'fundos'))) rmSync(join(dados, 'fundos', n))
   await j.reload()
   await expect(j.getByText(/A imagem de fundo não abriu/)).toBeVisible()
-  await expect(html).toHaveAttribute('data-bioma', 'dia')
+  await expect(html).toHaveAttribute('data-bioma', padrao)
   await expect(j.locator('.fixed.-z-10 img[data-fundo]')).toHaveCount(0)
 })

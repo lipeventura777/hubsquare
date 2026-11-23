@@ -23,7 +23,7 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,CHANGELOG.md,README.md,PROJETO.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-  - '!{README.pt-BR.md,README.en.md,PRIVACY.md,PRIVACY.pt-BR.md,SECURITY.md,CONTRIBUTING.md,THIRD_PARTY_NOTICES.md,CODE_SIGNING_POLICY.md}'
+  - '!{README.pt-BR.md,README.en.md,TRADEMARK.md,PRIVACY.md,PRIVACY.pt-BR.md,SECURITY.md,CONTRIBUTING.md,THIRD_PARTY_NOTICES.md,CODE_SIGNING_POLICY.md}'
   - '!.github/**'
   # Arquivos soltos desta máquina (logs com caminhos do PC, sessões de navegador): nunca no app.
   - '!**/*.log'
@@ -44,8 +44,8 @@ nsis:
   perMachine: false
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
-  # A licença (GPL-3.0-or-later, texto oficial) aparece numa tela do instalador.
-  license: LICENSE
+  # A licença aparece numa tela do instalador, no idioma escolhido: build/license_pt_BR.txt e
+  # build/license_en_US.txt (o aviso de não afiliação no topo e, embaixo, o texto oficial da GPL).
   artifactName: HubSquare-Setup-${version}.${ext}
   shortcutName: HubSquare
   uninstallDisplayName: HubSquare

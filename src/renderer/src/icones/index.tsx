@@ -78,5 +78,6 @@ export const IconeOk = (p: Props): React.JSX.Element => <Icone nome="ok" {...p} 
 export const IconeErro = (p: Props): React.JSX.Element => <Icone nome="erro" {...p} />
 export const IconeAtencao = (p: Props): React.JSX.Element => <Icone nome="atencao" {...p} />
 export const IconeCoracao = (p: Props): React.JSX.Element => <Icone nome="coracao" {...p} />
+export const IconeApoio = (p: Props): React.JSX.Element => <Icone nome="apoio" {...p} />
 export const IconeComida = (p: Props): React.JSX.Element => <Icone nome="comida" {...p} />
 export const IconePocao = (p: Props): React.JSX.Element => <Icone nome="pocao" {...p} />

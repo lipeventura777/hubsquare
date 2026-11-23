@@ -54,5 +54,13 @@ for (const bioma of BIOMAS) {
     await foto(j, bioma, '11-instalacoes')
     await j.getByRole('button', { name: 'Entrar com convite' }).click()
     await foto(j, bioma, '12-dialogo')
+
+    // Engrenagem › Sobre › Apoiar o projeto (doação opcional; só abre ao clicar).
+    await j.keyboard.press('Escape')
+    await j.getByRole('button', { name: 'Aparência' }).click()
+    await j.getByRole('tab', { name: 'Sobre' }).click()
+    await foto(j, bioma, '13-sobre')
+    await j.locator('main').getByRole('button', { name: 'Apoiar o projeto', exact: true }).click()
+    await foto(j, bioma, '14-apoiar')
   })
 }

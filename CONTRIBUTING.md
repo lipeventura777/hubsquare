@@ -44,7 +44,7 @@ npm run dev
 
 ## Pull requests
 
-Keep each PR focused on one thing; the PR template asks what changed and how you tested it. By contributing, you agree that your contribution is licensed under the [GNU General Public License v3.0 or later](LICENSE). The HubSquare name and logo are not covered by the license (see the [License section of the README](README.en.md#license)).
+Keep each PR focused on one thing; the PR template asks what changed and how you tested it. By contributing, you agree that your contribution is licensed under the [GNU General Public License v3.0 or later](LICENSE). The HubSquare name, logo and visual identity are not covered by the license: forks and modified redistributions must use a different name and logo (see [TRADEMARK.md](TRADEMARK.md)).
 
 ## Security problems
 

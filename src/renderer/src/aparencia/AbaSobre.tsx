@@ -4,6 +4,7 @@ import { t } from '../../../shared/i18n'
 import { CardPainel } from '../componentes/paineis'
 import { Botao } from '../componentes/ui'
 import { BotaoRelatar } from '../componentes/RelatarProblema'
+import { ApoiarProjeto } from './ApoiarProjeto'
 
 // Fase I1: engrenagem › Sobre. Versão, licença, links públicos e o aviso da marca Minecraft.
 // Os links aparecem como texto com "Copiar": o PlaySquare não abre links externos.
@@ -44,6 +45,7 @@ export function AbaSobre(): React.JSX.Element {
           <BotaoRelatar />
         </div>
       </CardPainel>
+      <ApoiarProjeto />
       <CardPainel titulo={t('sobre.links')}>
         <ul className="flex flex-col gap-3">
           {LINKS.map((l) => (

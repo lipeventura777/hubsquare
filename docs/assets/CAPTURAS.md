@@ -24,6 +24,9 @@ As imagens que o README.md (português) e o README.en.md (inglês) usam ficam ne
 | `docs/assets/en-mods.png` | O mesmo, em inglês | Noite |
 | `docs/assets/pt-convites.png` | ServSquare › Conexão › Convites, com o código, o link e os endereços cobertos | Aurora Nevada |
 | `docs/assets/en-convites.png` | O mesmo, em inglês | Aurora Nevada |
+| `docs/assets/pix-qr.png` | Só o QR Code do Pix (o dono gerou no app do banco; nunca redimensionar com suavização nem recomprimir) | — |
+| `docs/assets/pix-apoie-pt.png` | Cartão em português com o QR do Pix, usado na seção "Apoie o projeto" do README | — |
+| `docs/assets/sponsors-apoie-en.png` | Cartão em inglês do GitHub Sponsors (sem QR), usado na seção em inglês quando o Sponsors estiver ativo | — |
 
 ## Outros arquivos desta pasta
 

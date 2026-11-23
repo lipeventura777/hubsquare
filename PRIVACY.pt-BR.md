@@ -50,3 +50,7 @@ O HubSquare não coleta dados de ninguém, inclusive de crianças.
 ## Contato
 
 Dúvidas: abra uma issue em <https://github.com/lipeventura777/hubsquare/issues>.
+
+---
+
+NÃO É UM PRODUTO OFICIAL MINECRAFT. NÃO APROVADO NEM ASSOCIADO À MOJANG OU À MICROSOFT.

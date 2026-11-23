@@ -26,9 +26,23 @@ export async function lerTexto(arquivo: string): Promise<string> {
 }
 
 // Grava num arquivo temporário e troca no fim: se o PC desligar no meio, o original não se perde.
-export async function gravarComSeguranca(arquivo: string, texto: string): Promise<void> {
-  await writeFile(`${arquivo}.tmp`, texto)
-  await rename(`${arquivo}.tmp`, arquivo)
+// Uma gravação de cada vez por arquivo: a tela pede o mesmo dado de vários lugares ao mesmo tempo, e
+// duas trocas (rename) juntas sobre o mesmo destino falham no Windows (ENOENT no temporário que a
+// outra já levou, ou EPERM no destino).
+const filas = new Map<string, Promise<unknown>>()
+export function gravarComSeguranca(arquivo: string, texto: string): Promise<void> {
+  const vez = (filas.get(arquivo) ?? Promise.resolve())
+    .catch(() => undefined)
+    .then(async () => {
+      await writeFile(`${arquivo}.tmp`, texto)
+      await rename(`${arquivo}.tmp`, arquivo)
+    })
+  filas.set(arquivo, vez)
+  void vez.then(
+    () => filas.get(arquivo) === vez && filas.delete(arquivo),
+    () => filas.get(arquivo) === vez && filas.delete(arquivo)
+  )
+  return vez
 }
 
 export async function lerArquivoPropriedades(pasta: string): Promise<Map<string, string>> {

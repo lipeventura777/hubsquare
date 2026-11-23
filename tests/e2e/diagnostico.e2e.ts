@@ -8,7 +8,8 @@ import {
   expect,
   pagina,
   test,
-  type AppDeTeste
+  type AppDeTeste,
+  soNoPc
 } from './apoio'
 import { MC, servidorMinecraftFalso } from './simulado'
 
@@ -42,6 +43,7 @@ test('diagnóstico do dono: servidor desligado para no primeiro problema', async
 })
 
 test('diagnóstico do amigo: servidor do dono desligado', async ({ abrir }) => {
+  soNoPc()
   // Porta própria do teste, onde nada escuta: o servidor "desligado".
   const vazio = await servidorMinecraftFalso()
   const porta = vazio.porta
@@ -64,6 +66,7 @@ test('diagnóstico do amigo: servidor do dono desligado', async ({ abrir }) => {
 test('diagnóstico do amigo: instalação desatualizada, depois nick não aprovado, depois tudo certo', async ({
   abrir
 }) => {
+  soNoPc()
   const jogo = await servidorMinecraftFalso()
   try {
     const { dono, texto } = await donoComConvite(abrir, MC, jogo.porta)

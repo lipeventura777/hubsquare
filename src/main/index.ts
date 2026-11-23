@@ -319,6 +319,7 @@ import {
 } from './instalacoes'
 import './uso' // começa a medir CPU e RAM sempre que o servidor liga
 import { t } from '../shared/i18n'
+import { abrirSponsors, dadosDeApoio } from './apoio'
 import { registrarErro } from './registroErros'
 
 // Fase E2: a pasta de dados é %APPDATA%\HubSquare. Na primeira abertura depois da atualização,
@@ -975,6 +976,9 @@ app.whenReady().then(async () => {
   ipcMain.handle('relatorio:abrirPasta', () => tentar(abrirPastaDoRelatorio))
   ipcMain.handle('relatar:enviar', (_e, pedido: unknown) => tentar(() => enviarRelato(pedido)))
   ipcMain.handle('relatar:mostrarArquivo', () => tentar(async () => mostrarUltimoRelatorio()))
+  // Apoiar o projeto: os dados do Pix e o Sponsors; só abre a página no navegador (nada de pagamento aqui).
+  ipcMain.handle('apoio:dados', () => tentar(async () => dadosDeApoio()))
+  ipcMain.handle('apoio:sponsors', () => tentar(abrirSponsors))
   ipcMain.handle('diagnostico:consertar', (_e, conserto: unknown) =>
     tentar(() => consertarDono(conserto))
   )

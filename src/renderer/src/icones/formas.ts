@@ -81,6 +81,7 @@ export const FORMAS = {
 
   // ---------- Conteúdo do jogo (status do jogador, efeitos) ----------
   coracao: { traco: 'M12 20l-8-8V7l3-3h3l2 2 2-2h3l3 3v5z' },
+  apoio: { traco: 'M12 20l-8-8V7l3-3h3l2 2 2-2h3l3 3v5zM12 9v6M9 12h6' }, // coração com um mais
   comida: { traco: 'M4 10l3-3h3l2 2 2-2h3l3 3v6l-5 5H9l-5-5zM12 8V4' }, // maçã em blocos
   pocao: { traco: 'M8 3h8M10 3v5l-5 5v8h14v-8l-5-5V3', detalhe: 'M5 15h14v6H5z' }
 } satisfies Record<string, Forma>

@@ -24,6 +24,8 @@
 
 <p align="center"><a href="README.md">Português (Brasil)</a> · <strong>English</strong></p>
 
+<p align="center"><sub>NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</sub></p>
+
 <p align="center">
   <img src="docs/assets/en-demo.gif" width="860" alt="Creating a server and going to the HubSquare Play screen">
 </p>
@@ -177,17 +179,26 @@ Each version's history is in [CHANGELOG.md](CHANGELOG.md).
 
 Want to help with the code? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Donations
+<!-- SPONSORS-EN-INICIO
+## Support the project
 
-HubSquare is free and will stay that way. The way to donate is still being chosen; once it exists, the **Sponsor** button shows up at the top of the repository.
+> **Donating is entirely optional and unlocks nothing new in the app. HubSquare is and will stay free.**
+
+<p align="center">
+  <a href="https://github.com/sponsors/[USUARIO_GITHUB]"><img src="docs/assets/sponsors-apoie-en.png" width="720" alt="Card to support HubSquare on GitHub Sponsors, saying that donating is optional and unlocks nothing in the app"></a>
+</p>
+
+**[Support HubSquare on GitHub Sponsors](https://github.com/sponsors/[USUARIO_GITHUB])**
+SPONSORS-EN-FIM -->
 
 ## License
 
 [GNU General Public License v3.0 or later](LICENSE) (`GPL-3.0-or-later`). Third-party components and fonts: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-The HubSquare name and logo are not covered by the license (trademark registration pending at INPI, Brazil). You may copy and change the code under the GPL, but a modified version must use a different name and logo.
+The HubSquare name and logo are not covered by the license (trademark registration pending at INPI, Brazil). You may copy and change the code under the GPL, but a modified version must use a different name and logo. Details in [TRADEMARK.md](TRADEMARK.md).
 
 ---
 
 <sub>NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.<br>
+NÃO É UM PRODUTO OFICIAL MINECRAFT. NÃO APROVADO NEM ASSOCIADO À MOJANG OU À MICROSOFT.<br>
 Mod, plugin and modpack names, descriptions and images belong to their authors and are shown as provided by Modrinth and Hangar.</sub>
