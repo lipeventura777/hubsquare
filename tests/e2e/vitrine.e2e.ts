@@ -168,9 +168,12 @@ test('vitrine no Jogar: o fundo é a mesma instância, JOGAR no bloco e Esc', as
   await expect(bloco(j)).toBeVisible()
   expect(await mesmoFundo(j)).toBe(true)
 
-  // Esc sai (a barra lateral, com as abas Serv/Play, fica fora do alcance na vitrine).
-  await j.keyboard.press('Escape')
-  await expect(bloco(j)).toHaveCount(0)
+  // Esc sai (a barra lateral, com as abas Serv/Play, fica fora do alcance na vitrine). O diálogo
+  // do JOGAR pode abrir só agora (PC lento); aí o primeiro Esc fecha ele, e o seguinte sai.
+  await expect(async () => {
+    await j.keyboard.press('Escape')
+    await expect(bloco(j)).toHaveCount(0, { timeout: 1000 })
+  }).toPass({ timeout: 20_000 })
   expect(await mesmoFundo(j)).toBe(true)
   // Cada área lembra a sua: no ServSquare o Painel continua com o painel.
   await area(j, 'ServSquare')
